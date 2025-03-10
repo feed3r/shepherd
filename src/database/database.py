@@ -20,8 +20,65 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
+from typing import override
 
-class Database:
+from service import Service
+
+
+class DatabaseService(Service):
+    @override
+    def build_image(self) -> None:
+        """Build the DBMS image."""
+        pass
+
+    @override
+    def bootstrap(self) -> None:
+        """Bootstrap the DBMS service."""
+        pass
+
+    @override
+    def start(self) -> None:
+        """Start the DBMS service."""
+        pass
+
+    @override
+    def halt(self) -> None:
+        """Halt the DBMS service."""
+        pass
+
+    @override
+    def reload(self) -> None:
+        """Reload the DBMS service."""
+        pass
+
+    @override
+    def show_stdout(self) -> None:
+        """Show the DBMS stdout."""
+        pass
+
+    @override
+    def get_shell(self) -> None:
+        """Get a shell session for the DBMS."""
+        pass
+
+    def get_sql_shell(self) -> None:
+        """Get a SQL shell session."""
+        pass
+
+    def create_user(self, user: str, psw: str) -> None:
+        """Create a new database user."""
+        pass
+
+    def create_directory(self, user: str, directory_name: str) -> None:
+        """Create a directory object in the database."""
+        pass
+
+    def remove_user(self, user: str) -> None:
+        """Drop an existing database user."""
+        pass
+
+
+class DatabaseMng:
     def build_dbms_image(self) -> None:
         """Stub for building DBMS image."""
         pass

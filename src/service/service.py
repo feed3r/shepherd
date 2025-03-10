@@ -20,8 +20,47 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
+from abc import ABC, abstractmethod
 
-class Service:
+
+class Service(ABC):
+    @abstractmethod
+    def build_image(self) -> None:
+        """Build the service image."""
+        pass
+
+    @abstractmethod
+    def bootstrap(self) -> None:
+        """Bootstrap the service."""
+        pass
+
+    @abstractmethod
+    def start(self) -> None:
+        """Start the service."""
+        pass
+
+    @abstractmethod
+    def halt(self) -> None:
+        """Stop the service."""
+        pass
+
+    @abstractmethod
+    def reload(self) -> None:
+        """Reload the service."""
+        pass
+
+    @abstractmethod
+    def show_stdout(self) -> None:
+        """Show the service stdout."""
+        pass
+
+    @abstractmethod
+    def get_shell(self) -> None:
+        """Get a shell session for the service."""
+        pass
+
+
+class ServiceMng:
     def build_service_image(self, service_type: str) -> None:
         """Stub for building a service image."""
         pass
