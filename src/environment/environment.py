@@ -19,9 +19,88 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
+from __future__ import annotations
+
+from abc import ABC, abstractmethod
+from typing import List
+
+from service import Service
 
 
-class Environment:
+class Environment(ABC):
+
+    tag: str
+    archived: bool
+    active: bool
+    services: List[Service]
+
+    def __init__(self):
+        self.services = []
+
+    @abstractmethod
+    def init(self, db_type: str, env_tag: str) -> None:
+        """Initialize an environment."""
+        pass
+
+    @abstractmethod
+    def clone(self, dst_env_tag: str) -> Environment:
+        """Clone an environment."""
+        pass
+
+    @abstractmethod
+    def start(self) -> None:
+        """Start an environment."""
+        pass
+
+    @abstractmethod
+    def halt(self) -> None:
+        """Halt an environment."""
+        pass
+
+    @abstractmethod
+    def reload(self) -> None:
+        """Reload an environment."""
+        pass
+
+    @abstractmethod
+    def status(self) -> None:
+        """Get environment status."""
+        pass
+
+    def get_tag(self) -> str:
+        """Return the tag of the environment."""
+        return self.tag
+
+    def set_tag(self, tag: str) -> None:
+        """Set the tag of the environment."""
+        self.tag = tag
+
+    def is_archived(self) -> bool:
+        return self.archived
+
+    def set_archived(self, archived: bool) -> None:
+        self.archived = archived
+
+    def is_active(self) -> bool:
+        return self.active
+
+    def set_active(self, active: bool) -> None:
+        self.active = active
+
+    def add_service(self, service: Service) -> None:
+        """Add a service to the environment."""
+        self.services.append(service)
+
+    def remove_service(self, service: Service) -> None:
+        """Remove a service from the environment."""
+        self.services.remove(service)
+
+    def get_services(self) -> List[Service]:
+        """Return the list of services in the environment."""
+        return self.services
+
+
+class EnvironmentMng:
     def init_environment(self, db_type: str, env_tag: str) -> None:
         """Stub for initializing an environment."""
         pass

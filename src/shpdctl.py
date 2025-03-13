@@ -22,14 +22,14 @@
 
 import click
 
-from database.database import Database
-from environment.environment import Environment
-from service.service import Service
+from database import DatabaseMng
+from environment import EnvironmentMng
+from service import ServiceMng
 
 # Initialize instances
-database = Database()
-environment = Environment()
-service = Service()
+databaseMng = DatabaseMng()
+environmentMng = EnvironmentMng()
+serviceMng = ServiceMng()
 
 
 @click.group()
@@ -88,43 +88,43 @@ def db() -> None:
 @db.command(name="build")
 def build_dbms() -> None:
     """Build dbms image."""
-    database.build_dbms_image()
+    databaseMng.build_dbms_image()
 
 
 @db.command(name="bootstrap")
 def bootstrap() -> None:
     """Bootstrap dbms service."""
-    database.bootstrap_dbms_service()
+    databaseMng.bootstrap_dbms_service()
 
 
 @db.command(name="start")
 def up() -> None:
     """Start dbms service."""
-    database.start_dbms_service()
+    databaseMng.start_dbms_service()
 
 
 @db.command(name="halt")
 def halt() -> None:
     """Halt dbms service."""
-    database.halt_dbms_service()
+    databaseMng.halt_dbms_service()
 
 
 @db.command(name="stdout")
 def stdout() -> None:
     """Show dbms service stdout."""
-    database.show_dbms_stdout()
+    databaseMng.show_dbms_stdout()
 
 
 @db.command(name="shell")
 def shell() -> None:
     """Get a shell session for the dbms service."""
-    database.get_dbms_shell_session()
+    databaseMng.get_dbms_shell_session()
 
 
 @db.command(name="sql")
 def sql_shell() -> None:
     """Get a SQL session for the dbms service."""
-    database.get_sql_shell_session()
+    databaseMng.get_sql_shell_session()
 
 
 # Environment commands
@@ -139,7 +139,7 @@ def env() -> None:
 @click.argument("env_tag")
 def init_environment(db_type: str, env_tag: str) -> None:
     """Init an environment with a dbms type and an environment's tag name."""
-    environment.init_environment(db_type, env_tag)
+    environmentMng.init_environment(db_type, env_tag)
 
 
 @env.command(name="clone")
@@ -147,50 +147,50 @@ def init_environment(db_type: str, env_tag: str) -> None:
 @click.argument("dst_env_tag")
 def clone_environment(src_env_tag: str, dst_env_tag: str) -> None:
     """Clone an environment."""
-    environment.clone_environment(src_env_tag, dst_env_tag)
+    environmentMng.clone_environment(src_env_tag, dst_env_tag)
 
 
 @env.command(name="checkout")
 @click.argument("env_tag")
 def checkout_environment(env_tag: str) -> None:
     """Checkout an environment."""
-    environment.checkout_environment(env_tag)
+    environmentMng.checkout_environment(env_tag)
 
 
 @env.command(name="noactive")
 def set_noactive() -> None:
     """Set all environments as non-active."""
-    environment.set_all_non_active()
+    environmentMng.set_all_non_active()
 
 
 @env.command(name="list")
 def list_environments() -> None:
     """List all available environments."""
-    environment.list_environments()
+    environmentMng.list_environments()
 
 
 @env.command(name="start")
 def start_environment() -> None:
     """Start environment."""
-    environment.start_environment()
+    environmentMng.start_environment()
 
 
 @env.command(name="halt")
 def halt_environment() -> None:
     """Halt environment."""
-    environment.halt_environment()
+    environmentMng.halt_environment()
 
 
 @env.command(name="reload")
 def reload_environment() -> None:
     """Reload environment."""
-    environment.reload_environment()
+    environmentMng.reload_environment()
 
 
 @env.command(name="status")
 def environment_status() -> None:
     """Print environment's status."""
-    environment.environment_status()
+    environmentMng.environment_status()
 
 
 @click.group()
@@ -203,49 +203,49 @@ def svc() -> None:
 @click.argument("service_type", type=str)
 def build_service(service_type: str) -> None:
     """Build service image."""
-    service.build_service_image(service_type)
+    serviceMng.build_service_image(service_type)
 
 
 @svc.command(name="bootstrap")
 @click.argument("service_type", type=str)
 def bootstrap_service(service_type: str) -> None:
     """Bootstrap service."""
-    service.bootstrap_service(service_type)
+    serviceMng.bootstrap_service(service_type)
 
 
 @svc.command(name="start")
 @click.argument("service_type", type=str)
 def start_service(service_type: str) -> None:
     """Start service."""
-    service.start_service(service_type)
+    serviceMng.start_service(service_type)
 
 
 @svc.command(name="halt")
 @click.argument("service_type", type=str)
 def stop_service(service_type: str) -> None:
     """Stop service."""
-    service.stop_service(service_type)
+    serviceMng.stop_service(service_type)
 
 
 @svc.command(name="reload")
 @click.argument("service_type", type=str)
 def reload_service(service_type: str) -> None:
     """Reload service."""
-    service.reload_service(service_type)
+    serviceMng.reload_service(service_type)
 
 
 @svc.command(name="stdout")
 @click.argument("service_id", type=str)
 def service_stdout(service_id: str) -> None:
     """Show service stdout."""
-    service.show_service_stdout(service_id)
+    serviceMng.show_service_stdout(service_id)
 
 
 @svc.command(name="shell")
 @click.argument("service_id", type=str)
 def service_shell(service_id: str) -> None:
     """Get a shell session for the service."""
-    service.get_service_shell(service_id)
+    serviceMng.get_service_shell(service_id)
 
 
 if __name__ == "__main__":

@@ -20,6 +20,6 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-from .service import Service
+from .service import Service, ServiceMng
 
-__all__ = ["Service"]
+__all__ = ["Service", "ServiceMng"]

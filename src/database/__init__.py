@@ -20,6 +20,6 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-from .database import Database
+from .database import DatabaseMng
 
-__all__ = ["Database"]
+__all__ = ["DatabaseMng"]

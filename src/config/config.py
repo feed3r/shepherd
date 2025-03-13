@@ -27,7 +27,7 @@ from typing import Any, Dict, List, Optional
 
 
 @dataclass
-class Upstream:
+class DBUpstreamCfg:
     tag: str
     type: str
     user: str
@@ -41,18 +41,7 @@ class Upstream:
 
 
 @dataclass
-class Database:
-    type: str
-    image: Optional[str]
-    sys_user: str
-    sys_psw: str
-    user: str
-    psw: str
-    upstreams: List[Upstream] = field(default_factory=list)
-
-
-@dataclass
-class Service:
+class ServiceCfg:
     type: str
     tag: str
     image: str
@@ -61,19 +50,19 @@ class Service:
     ports: Optional[dict[str, str]] = field(default_factory=dict)
     properties: Optional[dict[str, str]] = field(default_factory=dict)
     subject_alternative_name: Optional[str] = None
+    db_upstreams: Optional[List[DBUpstreamCfg]] = field(default_factory=list)
 
 
 @dataclass
-class Environment:
+class EnvironmentCfg:
     tag: str
-    db: Database
-    services: List[Service]
+    services: Optional[List[ServiceCfg]]
     archived: bool
     active: bool
 
 
 @dataclass
-class OracleConfig:
+class OracleCfg:
     image: str
     empty_env: str
     pump_dir_name: str
@@ -83,14 +72,14 @@ class OracleConfig:
 
 
 @dataclass
-class PostgresConfig:
+class PostgresCfg:
     image: str
     empty_env: str
     net_listener_port: str
 
 
 @dataclass
-class ShpdRegistry:
+class ShpdRegistryCfg:
     ftp_server: str
     ftp_user: str
     ftp_psw: str
@@ -99,7 +88,7 @@ class ShpdRegistry:
 
 
 @dataclass
-class CAConfig:
+class CACfg:
     country: str
     state: str
     locality: str
@@ -111,7 +100,7 @@ class CAConfig:
 
 
 @dataclass
-class CertConfig:
+class CertCfg:
     country: str
     state: str
     locality: str
@@ -123,7 +112,7 @@ class CertConfig:
 
 
 @dataclass
-class DbDefault:
+class DbDefaultCfg:
     sys_user: str
     sys_psw: str
     user: str
@@ -132,24 +121,24 @@ class DbDefault:
 
 @dataclass
 class Config:
-    ora: OracleConfig
-    pg: PostgresConfig
-    shpd_registry: ShpdRegistry
+    ora: OracleCfg
+    pg: PostgresCfg
+    shpd_registry: ShpdRegistryCfg
     host_inet_ip: str
     domain: str
     dns_type: str
-    ca: CAConfig
-    cert: CertConfig
+    ca: CACfg
+    cert: CertCfg
     envs_dir: str
-    db_default: DbDefault
-    envs: List[Environment] = field(default_factory=list)
+    db_default: DbDefaultCfg
+    envs: List[EnvironmentCfg] = field(default_factory=list)
 
 
 def parse_config(json_str: str) -> Config:
     data = json.loads(json_str)
 
-    def parse_upstream(item: Any) -> Upstream:
-        return Upstream(
+    def parse_upstream(item: Any) -> DBUpstreamCfg:
+        return DBUpstreamCfg(
             tag=item["tag"],
             type=item["type"],
             user=item["user"],
@@ -162,21 +151,8 @@ def parse_config(json_str: str) -> Config:
             enabled=item["enabled"],
         )
 
-    def parse_database(item: Any) -> Database:
-        return Database(
-            type=item["type"],
-            image=item["image"],
-            sys_user=item["sys_user"],
-            sys_psw=item["sys_psw"],
-            user=item["user"],
-            psw=item["psw"],
-            upstreams=[
-                parse_upstream(upstream) for upstream in item["upstreams"]
-            ],
-        )
-
-    def parse_service(item: Any) -> Service:
-        return Service(
+    def parse_service(item: Any) -> ServiceCfg:
+        return ServiceCfg(
             type=item["type"],
             tag=item["tag"],
             image=item["image"],
@@ -185,19 +161,24 @@ def parse_config(json_str: str) -> Config:
             ports=item.get("ports", {}),
             properties=item.get("properties", {}),
             subject_alternative_name=item.get("subject_alternative_name"),
+            db_upstreams=[
+                parse_upstream(upstream)
+                for upstream in item.get("db_upstreams", [])
+            ],
         )
 
-    def parse_environment(item: Any) -> Environment:
-        return Environment(
+    def parse_environment(item: Any) -> EnvironmentCfg:
+        return EnvironmentCfg(
             tag=item["tag"],
-            db=parse_database(item["db"]),
-            services=[parse_service(service) for service in item["services"]],
+            services=[
+                parse_service(service) for service in item.get("services", [])
+            ],
             archived=item["archived"],
             active=item["active"],
         )
 
-    def parse_oracle_config(item: Any) -> OracleConfig:
-        return OracleConfig(
+    def parse_oracle_config(item: Any) -> OracleCfg:
+        return OracleCfg(
             image=item["image"],
             empty_env=item["empty_env"],
             pump_dir_name=item["pump_dir_name"],
@@ -206,15 +187,15 @@ def parse_config(json_str: str) -> Config:
             net_listener_port=item["net_listener_port"],
         )
 
-    def parse_postgres_config(item: Any) -> PostgresConfig:
-        return PostgresConfig(
+    def parse_postgres_config(item: Any) -> PostgresCfg:
+        return PostgresCfg(
             image=item["image"],
             empty_env=item["empty_env"],
             net_listener_port=item["net_listener_port"],
         )
 
-    def parse_shpd_registry(item: Any) -> ShpdRegistry:
-        return ShpdRegistry(
+    def parse_shpd_registry(item: Any) -> ShpdRegistryCfg:
+        return ShpdRegistryCfg(
             ftp_server=item["ftp_server"],
             ftp_user=item["ftp_user"],
             ftp_psw=item["ftp_psw"],
@@ -222,8 +203,8 @@ def parse_config(json_str: str) -> Config:
             ftp_env_imgs_path=item["ftp_env_imgs_path"],
         )
 
-    def parse_ca_config(item: Any) -> CAConfig:
-        return CAConfig(
+    def parse_ca_config(item: Any) -> CACfg:
+        return CACfg(
             country=item["country"],
             state=item["state"],
             locality=item["locality"],
@@ -234,8 +215,8 @@ def parse_config(json_str: str) -> Config:
             passphrase=item["passphrase"],
         )
 
-    def parse_cert_config(item: Any) -> CertConfig:
-        return CertConfig(
+    def parse_cert_config(item: Any) -> CertCfg:
+        return CertCfg(
             country=item["country"],
             state=item["state"],
             locality=item["locality"],
@@ -246,8 +227,8 @@ def parse_config(json_str: str) -> Config:
             subject_alternative_names=item.get("subject_alternative_names", []),
         )
 
-    def parse_db_default(item: Any) -> DbDefault:
-        return DbDefault(
+    def parse_db_default(item: Any) -> DbDefaultCfg:
+        return DbDefaultCfg(
             sys_user=item["sys_user"],
             sys_psw=item["sys_psw"],
             user=item["user"],

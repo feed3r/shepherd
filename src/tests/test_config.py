@@ -84,64 +84,68 @@ def test_load_config(mocker: MockerFixture):
         },
         "envs": [
             {
-                "tag": "sample-1",
-                "db": {
+              "tag": "sample-1",
+              "services": [
+                {
                     "type": "pg",
-                    "image": "",
-                    "sys_user": "",
-                    "sys_psw": "",
-                    "user": "",
-                    "psw": "",
-                    "upstreams": [
+                    "tag": "pg-1",
+                    "image": "ghcr.io/lunaticfringers/shepherd/postgres:17-3.5",
+                    "properties": {
+                        "sys_user": "syspg1",
+                        "sys_psw": "syspg1",
+                        "user": "pg1",
+                        "psw": "pg1"
+                    },
+                    "envvars": null,
+                    "db_upstreams": [
                         {
                             "tag": "upstream",
                             "type": "pg",
-                            "user": "",
-                            "psw": "",
-                            "host": "",
+                            "user": "pg1up",
+                            "psw": "pg1up",
+                            "host": "localhost",
                             "port": "5432",
-                            "database": "",
-                            "unix_user": "",
-                            "dump_dir": "",
+                            "database": "d_pg1",
+                            "unix_user": "postgres",
+                            "dump_dir": "/dumps",
                             "enabled": false
                         }
                     ]
                 },
-                "services": [
-                    {
-                        "type": "traefik",
-                        "ingress": true,
-                        "tag": "traefik-1",
-                        "image": "",
-                        "envvars": null
-                    },
-                    {
-                        "type": "custom-1",
-                        "tag": "primary",
-                        "image": "",
-                        "envvars": null,
-                        "ports": null,
-                        "properties": {
-                            "instance.name": "primary",
-                            "instance.id": 1
-                        }
-                    },
-                    {
-                        "type": "nodejs",
-                        "tag": "poke",
-                        "image": "",
-                        "ports": {
-                            "http": "3000:3000"
-                        },
-                        "envvars": {
-                            "USER": "user",
-                            "PSW": "psw"
-                        }
+                {
+                    "type": "traefik",
+                    "ingress": true,
+                    "tag": "traefik-1",
+                    "image": "",
+                    "envvars": null
+                },
+                {
+                    "type": "custom-1",
+                    "tag": "primary",
+                    "image": "",
+                    "envvars": null,
+                    "ports": null,
+                    "properties": {
+                        "instance.name": "primary",
+                        "instance.id": 1
                     }
-                ],
-                "archived": false,
-                "active": false
-            }
+                },
+                {
+                    "type": "nodejs",
+                    "tag": "poke",
+                    "image": "",
+                    "ports": {
+                        "http": "3000:3000"
+                    },
+                    "envvars": {
+                        "USER": "user",
+                        "PSW": "psw"
+                    }
+                }
+            ],
+            "archived": false,
+            "active": false
+          }
         ]
     }"""
 
@@ -219,18 +223,39 @@ def test_load_config(mocker: MockerFixture):
     assert config.pg.image == "ghcr.io/lunaticfringers/shepherd/postgres:17-3.5"
     assert config.shpd_registry.ftp_server == "ftp.example.com"
     assert config.envs[0].tag == "sample-1"
-    assert config.envs[0].db.type == "pg"
     assert config.db_default.sys_user == "sys"
-    assert config.envs[0].services[0].type == "traefik"
-    assert config.envs[0].services[0].ingress is True
-    assert config.envs[0].services[1].type == "custom-1"
-    assert config.envs[0].services[1].tag == "primary"
-    assert config.envs[0].services[2].type == "nodejs"
-    assert config.envs[0].services[2].tag == "poke"
-    envvars = config.envs[0].services[2].envvars
+    services = config.envs[0].services
+    assert services and services[0].type == "pg"
+    assert services[0].tag == "pg-1"
+    assert services[0].image == (
+        "ghcr.io/lunaticfringers/shepherd/postgres:17-3.5"
+    )
+    properties = services[0].properties
+    assert properties and properties["sys_user"] == "syspg1"
+    assert properties["sys_psw"] == "syspg1"
+    assert properties["user"] == "pg1"
+    assert properties["psw"] == "pg1"
+    db_upstreams = services[0].db_upstreams
+    assert db_upstreams and db_upstreams[0].tag == "upstream"
+    assert db_upstreams[0].type == "pg"
+    assert db_upstreams[0].user == "pg1up"
+    assert db_upstreams[0].psw == "pg1up"
+    assert db_upstreams[0].host == "localhost"
+    assert db_upstreams[0].port == "5432"
+    assert db_upstreams[0].database == "d_pg1"
+    assert db_upstreams[0].unix_user == "postgres"
+    assert db_upstreams[0].dump_dir == "/dumps"
+    assert db_upstreams[0].enabled is False
+    assert services[1].type == "traefik"
+    assert services[1].ingress is True
+    assert services[2].type == "custom-1"
+    assert services[2].tag == "primary"
+    assert services[3].type == "nodejs"
+    assert services[3].tag == "poke"
+    envvars = services[3].envvars
     assert envvars and envvars.get("USER") == "user"
     assert envvars and envvars.get("PSW") == "psw"
-    ports = config.envs[0].services[2].ports
+    ports = services[3].ports
     assert ports and ports["http"] == "3000:3000"
     assert config.host_inet_ip == "127.0.0.1"
     assert config.domain == "sslip.io"
