@@ -43,11 +43,24 @@ class DBUpstreamCfg:
 
 
 @dataclass
+class ServiceTypeCfg:
+    type: str
+    image: str
+    ingress: Optional[bool] = None
+    empty_env: Optional[str] = None
+    envvars: Optional[dict[str, str]] = field(default_factory=dict)
+    ports: Optional[dict[str, str]] = field(default_factory=dict)
+    properties: Optional[dict[str, str]] = field(default_factory=dict)
+    subject_alternative_name: Optional[str] = None
+
+
+@dataclass
 class ServiceCfg:
     type: str
     tag: str
     image: str
     ingress: Optional[bool] = None
+    empty_env: Optional[str] = None
     envvars: Optional[dict[str, str]] = field(default_factory=dict)
     ports: Optional[dict[str, str]] = field(default_factory=dict)
     properties: Optional[dict[str, str]] = field(default_factory=dict)
@@ -61,23 +74,6 @@ class EnvironmentCfg:
     services: Optional[List[ServiceCfg]]
     archived: bool
     active: bool
-
-
-@dataclass
-class OracleCfg:
-    image: str
-    empty_env: str
-    pump_dir_name: str
-    root_db_name: str
-    plug_db_name: str
-    net_listener_port: str
-
-
-@dataclass
-class PostgresCfg:
-    image: str
-    empty_env: str
-    net_listener_port: str
 
 
 @dataclass
@@ -114,24 +110,14 @@ class CertCfg:
 
 
 @dataclass
-class DbDefaultCfg:
-    sys_user: str
-    sys_psw: str
-    user: str
-    psw: str
-
-
-@dataclass
 class Config:
-    ora: OracleCfg
-    pg: PostgresCfg
     shpd_registry: ShpdRegistryCfg
     host_inet_ip: str
     domain: str
     dns_type: str
     ca: CACfg
     cert: CertCfg
-    db_default: DbDefaultCfg
+    service_types: Optional[List[ServiceTypeCfg]] = field(default_factory=list)
     envs: List[EnvironmentCfg] = field(default_factory=list)
 
 
@@ -152,12 +138,25 @@ def parse_config(json_str: str) -> Config:
             enabled=item["enabled"],
         )
 
+    def parse_service_type(item: Any) -> ServiceTypeCfg:
+        return ServiceTypeCfg(
+            type=item["type"],
+            image=item["image"],
+            ingress=item.get("ingress"),
+            empty_env=item.get("empty_env"),
+            envvars=item.get("envvars", {}),
+            ports=item.get("ports", {}),
+            properties=item.get("properties", {}),
+            subject_alternative_name=item.get("subject_alternative_name"),
+        )
+
     def parse_service(item: Any) -> ServiceCfg:
         return ServiceCfg(
             type=item["type"],
             tag=item["tag"],
             image=item["image"],
             ingress=item.get("ingress"),
+            empty_env=item.get("empty_env"),
             envvars=item.get("envvars", {}),
             ports=item.get("ports", {}),
             properties=item.get("properties", {}),
@@ -176,23 +175,6 @@ def parse_config(json_str: str) -> Config:
             ],
             archived=item["archived"],
             active=item["active"],
-        )
-
-    def parse_oracle_config(item: Any) -> OracleCfg:
-        return OracleCfg(
-            image=item["image"],
-            empty_env=item["empty_env"],
-            pump_dir_name=item["pump_dir_name"],
-            root_db_name=item["root_db_name"],
-            plug_db_name=item["plug_db_name"],
-            net_listener_port=item["net_listener_port"],
-        )
-
-    def parse_postgres_config(item: Any) -> PostgresCfg:
-        return PostgresCfg(
-            image=item["image"],
-            empty_env=item["empty_env"],
-            net_listener_port=item["net_listener_port"],
         )
 
     def parse_shpd_registry(item: Any) -> ShpdRegistryCfg:
@@ -228,24 +210,17 @@ def parse_config(json_str: str) -> Config:
             subject_alternative_names=item.get("subject_alternative_names", []),
         )
 
-    def parse_db_default(item: Any) -> DbDefaultCfg:
-        return DbDefaultCfg(
-            sys_user=item["sys_user"],
-            sys_psw=item["sys_psw"],
-            user=item["user"],
-            psw=item["psw"],
-        )
-
     return Config(
-        ora=parse_oracle_config(data["ora"]),
-        pg=parse_postgres_config(data["pg"]),
+        service_types=[
+            parse_service_type(service_type)
+            for service_type in data.get("service_types", [])
+        ],
         shpd_registry=parse_shpd_registry(data["shpd_registry"]),
         host_inet_ip=data["host_inet_ip"],
         domain=data["domain"],
         dns_type=data["dns_type"],
         ca=parse_ca_config(data["ca"]),
         cert=parse_cert_config(data["cert"]),
-        db_default=parse_db_default(data["db_default"]),
         envs=[parse_environment(env) for env in data["envs"]],
     )
 
@@ -426,8 +401,8 @@ class ConfigMng:
             elif isinstance(config, list):
                 configList: List[Any] = config
                 return [
-                    replace_keys_with_placeholders(item, parent_key)
-                    for item in configList
+                    replace_keys_with_placeholders(item, f"{parent_key}[{i}]")
+                    for i, item in enumerate(configList)
                 ]
 
         processed_config = replace_keys_with_placeholders(asdict(config))
