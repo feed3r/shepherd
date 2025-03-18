@@ -19,3 +19,20 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
+
+from dataclasses import dataclass
+
+
+@dataclass(frozen=True)
+class Constants:
+    """Constants for the application."""
+
+    APP_NAME: str = "shpdctl"
+    APP_VERSION: str = "0.0.0"
+    APP_AUTHOR: str = "Lunatic Fringers"
+    APP_LICENSE: str = "MIT"
+    APP_URL: str = ""
+
+    # Configuration file
+    CONFIG_FILE: str = ".shpdctl.json"
+    CONFIG_VALUES_FILE: str = "shpdctl.conf"
