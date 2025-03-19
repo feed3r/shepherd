@@ -118,18 +118,34 @@ config_json = """{
             "psw": "pg1"
           },
           "subject_alternative_name": null,
-          "db_upstreams": [
+          "upstreams": [
             {
-              "tag": "upstream",
+              "tag": "upstream-1",
               "type": "postgres",
-              "user": "pg1up",
-              "psw": "pg1up",
-              "host": "localhost",
-              "port": "5432",
-              "database": "d_pg1",
-              "unix_user": "postgres",
-              "dump_dir": "/dumps",
-              "enabled": false
+              "enabled": true,
+              "properties": {
+                "user": "pg1up",
+                "psw": "pg1up",
+                "host": "localhost",
+                "port": "5432",
+                "database": "d_pg1",
+                "unix_user": "postgres",
+                "dump_dir": "/dumps"
+              }
+            },
+            {
+              "tag": "upstream-2",
+              "type": "postgres",
+              "enabled": false,
+              "properties": {
+                "user": "pg2up",
+                "psw": "pg2up",
+                "host": "moon",
+                "port": "5432",
+                "database": "d_pg2",
+                "unix_user": "postgres",
+                "dump_dir": "/dumps/2"
+              }
             }
           ]
         },
@@ -143,7 +159,7 @@ config_json = """{
           "ports": {},
           "properties": {},
           "subject_alternative_name": null,
-          "db_upstreams": []
+          "upstreams": []
         },
         {
           "type": "custom-1",
@@ -158,7 +174,7 @@ config_json = """{
             "instance.id": 1
           },
           "subject_alternative_name": null,
-          "db_upstreams": []
+          "upstreams": []
         },
         {
           "type": "nodejs",
@@ -175,7 +191,7 @@ config_json = """{
           },
           "properties": {},
           "subject_alternative_name": null,
-          "db_upstreams": []
+          "upstreams": []
         }
       ],
       "archived": false,
@@ -310,17 +326,27 @@ def test_load_config(mocker: MockerFixture):
     assert properties["sys_psw"] == "syspg1"
     assert properties["user"] == "pg1"
     assert properties["psw"] == "pg1"
-    db_upstreams = services[0].db_upstreams
-    assert db_upstreams and db_upstreams[0].tag == "upstream"
-    assert db_upstreams[0].type == "postgres"
-    assert db_upstreams[0].user == "pg1up"
-    assert db_upstreams[0].psw == "pg1up"
-    assert db_upstreams[0].host == "localhost"
-    assert db_upstreams[0].port == "5432"
-    assert db_upstreams[0].database == "d_pg1"
-    assert db_upstreams[0].unix_user == "postgres"
-    assert db_upstreams[0].dump_dir == "/dumps"
-    assert db_upstreams[0].enabled is False
+    upstreams = services[0].upstreams
+    assert upstreams and upstreams[0].tag == "upstream-1"
+    properties = upstreams[0].properties
+    assert properties and properties["user"] == "pg1up"
+    assert properties["psw"] == "pg1up"
+    assert properties["host"] == "localhost"
+    assert properties["port"] == "5432"
+    assert properties["database"] == "d_pg1"
+    assert properties["unix_user"] == "postgres"
+    assert properties["dump_dir"] == "/dumps"
+    assert upstreams[0].enabled is True
+    assert upstreams[1].tag == "upstream-2"
+    properties = upstreams[1].properties
+    assert properties and properties["user"] == "pg2up"
+    assert properties["psw"] == "pg2up"
+    assert properties["host"] == "moon"
+    assert properties["port"] == "5432"
+    assert properties["database"] == "d_pg2"
+    assert properties["unix_user"] == "postgres"
+    assert properties["dump_dir"] == "/dumps/2"
+    assert upstreams[1].enabled is False
     assert services[1].type == "traefik"
     assert services[1].ingress is True
     assert services[2].type == "custom-1"
