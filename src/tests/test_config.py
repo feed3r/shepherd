@@ -30,19 +30,6 @@ from config import Config, ConfigMng
 from util import Constants
 
 config_json = """{
-  "ora": {
-    "image": "${ora_image}",
-    "empty_env": "${ora_empty_env}",
-    "pump_dir_name": "${ora_pump_dir}",
-    "root_db_name": "${ora_root_db_name}",
-    "plug_db_name": "${ora_plug_db_name}",
-    "net_listener_port": "${ora_listener_port}"
-  },
-  "pg": {
-    "image": "${pg_image}",
-    "empty_env": "${pg_empty_env}",
-    "net_listener_port": "${pg_listener_port}"
-  },
   "shpd_registry": {
     "ftp_server": "${shpd_registry}",
     "ftp_user": "${shpd_registry_ftp_usr}",
@@ -73,21 +60,55 @@ config_json = """{
     "email": "${cert_email}",
     "subject_alternative_names": []
   },
-  "db_default": {
-    "sys_user": "${db_sys_usr}",
-    "sys_psw": "${db_sys_psw}",
-    "user": "${db_usr}",
-    "psw": "${db_psw}"
-  },
+  "service_types": [
+    {
+      "type": "oracle",
+      "image": "${ora_image}",
+      "ingress": false,
+      "empty_env": "${ora_empty_env}",
+      "envvars": {},
+      "ports": {
+        "net_listener_port": "${ora_listener_port}"
+      },
+      "properties": {
+        "pump_dir_name": "${ora_pump_dir}",
+        "root_db_name": "${ora_root_db_name}",
+        "plug_db_name": "${ora_plug_db_name}",
+        "sys_user": "${db_sys_usr}",
+        "sys_psw": "${db_sys_psw}",
+        "user": "${db_usr}",
+        "psw": "${db_psw}"
+      },
+      "subject_alternative_name": null
+    },
+    {
+      "type": "postgres",
+      "image": "${pg_image}",
+      "ingress": false,
+      "empty_env": "${pg_empty_env}",
+      "envvars": {},
+      "ports": {
+        "net_listener_port": "${pg_listener_port}"
+      },
+      "properties": {
+        "sys_user": "${db_sys_usr}",
+        "sys_psw": "${db_sys_psw}",
+        "user": "${db_usr}",
+        "psw": "${db_psw}"
+      },
+      "subject_alternative_name": null
+    }
+  ],
   "envs": [
     {
       "tag": "sample-1",
       "services": [
         {
-          "type": "pg",
+          "type": "postgres",
           "tag": "pg-1",
           "image": "ghcr.io/lunaticfringers/shepherd/postgres:17-3.5",
           "ingress": null,
+          "empty_env": null,
           "envvars": null,
           "ports": {},
           "properties": {
@@ -100,7 +121,7 @@ config_json = """{
           "db_upstreams": [
             {
               "tag": "upstream",
-              "type": "pg",
+              "type": "postgres",
               "user": "pg1up",
               "psw": "pg1up",
               "host": "localhost",
@@ -117,6 +138,7 @@ config_json = """{
           "tag": "traefik-1",
           "image": "",
           "ingress": true,
+          "empty_env": null,
           "envvars": null,
           "ports": {},
           "properties": {},
@@ -128,6 +150,7 @@ config_json = """{
           "tag": "primary",
           "image": "",
           "ingress": true,
+          "empty_env": null,
           "envvars": null,
           "ports": null,
           "properties": {
@@ -142,6 +165,7 @@ config_json = """{
           "tag": "poke",
           "image": "",
           "ingress": null,
+          "empty_env": null,
           "envvars": {
             "USER": "user",
             "PSW": "psw"
@@ -230,16 +254,53 @@ def test_load_config(mocker: MockerFixture):
 
     config: Config = cMng.load_config()
 
-    assert (
-        config.ora.image
-        == "ghcr.io/lunaticfringers/shepherd/oracle:19.3.0.0_TZ40"
+    service_types = config.service_types
+    assert service_types and service_types[0].type == "oracle"
+    assert service_types[0].image == (
+        "ghcr.io/lunaticfringers/shepherd/oracle:19.3.0.0_TZ40"
     )
-    assert config.pg.image == "ghcr.io/lunaticfringers/shepherd/postgres:17-3.5"
+    assert service_types[0].empty_env == "fresh-ora-19300"
+    assert service_types[0].ingress is False
+    assert service_types[0].envvars == {}
+    assert (
+        service_types[0].ports
+        and service_types[0].ports["net_listener_port"] == "1521"
+    )
+    assert (
+        service_types[0].properties
+        and service_types[0].properties["pump_dir_name"] == "PUMP_DIR"
+    )
+    assert service_types[0].properties["root_db_name"] == "ORCLCDB"
+    assert service_types[0].properties["plug_db_name"] == "ORCLPDB1"
+    assert service_types[0].properties["sys_user"] == "sys"
+    assert service_types[0].properties["sys_psw"] == "sys"
+    assert service_types[0].properties["user"] == "docker"
+    assert service_types[0].properties["psw"] == "docker"
+    assert service_types[0].subject_alternative_name is None
+    assert service_types[1].type == "postgres"
+    assert service_types[1].image == (
+        "ghcr.io/lunaticfringers/shepherd/postgres:17-3.5"
+    )
+    assert service_types[1].empty_env == "fresh-pg-1735"
+    assert service_types[1].ingress is False
+    assert service_types[1].envvars == {}
+    assert (
+        service_types[1].ports
+        and service_types[1].ports["net_listener_port"] == "5432"
+    )
+    assert (
+        service_types[1].properties
+        and service_types[1].properties["sys_user"] == "sys"
+    )
+    assert service_types[1].properties["sys_psw"] == "sys"
+    assert service_types[1].properties["user"] == "docker"
+    assert service_types[1].properties["psw"] == "docker"
+    assert service_types[1].subject_alternative_name is None
+
     assert config.shpd_registry.ftp_server == "ftp.example.com"
     assert config.envs[0].tag == "sample-1"
-    assert config.db_default.sys_user == "sys"
     services = config.envs[0].services
-    assert services and services[0].type == "pg"
+    assert services and services[0].type == "postgres"
     assert services[0].tag == "pg-1"
     assert services[0].image == (
         "ghcr.io/lunaticfringers/shepherd/postgres:17-3.5"
@@ -251,7 +312,7 @@ def test_load_config(mocker: MockerFixture):
     assert properties["psw"] == "pg1"
     db_upstreams = services[0].db_upstreams
     assert db_upstreams and db_upstreams[0].tag == "upstream"
-    assert db_upstreams[0].type == "pg"
+    assert db_upstreams[0].type == "postgres"
     assert db_upstreams[0].user == "pg1up"
     assert db_upstreams[0].psw == "pg1up"
     assert db_upstreams[0].host == "localhost"
@@ -290,9 +351,6 @@ def test_load_config(mocker: MockerFixture):
     assert config.cert.common_name == "sslip.io"
     assert config.cert.email == "lf@sslip.io"
     assert config.cert.subject_alternative_names == []
-    assert config.db_default.sys_psw == "sys"
-    assert config.db_default.user == "docker"
-    assert config.db_default.psw == "docker"
     assert config.envs[0].archived is False
     assert config.envs[0].active is False
 
