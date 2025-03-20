@@ -29,21 +29,23 @@ from util import Constants
 
 
 @dataclass
-class DBUpstreamCfg:
+class UpstreamCfg:
+    """
+    Represents an upstream service configuration.
+    """
+
     tag: str
     type: str
-    user: str
-    psw: str
-    host: str
-    port: str
-    database: str
-    unix_user: str
-    dump_dir: str
     enabled: bool
+    properties: Optional[dict[str, str]] = field(default_factory=dict)
 
 
 @dataclass
 class ServiceTypeCfg:
+    """
+    Represents a service type configuration.
+    """
+
     type: str
     image: str
     ingress: Optional[bool] = None
@@ -56,6 +58,10 @@ class ServiceTypeCfg:
 
 @dataclass
 class ServiceCfg:
+    """
+    Represents a service configuration.
+    """
+
     type: str
     tag: str
     image: str
@@ -65,11 +71,15 @@ class ServiceCfg:
     ports: Optional[dict[str, str]] = field(default_factory=dict)
     properties: Optional[dict[str, str]] = field(default_factory=dict)
     subject_alternative_name: Optional[str] = None
-    db_upstreams: Optional[List[DBUpstreamCfg]] = field(default_factory=list)
+    upstreams: Optional[List[UpstreamCfg]] = field(default_factory=list)
 
 
 @dataclass
 class EnvironmentCfg:
+    """
+    Represents an environment configuration.
+    """
+
     tag: str
     services: Optional[List[ServiceCfg]]
     archived: bool
@@ -78,6 +88,10 @@ class EnvironmentCfg:
 
 @dataclass
 class ShpdRegistryCfg:
+    """
+    Represents the configuration for the shepherd registry.
+    """
+
     ftp_server: str
     ftp_user: str
     ftp_psw: str
@@ -87,6 +101,10 @@ class ShpdRegistryCfg:
 
 @dataclass
 class CACfg:
+    """
+    Represents the configuration for the Certificate Authority.
+    """
+
     country: str
     state: str
     locality: str
@@ -99,6 +117,10 @@ class CACfg:
 
 @dataclass
 class CertCfg:
+    """
+    Represents the configuration for the certificate.
+    """
+
     country: str
     state: str
     locality: str
@@ -111,6 +133,10 @@ class CertCfg:
 
 @dataclass
 class Config:
+    """
+    Represents the shepherd configuration.
+    """
+
     shpd_registry: ShpdRegistryCfg
     host_inet_ip: str
     domain: str
@@ -122,19 +148,17 @@ class Config:
 
 
 def parse_config(json_str: str) -> Config:
+    """
+    Parses a JSON string into a `Config` object.
+    """
+
     data = json.loads(json_str)
 
-    def parse_upstream(item: Any) -> DBUpstreamCfg:
-        return DBUpstreamCfg(
+    def parse_upstream(item: Any) -> UpstreamCfg:
+        return UpstreamCfg(
             tag=item["tag"],
             type=item["type"],
-            user=item["user"],
-            psw=item["psw"],
-            host=item["host"],
-            port=item["port"],
-            database=item["database"],
-            unix_user=item["unix_user"],
-            dump_dir=item["dump_dir"],
+            properties=item.get("properties", {}),
             enabled=item["enabled"],
         )
 
@@ -161,9 +185,9 @@ def parse_config(json_str: str) -> Config:
             ports=item.get("ports", {}),
             properties=item.get("properties", {}),
             subject_alternative_name=item.get("subject_alternative_name"),
-            db_upstreams=[
+            upstreams=[
                 parse_upstream(upstream)
-                for upstream in item.get("db_upstreams", [])
+                for upstream in item.get("upstreams", [])
             ],
         )
 

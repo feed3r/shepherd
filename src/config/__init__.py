@@ -25,11 +25,11 @@ from .config import (
     CertCfg,
     Config,
     ConfigMng,
-    DBUpstreamCfg,
     EnvironmentCfg,
     ServiceCfg,
     ServiceTypeCfg,
     ShpdRegistryCfg,
+    UpstreamCfg,
 )
 
 __all__ = [
@@ -40,6 +40,6 @@ __all__ = [
     "ServiceTypeCfg",
     "ServiceCfg",
     "ShpdRegistryCfg",
-    "DBUpstreamCfg",
+    "UpstreamCfg",
     "ConfigMng",
 ]
