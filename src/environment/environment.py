@@ -21,8 +21,7 @@
 # SOFTWARE.
 from __future__ import annotations
 
-import copy
-from abc import ABC
+from abc import ABC, abstractmethod
 from typing import List
 
 from service import Service
@@ -38,29 +37,32 @@ class Environment(ABC):
     def __init__(self):
         self.services = []
 
+    @abstractmethod
     def init(self, db_type: str, env_tag: str):
         """Initialize an environment."""
         pass
 
+    @abstractmethod
     def clone(self, dst_env_tag: str) -> Environment:
         """Clone an environment."""
         pass
-        cloned_env = copy.deepcopy(self)
-        cloned_env.tag = dst_env_tag
-        return cloned_env
 
+    @abstractmethod
     def start(self):
         """Start an environment."""
         pass
 
+    @abstractmethod
     def halt(self):
         """Halt an environment."""
         pass
 
+    @abstractmethod
     def reload(self):
         """Reload an environment."""
         pass
 
+    @abstractmethod
     def status(self):
         """Get environment status."""
         pass
