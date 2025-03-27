@@ -101,38 +101,38 @@ class Environment(ABC):
 
 
 class EnvironmentMng:
-    def init_environment(self, db_type: str, env_tag: str):
-        """Stub for initializing an environment."""
+    def init(self, db_type: str, env_tag: str):
+        """Initialize an environment."""
         pass
 
-    def clone_environment(self, src_env_tag: str, dst_env_tag: str):
-        """Stub for cloning an environment."""
+    def clone(self, src_env_tag: str, dst_env_tag: str):
+        """Clone an environment."""
         pass
 
-    def checkout_environment(self, env_tag: str):
-        """Stub for checking out an environment."""
+    def checkout(self, env_tag: str):
+        """Checkout an environment."""
         pass
 
     def set_all_non_active(self):
-        """Stub for setting all environments as non-active."""
+        """Set all environments as non-active."""
         pass
 
-    def list_environments(self):
-        """Stub for listing all available environments."""
+    def list(self):
+        """List all available environments."""
         pass
 
-    def start_environment(self):
-        """Stub for starting an environment."""
+    def start(self):
+        """Start an environment."""
         pass
 
-    def halt_environment(self):
-        """Stub for halting an environment."""
+    def halt(self):
+        """Halt an environment."""
         pass
 
-    def reload_environment(self):
-        """Stub for reloading an environment."""
+    def reload(self):
+        """Reload an environment."""
         pass
 
-    def environment_status(self):
-        """Stub for getting environment status."""
+    def status(self):
+        """Get environment status."""
         pass
