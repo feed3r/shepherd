@@ -1,6 +1,6 @@
 ---
-status: "proposed"
-date: 2025-03-26
+status: "accepted"
+date: 2025-03-31
 decision-makers:
   - '@luca-c-xcv'
   - '@feed3r'
