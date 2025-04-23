@@ -36,3 +36,4 @@ convert.sh
 wiki
 shpdctl.spec
 build
+.coverage.*
