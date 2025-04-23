@@ -1,24 +1,20 @@
-# MIT License
-#
 # Copyright (c) 2025 Lunatic Fringers
 #
-# Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the "Software"), to deal
-# in the Software without restriction, including without limitation the rights
-# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-# copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
+# This file is part of Shepherd Core Stack
 #
-# The above copyright notice and this permission notice shall be included in all
-# copies or substantial portions of the Software.
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
 #
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-# SOFTWARE.
+# This program is distributed in the hope that it will be useful
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
 
 import os
 from unittest.mock import mock_open
@@ -27,7 +23,6 @@ import pytest
 from pytest_mock import MockerFixture
 
 from config import Config, ConfigMng
-from util import Constants
 
 config_json = """{
   "shpd_registry": {
@@ -118,18 +113,34 @@ config_json = """{
             "psw": "pg1"
           },
           "subject_alternative_name": null,
-          "db_upstreams": [
+          "upstreams": [
             {
-              "tag": "upstream",
+              "tag": "upstream-1",
               "type": "postgres",
-              "user": "pg1up",
-              "psw": "pg1up",
-              "host": "localhost",
-              "port": "5432",
-              "database": "d_pg1",
-              "unix_user": "postgres",
-              "dump_dir": "/dumps",
-              "enabled": false
+              "enabled": true,
+              "properties": {
+                "user": "pg1up",
+                "psw": "pg1up",
+                "host": "localhost",
+                "port": "5432",
+                "database": "d_pg1",
+                "unix_user": "postgres",
+                "dump_dir": "/dumps"
+              }
+            },
+            {
+              "tag": "upstream-2",
+              "type": "postgres",
+              "enabled": false,
+              "properties": {
+                "user": "pg2up",
+                "psw": "pg2up",
+                "host": "moon",
+                "port": "5432",
+                "database": "d_pg2",
+                "unix_user": "postgres",
+                "dump_dir": "/dumps/2"
+              }
             }
           ]
         },
@@ -143,7 +154,7 @@ config_json = """{
           "ports": {},
           "properties": {},
           "subject_alternative_name": null,
-          "db_upstreams": []
+          "upstreams": []
         },
         {
           "type": "custom-1",
@@ -158,7 +169,7 @@ config_json = """{
             "instance.id": 1
           },
           "subject_alternative_name": null,
-          "db_upstreams": []
+          "upstreams": []
         },
         {
           "type": "nodejs",
@@ -175,7 +186,7 @@ config_json = """{
           },
           "properties": {},
           "subject_alternative_name": null,
-          "db_upstreams": []
+          "upstreams": []
         }
       ],
       "archived": false,
@@ -230,6 +241,8 @@ values = """
   cert_email=lf@sslip.io
   cert_subject_alternative_names=
 
+  shpd_dir=.
+
   # Database Default Configuration
   db_sys_usr=sys
   db_sys_psw=sys
@@ -241,10 +254,8 @@ values = """
 def test_load_config(mocker: MockerFixture):
     """Test regular parsing"""
 
-    cMng = ConfigMng(".")
-
-    mock_open1 = mock_open(read_data=config_json)
-    mock_open2 = mock_open(read_data=values)
+    mock_open1 = mock_open(read_data=values)
+    mock_open2 = mock_open(read_data=config_json)
 
     mocker.patch("os.path.exists", return_value=True)
     mocker.patch(
@@ -252,6 +263,7 @@ def test_load_config(mocker: MockerFixture):
         side_effect=[mock_open1.return_value, mock_open2.return_value],
     )
 
+    cMng = ConfigMng(".shpd.conf")
     config: Config = cMng.load_config()
 
     service_types = config.service_types
@@ -310,17 +322,27 @@ def test_load_config(mocker: MockerFixture):
     assert properties["sys_psw"] == "syspg1"
     assert properties["user"] == "pg1"
     assert properties["psw"] == "pg1"
-    db_upstreams = services[0].db_upstreams
-    assert db_upstreams and db_upstreams[0].tag == "upstream"
-    assert db_upstreams[0].type == "postgres"
-    assert db_upstreams[0].user == "pg1up"
-    assert db_upstreams[0].psw == "pg1up"
-    assert db_upstreams[0].host == "localhost"
-    assert db_upstreams[0].port == "5432"
-    assert db_upstreams[0].database == "d_pg1"
-    assert db_upstreams[0].unix_user == "postgres"
-    assert db_upstreams[0].dump_dir == "/dumps"
-    assert db_upstreams[0].enabled is False
+    upstreams = services[0].upstreams
+    assert upstreams and upstreams[0].tag == "upstream-1"
+    properties = upstreams[0].properties
+    assert properties and properties["user"] == "pg1up"
+    assert properties["psw"] == "pg1up"
+    assert properties["host"] == "localhost"
+    assert properties["port"] == "5432"
+    assert properties["database"] == "d_pg1"
+    assert properties["unix_user"] == "postgres"
+    assert properties["dump_dir"] == "/dumps"
+    assert upstreams[0].enabled is True
+    assert upstreams[1].tag == "upstream-2"
+    properties = upstreams[1].properties
+    assert properties and properties["user"] == "pg2up"
+    assert properties["psw"] == "pg2up"
+    assert properties["host"] == "moon"
+    assert properties["port"] == "5432"
+    assert properties["database"] == "d_pg2"
+    assert properties["unix_user"] == "postgres"
+    assert properties["dump_dir"] == "/dumps/2"
+    assert upstreams[1].enabled is False
     assert services[1].type == "traefik"
     assert services[1].ingress is True
     assert services[2].type == "custom-1"
@@ -358,25 +380,22 @@ def test_load_config(mocker: MockerFixture):
 def test_load_user_values_file_not_found(mocker: MockerFixture):
     """Test file_values_path does not exist"""
 
-    cMng = ConfigMng(".")
-
     mock_open1 = mock_open(read_data="{}")
     mocker.patch(
         "builtins.open",
-        side_effect=[mock_open1.return_value, OSError("File not found")],
+        side_effect=[OSError("File not found"), mock_open1.return_value],
     )
 
-    with pytest.raises(FileNotFoundError):
-        cMng.load_config()
+    with pytest.raises(SystemExit) as exc_info:
+        ConfigMng(".shpd.conf")
+        assert exc_info.value.code == 1
 
 
 def test_load_invalid_user_values(mocker: MockerFixture):
     """Test invalid user values"""
 
-    cMng = ConfigMng(".")
-
-    mock_open1 = mock_open(read_data="{}")
-    mock_open2 = mock_open(read_data="key")
+    mock_open1 = mock_open(read_data="key")
+    mock_open2 = mock_open(read_data="{}")
 
     mocker.patch("os.path.exists", return_value=True)
     mocker.patch(
@@ -384,33 +403,31 @@ def test_load_invalid_user_values(mocker: MockerFixture):
         side_effect=[mock_open1.return_value, mock_open2.return_value],
     )
 
-    with pytest.raises(ValueError):
-        cMng.load_config()
+    with pytest.raises(SystemExit) as exc_info:
+        ConfigMng(".shpd.conf")
+        assert exc_info.value.code == 1
 
 
 def test_store_config_with_real_files():
     """Test storing config using real files in ./"""
-    cMng = ConfigMng(".")
-
-    config_file_path = Constants.CONFIG_FILE
-    values_file_path = Constants.CONFIG_VALUES_FILE
 
     try:
         with (
-            open(config_file_path, "w") as config_file,
-            open(values_file_path, "w") as values_file,
+            open(".shpd.json", "w") as config_file,
+            open(".shpd.conf", "w") as values_file,
         ):
             config_file.write(config_json)
             values_file.write(values)
 
+        cMng = ConfigMng(values_file.name)
         config: Config = cMng.load_config()
         cMng.store_config(config)
 
-        with open(config_file_path, "r") as output_file:
+        with open(".shpd.json", "r") as output_file:
             content = output_file.read()
             assert content == config_json
 
     finally:
-        for file_path in (config_file_path, values_file_path, config_file_path):
+        for file_path in (".shpd.json", ".shpd.conf"):
             if os.path.exists(file_path):
                 os.remove(file_path)

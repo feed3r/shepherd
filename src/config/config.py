@@ -1,49 +1,47 @@
-# MIT License
-#
 # Copyright (c) 2025 Lunatic Fringers
 #
-# Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the "Software"), to deal
-# in the Software without restriction, including without limitation the rights
-# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-# copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
+# This file is part of Shepherd Core Stack
 #
-# The above copyright notice and this permission notice shall be included in all
-# copies or substantial portions of the Software.
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
 #
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-# SOFTWARE.
+# This program is distributed in the hope that it will be useful
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
 
 import json
 import os
 from dataclasses import asdict, dataclass, field
 from typing import Any, Dict, List, Optional
 
-from util import Constants
+from util import Constants, Util
 
 
 @dataclass
-class DBUpstreamCfg:
+class UpstreamCfg:
+    """
+    Represents an upstream service configuration.
+    """
+
     tag: str
     type: str
-    user: str
-    psw: str
-    host: str
-    port: str
-    database: str
-    unix_user: str
-    dump_dir: str
     enabled: bool
+    properties: Optional[dict[str, str]] = field(default_factory=dict)
 
 
 @dataclass
 class ServiceTypeCfg:
+    """
+    Represents a service type configuration.
+    """
+
     type: str
     image: str
     ingress: Optional[bool] = None
@@ -56,6 +54,10 @@ class ServiceTypeCfg:
 
 @dataclass
 class ServiceCfg:
+    """
+    Represents a service configuration.
+    """
+
     type: str
     tag: str
     image: str
@@ -65,11 +67,15 @@ class ServiceCfg:
     ports: Optional[dict[str, str]] = field(default_factory=dict)
     properties: Optional[dict[str, str]] = field(default_factory=dict)
     subject_alternative_name: Optional[str] = None
-    db_upstreams: Optional[List[DBUpstreamCfg]] = field(default_factory=list)
+    upstreams: Optional[List[UpstreamCfg]] = field(default_factory=list)
 
 
 @dataclass
 class EnvironmentCfg:
+    """
+    Represents an environment configuration.
+    """
+
     tag: str
     services: Optional[List[ServiceCfg]]
     archived: bool
@@ -78,6 +84,10 @@ class EnvironmentCfg:
 
 @dataclass
 class ShpdRegistryCfg:
+    """
+    Represents the configuration for the shepherd registry.
+    """
+
     ftp_server: str
     ftp_user: str
     ftp_psw: str
@@ -87,6 +97,10 @@ class ShpdRegistryCfg:
 
 @dataclass
 class CACfg:
+    """
+    Represents the configuration for the Certificate Authority.
+    """
+
     country: str
     state: str
     locality: str
@@ -99,6 +113,10 @@ class CACfg:
 
 @dataclass
 class CertCfg:
+    """
+    Represents the configuration for the certificate.
+    """
+
     country: str
     state: str
     locality: str
@@ -111,6 +129,10 @@ class CertCfg:
 
 @dataclass
 class Config:
+    """
+    Represents the shepherd configuration.
+    """
+
     shpd_registry: ShpdRegistryCfg
     host_inet_ip: str
     domain: str
@@ -122,19 +144,17 @@ class Config:
 
 
 def parse_config(json_str: str) -> Config:
+    """
+    Parses a JSON string into a `Config` object.
+    """
+
     data = json.loads(json_str)
 
-    def parse_upstream(item: Any) -> DBUpstreamCfg:
-        return DBUpstreamCfg(
+    def parse_upstream(item: Any) -> UpstreamCfg:
+        return UpstreamCfg(
             tag=item["tag"],
             type=item["type"],
-            user=item["user"],
-            psw=item["psw"],
-            host=item["host"],
-            port=item["port"],
-            database=item["database"],
-            unix_user=item["unix_user"],
-            dump_dir=item["dump_dir"],
+            properties=item.get("properties", {}),
             enabled=item["enabled"],
         )
 
@@ -161,9 +181,9 @@ def parse_config(json_str: str) -> Config:
             ports=item.get("ports", {}),
             properties=item.get("properties", {}),
             subject_alternative_name=item.get("subject_alternative_name"),
-            db_upstreams=[
+            upstreams=[
                 parse_upstream(upstream)
-                for upstream in item.get("db_upstreams", [])
+                for upstream in item.get("upstreams", [])
             ],
         )
 
@@ -237,20 +257,21 @@ class ConfigMng:
       placeholders.
     """
 
-    file_config_path: str
     file_values_path: str
     original_placeholders: Dict[str, str] = {}
 
-    def __init__(self, shpd_dir: str):
+    def __init__(self, file_values_path: str):
         """
         Initializes the configuration manager.
 
         :param shpd_dir: The base directory where configuration files
         are stored.
         """
-        self.file_config_path = os.path.join(shpd_dir, Constants.CONFIG_FILE)
-        self.file_values_path = os.path.join(
-            shpd_dir, Constants.CONFIG_VALUES_FILE
+        self.file_values_path = os.path.expanduser(file_values_path)
+        self.values = self.load_user_values()
+        self.constants = Constants(
+            SHPD_CONFIG_VALUES_FILE=self.file_values_path,
+            SHPD_DIR=os.path.expanduser(self.values["shpd_dir"]),
         )
 
     def load_user_values(self) -> Dict[str, str]:
@@ -270,9 +291,8 @@ class ConfigMng:
         user_values: Dict[str, str] = {}
 
         if not os.path.exists(self.file_values_path):
-            raise FileNotFoundError(
-                f"""The configuration file '{self.file_values_path}'
-                does not exist."""
+            Util.print_error_and_die(
+                f"'{self.file_values_path}' does not exist."
             )
 
         try:
@@ -290,7 +310,7 @@ class ConfigMng:
                             f"Invalid line format in config file: '{line}'"
                         )
         except Exception as e:
-            raise ValueError(f"Error reading configuration file: {e}")
+            Util.print_error_and_die(f"Error reading configuration file: {e}")
 
         return user_values
 
@@ -359,11 +379,12 @@ class ConfigMng:
         :raises FileNotFoundError: If the configuration file is missing.
         :raises ValueError: If the configuration file is malformed.
         """
-        with open(self.file_config_path, "r", encoding="utf-8") as f:
+        with open(self.constants.SHPD_CONFIG_FILE, "r", encoding="utf-8") as f:
             config_data = json.load(f)
 
-        values = self.load_user_values()
-        substituted_config = self.substitute_placeholders(config_data, values)
+        substituted_config = self.substitute_placeholders(
+            config_data, self.values
+        )
 
         return parse_config(json.dumps(substituted_config))
 
@@ -407,5 +428,5 @@ class ConfigMng:
 
         processed_config = replace_keys_with_placeholders(asdict(config))
 
-        with open(self.file_config_path, "w", encoding="utf-8") as f:
+        with open(self.constants.SHPD_CONFIG_FILE, "w", encoding="utf-8") as f:
             json.dump(processed_config, f, indent=2)

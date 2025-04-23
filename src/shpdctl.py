@@ -1,40 +1,45 @@
-# MIT License
-#
 # Copyright (c) 2025 Lunatic Fringers
 #
-# Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the "Software"), to deal
-# in the Software without restriction, including without limitation the rights
-# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-# copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
+# This file is part of Shepherd Core Stack
 #
-# The above copyright notice and this permission notice shall be included in all
-# copies or substantial portions of the Software.
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
 #
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-# SOFTWARE.
+# This program is distributed in the hope that it will be useful
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+
+from typing import Dict
 
 import click
 
+from config import ConfigMng
 from database import DatabaseMng
 from environment import EnvironmentMng
 from service import ServiceMng
+from util import Util
 
-# Initialize instances
-databaseMng = DatabaseMng()
-environmentMng = EnvironmentMng()
-serviceMng = ServiceMng()
+
+class ShepherdMng:
+    def __init__(self, cli_flags: Dict[str, bool] = {}):
+        self.configMng = ConfigMng("~/.shpd.conf")
+        self.environmentMng = EnvironmentMng()
+        self.serviceMng = ServiceMng()
+        self.databaseMng = DatabaseMng()
+        self.cli_flags = cli_flags
+        Util.ensure_dirs(self.configMng.constants)
+        Util.ensure_config_file(self.configMng.constants)
 
 
 @click.group()
 @click.option("-v", "--verbose", is_flag=True, help="Enable verbose mode.")
-@click.option("-b", "--brief", is_flag=True, help="Brief output.")
 @click.option(
     "-y",
     "--yes",
@@ -56,13 +61,10 @@ serviceMng = ServiceMng()
     is_flag=True,
     help="Contextually checkout the environment.",
 )
-@click.option("-H", "--network-host", is_flag=True, help="Use host's network.")
-@click.option(
-    "-n", "--no-gen-certs", is_flag=True, help="Do not generate certificates."
-)
+@click.pass_context
 def cli(
+    ctx: click.Context,
     verbose: bool,
-    brief: bool,
     yes: bool,
     all: bool,
     follow: bool,
@@ -70,183 +72,222 @@ def cli(
     keep: bool,
     replace: bool,
     checkout: bool,
-    network_host: bool,
-    no_gen_certs: bool,
 ):
     """Shepherd CLI:
     A tool to manage your environment, services, and database.
     """
+    cli_flags = {
+        "verbose": verbose,
+        "yes": yes,
+        "all": all,
+        "follow": follow,
+        "porcelain": porcelain,
+        "keep": keep,
+        "replace": replace,
+        "checkout": checkout,
+    }
+
+    if ctx.obj is None:
+        ctx.obj = ShepherdMng(cli_flags)
+
+
+@cli.command(name="test")
+def empty():
+    """Empty testing purpose stub"""
     pass
 
 
-@click.group()
+@cli.group()
 def db():
     """Database related operations."""
     pass
 
 
 @db.command(name="build")
-def build_dbms():
+@click.pass_obj
+def dbms_build(shepherd: ShepherdMng):
     """Build dbms image."""
-    databaseMng.build_dbms_image()
+    shepherd.databaseMng.build_image()
 
 
 @db.command(name="bootstrap")
-def bootstrap():
+@click.pass_obj
+def dbms_bootstrap(shepherd: ShepherdMng):
     """Bootstrap dbms service."""
-    databaseMng.bootstrap_dbms_service()
+    shepherd.databaseMng.bootstrap()
 
 
 @db.command(name="start")
-def up():
+@click.pass_obj
+def dbms_start(shepherd: ShepherdMng):
     """Start dbms service."""
-    databaseMng.start_dbms_service()
+    shepherd.databaseMng.start()
 
 
 @db.command(name="halt")
-def halt():
+@click.pass_obj
+def dbms_halt(shepherd: ShepherdMng):
     """Halt dbms service."""
-    databaseMng.halt_dbms_service()
+    shepherd.databaseMng.halt()
 
 
 @db.command(name="stdout")
-def stdout():
+@click.pass_obj
+def dbms_stdout(shepherd: ShepherdMng):
     """Show dbms service stdout."""
-    databaseMng.show_dbms_stdout()
+    shepherd.databaseMng.stdout()
 
 
 @db.command(name="shell")
-def shell():
+@click.pass_obj
+def dbms_shell(shepherd: ShepherdMng):
     """Get a shell session for the dbms service."""
-    databaseMng.get_dbms_shell_session()
+    shepherd.databaseMng.shell()
 
 
 @db.command(name="sql")
-def sql_shell():
+@click.pass_obj
+def dbms_sql_shell(shepherd: ShepherdMng):
     """Get a SQL session for the dbms service."""
-    databaseMng.get_sql_shell_session()
+    shepherd.databaseMng.sql_shell()
 
 
 # Environment commands
-@click.group()
+@cli.group()
 def env():
     """Environment related operations."""
     pass
 
 
 @env.command(name="init")
-@click.argument("db_type")
-@click.argument("env_tag")
-def init_environment(db_type: str, env_tag: str):
+@click.argument("db_type", required=True)
+@click.argument("env_tag", required=True)
+@click.pass_obj
+def env_init(shepherd: ShepherdMng, db_type: str, env_tag: str):
     """Init an environment with a dbms type and an environment's tag name."""
-    environmentMng.init_environment(db_type, env_tag)
+    shepherd.environmentMng.init(db_type, env_tag)
 
 
 @env.command(name="clone")
-@click.argument("src_env_tag")
-@click.argument("dst_env_tag")
-def clone_environment(src_env_tag: str, dst_env_tag: str):
+@click.argument("src_env_tag", required=True)
+@click.argument("dst_env_tag", required=True)
+@click.pass_obj
+def env_clone(shepherd: ShepherdMng, src_env_tag: str, dst_env_tag: str):
     """Clone an environment."""
-    environmentMng.clone_environment(src_env_tag, dst_env_tag)
+    shepherd.environmentMng.clone(src_env_tag, dst_env_tag)
 
 
 @env.command(name="checkout")
-@click.argument("env_tag")
-def checkout_environment(env_tag: str):
+@click.argument("env_tag", required=True)
+@click.pass_obj
+def env_checkout(shepherd: ShepherdMng, env_tag: str):
     """Checkout an environment."""
-    environmentMng.checkout_environment(env_tag)
+    shepherd.environmentMng.checkout(env_tag)
 
 
 @env.command(name="noactive")
-def set_noactive():
+@click.pass_obj
+def env_set_noactive(shepherd: ShepherdMng):
     """Set all environments as non-active."""
-    environmentMng.set_all_non_active()
+    shepherd.environmentMng.set_all_non_active()
 
 
 @env.command(name="list")
-def list_environments():
+@click.pass_obj
+def env_list(shepherd: ShepherdMng):
     """List all available environments."""
-    environmentMng.list_environments()
+    shepherd.environmentMng.list()
 
 
 @env.command(name="start")
-def start_environment():
+@click.pass_obj
+def env_start(shepherd: ShepherdMng):
     """Start environment."""
-    environmentMng.start_environment()
+    shepherd.environmentMng.start()
 
 
 @env.command(name="halt")
-def halt_environment():
+@click.pass_obj
+def env_halt(shepherd: ShepherdMng):
     """Halt environment."""
-    environmentMng.halt_environment()
+    shepherd.environmentMng.halt()
 
 
 @env.command(name="reload")
-def reload_environment():
+@click.pass_obj
+def env_reload(shepherd: ShepherdMng):
     """Reload environment."""
-    environmentMng.reload_environment()
+    shepherd.environmentMng.reload()
 
 
 @env.command(name="status")
-def environment_status():
+@click.pass_obj
+def env_status(shepherd: ShepherdMng):
     """Print environment's status."""
-    environmentMng.environment_status()
+    shepherd.environmentMng.status()
 
 
-@click.group()
+@cli.group()
 def svc():
     """Service related operations."""
     pass
 
 
 @svc.command(name="build")
-@click.argument("service_type", type=str)
-def build_service(service_type: str):
+@click.argument("service_type", type=str, required=True)
+@click.pass_obj
+def srv_build(shepherd: ShepherdMng, service_type: str):
     """Build service image."""
-    serviceMng.build_service_image(service_type)
+    shepherd.serviceMng.build_image(service_type)
 
 
 @svc.command(name="bootstrap")
-@click.argument("service_type", type=str)
-def bootstrap_service(service_type: str):
+@click.argument("service_type", type=str, required=True)
+@click.pass_obj
+def srv_bootstrap(shepherd: ShepherdMng, service_type: str):
     """Bootstrap service."""
-    serviceMng.bootstrap_service(service_type)
+    shepherd.serviceMng.bootstrap(service_type)
 
 
 @svc.command(name="start")
-@click.argument("service_type", type=str)
-def start_service(service_type: str):
+@click.argument("service_type", type=str, required=True)
+@click.pass_obj
+def srv_start(shepherd: ShepherdMng, service_type: str):
     """Start service."""
-    serviceMng.start_service(service_type)
+    shepherd.serviceMng.start(service_type)
 
 
 @svc.command(name="halt")
-@click.argument("service_type", type=str)
-def stop_service(service_type: str):
-    """Stop service."""
-    serviceMng.stop_service(service_type)
+@click.argument("service_type", type=str, required=True)
+@click.pass_obj
+def srv_halt(shepherd: ShepherdMng, service_type: str):
+    """Halt service."""
+    shepherd.serviceMng.halt(service_type)
 
 
 @svc.command(name="reload")
-@click.argument("service_type", type=str)
-def reload_service(service_type: str):
+@click.argument("service_type", type=str, required=True)
+@click.pass_obj
+def srv_reload(shepherd: ShepherdMng, service_type: str):
     """Reload service."""
-    serviceMng.reload_service(service_type)
+    shepherd.serviceMng.reload(service_type)
 
 
 @svc.command(name="stdout")
-@click.argument("service_id", type=str)
-def service_stdout(service_id: str):
+@click.argument("service_id", type=str, required=True)
+@click.pass_obj
+def srv_stdout(shepherd: ShepherdMng, service_id: str):
     """Show service stdout."""
-    serviceMng.show_service_stdout(service_id)
+    shepherd.serviceMng.stdout(service_id)
 
 
 @svc.command(name="shell")
-@click.argument("service_id", type=str)
-def service_shell(service_id: str):
+@click.argument("service_id", type=str, required=True)
+@click.pass_obj
+def srv_shell(shepherd: ShepherdMng, service_id: str):
     """Get a shell session for the service."""
-    serviceMng.get_service_shell(service_id)
+    shepherd.serviceMng.shell(service_id)
 
 
 if __name__ == "__main__":
-    cli()
+    cli(obj=None)

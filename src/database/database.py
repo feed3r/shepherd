@@ -1,24 +1,20 @@
-# MIT License
-#
 # Copyright (c) 2025 Lunatic Fringers
 #
-# Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the "Software"), to deal
-# in the Software without restriction, including without limitation the rights
-# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-# copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
+# This file is part of Shepherd Core Stack
 #
-# The above copyright notice and this permission notice shall be included in all
-# copies or substantial portions of the Software.
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
 #
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-# SOFTWARE.
+# This program is distributed in the hope that it will be useful
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
 
 from typing import override
 
@@ -79,42 +75,42 @@ class DatabaseService(Service):
 
 
 class DatabaseMng:
-    def build_dbms_image(self):
-        """Stub for building DBMS image."""
+    def build_image(self):
+        """Build a DBMS image."""
         pass
 
-    def bootstrap_dbms_service(self):
-        """Stub for bootstrapping DBMS service."""
+    def bootstrap(self):
+        """Bootstrap a DBMS service."""
         pass
 
-    def start_dbms_service(self):
-        """Stub for starting DBMS service."""
+    def start(self):
+        """Start a DBMS service."""
         pass
 
-    def halt_dbms_service(self):
-        """Stub for halting DBMS service."""
+    def halt(self):
+        """Halt a DBMS service."""
         pass
 
-    def show_dbms_stdout(self):
-        """Stub for showing DBMS stdout."""
+    def stdout(self):
+        """Show a DBMS stdout."""
         pass
 
-    def get_dbms_shell_session(self):
-        """Stub for getting a DBMS shell session."""
+    def shell(self):
+        """Get a DBMS shell session."""
         pass
 
-    def get_sql_shell_session(self):
-        """Stub for getting a SQL shell session."""
+    def sql_shell(self):
+        """Get a SQL shell session."""
         pass
 
     def create_database_user(self, user: str, psw: str):
-        """Stub for creating a new database user."""
+        """Create a new database user."""
         pass
 
-    def create_db_directory(self, user: str, directory_name: str):
-        """Stub for creating a directory object in the database."""
+    def create_database_directory(self, user: str, directory_name: str):
+        """Create a directory object in a database."""
         pass
 
     def remove_database_user(self, user: str):
-        """Stub for dropping an existing user."""
+        """Drop an existing user."""
         pass

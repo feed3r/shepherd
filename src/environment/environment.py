@@ -1,24 +1,21 @@
-# MIT License
-#
 # Copyright (c) 2025 Lunatic Fringers
 #
-# Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the "Software"), to deal
-# in the Software without restriction, including without limitation the rights
-# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-# copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
+# This file is part of Shepherd Core Stack
 #
-# The above copyright notice and this permission notice shall be included in all
-# copies or substantial portions of the Software.
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
 #
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-# SOFTWARE.
+# This program is distributed in the hope that it will be useful
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
@@ -101,38 +98,38 @@ class Environment(ABC):
 
 
 class EnvironmentMng:
-    def init_environment(self, db_type: str, env_tag: str):
-        """Stub for initializing an environment."""
+    def init(self, db_type: str, env_tag: str):
+        """Initialize an environment."""
         pass
 
-    def clone_environment(self, src_env_tag: str, dst_env_tag: str):
-        """Stub for cloning an environment."""
+    def clone(self, src_env_tag: str, dst_env_tag: str):
+        """Clone an environment."""
         pass
 
-    def checkout_environment(self, env_tag: str):
-        """Stub for checking out an environment."""
+    def checkout(self, env_tag: str):
+        """Checkout an environment."""
         pass
 
     def set_all_non_active(self):
-        """Stub for setting all environments as non-active."""
+        """Set all environments as non-active."""
         pass
 
-    def list_environments(self):
-        """Stub for listing all available environments."""
+    def list(self):
+        """List all available environments."""
         pass
 
-    def start_environment(self):
-        """Stub for starting an environment."""
+    def start(self):
+        """Start an environment."""
         pass
 
-    def halt_environment(self):
-        """Stub for halting an environment."""
+    def halt(self):
+        """Halt an environment."""
         pass
 
-    def reload_environment(self):
-        """Stub for reloading an environment."""
+    def reload(self):
+        """Reload an environment."""
         pass
 
-    def environment_status(self):
-        """Stub for getting environment status."""
+    def status(self):
+        """Get environment status."""
         pass
