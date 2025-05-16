@@ -60,6 +60,8 @@ Use the `VER` env variable to specify the desired tool's version.
 sudo VER=0.0.0 sh -c "$(curl -sfL https://raw.githubusercontent.com/LunaticFringers/shepherd/main/scripts/install.sh)"
 ```
 
+For development, you can also install the tool directly from [sources](docs/development.md#install-from-source).
+
 ### Windows
 
 Not supported yet.
@@ -80,7 +82,7 @@ to [Authoring Environment Images].
 ## Full Commands and Options Documentation
 
 Refer to the specific documentation for the currently supported commands
-and options of [shpdctl].
+and options of [shepctl].
 
 ## Database Service's Documentation
 
@@ -96,6 +98,6 @@ See our [development][development] documentation.
 [issues]: https://github.com/LunaticFringers/shepherd/issues
 [Consuming Environment Images]: docs/env-consume.md
 [Authoring Environment Images]: docs/env-auth.md
-[shpdctl]: docs/shpdctl.md
+[shepctl]: docs/shepctl.md
 [Oracle]: docs/ORACLE.md
 [development]: docs/development.md

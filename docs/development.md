@@ -56,7 +56,7 @@ sudo apt install python3 python3-pip python3-venv -y
    Test the CLI to ensure it works:
 
    ```bash
-   python3 src/shpdctl.py --help
+   python3 src/shepctl.py --help
    ```
 
    You should see the list of available commands and options.
@@ -66,8 +66,36 @@ sudo apt install python3 python3-pip python3-venv -y
    You can now use the CLI:
 
    ```bash
-   python3 src/shpdctl.py <command> [options]
+   python3 src/shepctl.py <command> [options]
    ```
+
+## Install from Source
+
+To install `shepctl` from source for development purposes, use the
+`--install-method source` option (or `-m source`). This will:
+
+1. Copy the source files into the install directory
+2. Set up a Python virtual environment
+3. Install dependencies from `requirements.txt`
+4. Create a `shepctl` launcher in your `$PATH`
+
+```bash
+cd shepherd/scripts
+
+sudo ./install.sh -m source install
+```
+
+> 📌 You can also skip dependency installation if you've already satisfied all requirements:
+
+```bash
+sudo INSTALL_SHEPCTL_DIR=/opt/shepctl ./install.sh -m source --skip-deps install
+```
+
+After installing, you can run the tool with:
+
+```bash
+shepctl
+```
 
 ## Lints & Checks
 
@@ -120,15 +148,15 @@ sudo apt install python3 python3-pip python3-venv -y
 
 ## PyInstaller Build Automation Script
 
-The `src/build.py` script automates the process of building `shpdctl`
+The `src/build.py` script automates the process of building `shepctl`
 application using PyInstaller, managing versioning,
 Git tagging, and resource management.
 
-The script manages the build process for `shpdctl` by:
+The script manages the build process for `shepctl` by:
 
 1. Cleaning previous build files.
 2. Reading the version from `src/version`.
-3. Building `shpdctl` with PyInstaller.
+3. Building `shepctl` with PyInstaller.
 4. Copying necessary resources.
 5. Optionally creating and pushing Git tags for versioning
    (still experimental).
