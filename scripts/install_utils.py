@@ -96,6 +96,16 @@ def check_package_installed(pkg_name):
         return False
 
 def install_missing_packages(distro, missing_packages):
+    """Install missing packages using the appropriate package manager.
+    
+    Args:
+        distro: The Linux distribution
+        missing_packages: List of packages to install
+    """
+    if not missing_packages:  # Safeguard against empty lists
+        print_color("No packages to install", YELLOW)
+        return
+        
     cmd_list = INSTALL_COMMANDS[distro].copy()  # Create a copy of the list
     cmd_list.extend(missing_packages)  # Modify the copy
     run_command(cmd_list, check=True)  # Pass the modified list
@@ -103,34 +113,39 @@ def install_missing_packages(distro, missing_packages):
 def install_packages(distro):
     missing_packages = []
     for pkg in REQUIRED_PKGS:
-        print(f"Checking for package: {pkg}")
+        print(f"Checking for package: {pkg}")  # Debug print
         if not check_package_installed(pkg):
             print_color(f"Package {pkg} is missing.", YELLOW)
             missing_packages.append(pkg)
         else:
             print_color(f"Package {pkg} is already installed.", GREEN)
 
+    print(f"Missing packages: {missing_packages}")  # Debug print
+
     if missing_packages:
-        print_color(f"Missing packages: {', '.join(missing_packages)}", YELLOW)
-        print_color("Installing missing packages...", BLUE)
+        print_color(f"Installing missing packages: {', '.join(missing_packages)}", BLUE)
+        print("Calling install_missing_packages...")  # Debug print
         install_missing_packages(distro, missing_packages)
-    else: 
+    else:
         print_color("All required packages are already installed.", GREEN)
-        
+
     missing_python_packages = []
     for pkg in REQUIRED_PYTHON_PKGS:
-        print(f"Checking for Python package: {pkg}")
+        print(f"Checking for Python package: {pkg}")  # Debug print
         if not check_package_installed(pkg):
             print_color(f"Python package {pkg} is missing.", YELLOW)
             missing_python_packages.append(pkg)
         else:
             print_color(f"Python package {pkg} is already installed.", GREEN)
+
+    print(f"Missing Python packages: {missing_python_packages}")  # Debug print
+
     if missing_python_packages:
-        print_color(f"Missing Python packages: {', '.join(missing_python_packages)}", YELLOW)
-        print_color("Installing missing Python packages...", BLUE)
+        print_color(f"Installing missing Python packages: {', '.join(missing_python_packages)}", BLUE)
+        print("Calling install_missing_packages for Python packages...")  # Debug print
         install_missing_packages(distro, missing_python_packages)
     else:
-        print_color("All required Python packages are already installed.", GREEN)    
+        print_color("All required Python packages are already installed.", GREEN)
         
         
 @dataclass

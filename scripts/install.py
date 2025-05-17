@@ -80,6 +80,68 @@ def parse_arguments():
     return parser.parse_args()
 
 
+def install_binary():
+    """Install shepctl from binary release."""
+    print_color("Installing shepctl from binary...", BLUE)
+    
+    # Download the binary
+    print_color(f"Downloading from {url}...", BLUE)
+    run_command(['curl', '-fsSL', url, '-o', f"{install_shepctl_dir}/shepctl-{version}.tar.gz"], check=True)
+    
+    # Extract the tar.gz file
+    print_color("Extracting...", BLUE)
+    run_command(['tar', '-xzf', f"{install_shepctl_dir}/shepctl-{version}.tar.gz", '-C', str(install_shepctl_dir)], check=True)
+    
+    # Make the binary executable
+    print_color("Setting permissions...", BLUE)
+    os.chmod(f"{install_shepctl_dir}/shepctl", 0o755)
+    
+    # Create symlink if it doesn't exist
+    symlink_path = symlink_dir / "shepctl"
+    if symlink_path.exists():
+        symlink_path.unlink()
+    
+    print_color(f"Creating symlink in {symlink_dir}...", BLUE)
+    os.symlink(f"{install_shepctl_dir}/shepctl", str(symlink_path))
+    
+    print_color("Binary installation complete!", GREEN)
+
+
+def install_source():
+    """Install shepctl from source."""
+    print_color("Installing shepctl from source...", BLUE)
+    
+    # Clone the repo
+    print_color("Cloning repository...", BLUE)
+    run_command(['git', 'clone', 'https://github.com/LunaticFringers/shepherd.git', str(install_shepctl_dir)], check=True)
+    
+    # Install Python dependencies
+    print_color("Installing Python dependencies...", BLUE)
+    
+    # Save current directory
+    original_dir = os.getcwd()
+    os.chdir(install_shepctl_dir)
+    
+    try:
+        # Use pip to install
+        python_path = sys.executable
+        run_command([python_path, '-m', 'pip', 'install', '-e', f"{install_shepctl_dir}"], check=True)
+    finally:
+        # Restore original directory
+        os.chdir(original_dir)
+    
+    # Create symlink if it doesn't exist
+    bin_path = install_shepctl_dir / "bin" / "shepctl"
+    symlink_path = symlink_dir / "shepctl"
+    if symlink_path.exists():
+        symlink_path.unlink()
+    
+    print_color(f"Creating symlink in {symlink_dir}...", BLUE)
+    os.symlink(str(bin_path), str(symlink_path))
+    
+    print_color("Source installation complete!", GREEN)
+
+
 def install():
     """Install shepctl."""
     print_color("Installing shepctl...", BLUE)
@@ -91,9 +153,6 @@ def install():
         
         #Manage dependencies based on OS
         install_packages(os_info.distro)
-        
-        
-        
     
     # Clean existing installation if it exists
     if install_shepctl_dir.exists():
@@ -103,13 +162,11 @@ def install():
     
     # Call appropriate installation function based on method
     if install_method == "binary":
-        print("Binary installation method selected (not yet implemented)")
-        # Will implement install_binary() later
+        install_binary()
     elif install_method == "source":
-        print("Source installation method selected (not yet implemented)")
-        # Will implement install_sources() later
+        install_source()
     else:
-        print(f"Error: Unknown install method '{install_method}'")
+        print_color(f"Error: Unknown install method '{install_method}'", RED)
         sys.exit(1)
 
 
