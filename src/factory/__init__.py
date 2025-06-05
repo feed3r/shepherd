@@ -16,6 +16,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
-from .env_factory import ShpdEnvironmentFactory
+from factory.shpd_env_factory import ShpdEnvironmentFactory
+from factory.shpd_svc_factory import ShpdServiceFactory
 
-__all__ = ["ShpdEnvironmentFactory"]
+__all__ = ["ShpdEnvironmentFactory", "ShpdServiceFactory"]

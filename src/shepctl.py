@@ -16,14 +16,14 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
-from typing import Dict
+from typing import Dict, Optional
 
 import click
 
 from config import ConfigMng
 from database import DatabaseMng
 from environment import EnvironmentMng
-from factory import ShpdEnvironmentFactory
+from factory import ShpdEnvironmentFactory, ShpdServiceFactory
 from service import ServiceMng
 from util import Util
 
@@ -35,10 +35,12 @@ class ShepherdMng:
         Util.ensure_dirs(self.configMng.constants)
         Util.ensure_config_file(self.configMng.constants)
         self.configMng.load()
+        self.svcFactory = ShpdServiceFactory(self.configMng)
+        self.envFactory = ShpdEnvironmentFactory(
+            self.configMng, self.svcFactory
+        )
         self.environmentMng = EnvironmentMng(
-            self.cli_flags,
-            self.configMng,
-            ShpdEnvironmentFactory(self.configMng),
+            self.cli_flags, self.configMng, self.envFactory, self.svcFactory
         )
         self.serviceMng = ServiceMng(self.cli_flags, self.configMng)
         self.databaseMng = DatabaseMng(self.cli_flags, self.configMng)
@@ -249,6 +251,31 @@ def env_reload(shepherd: ShepherdMng):
 def env_status(shepherd: ShepherdMng):
     """Print environment's status."""
     shepherd.environmentMng.status_env()
+
+
+@env.command(name="add")
+@click.argument("resource_type", required=True)
+@click.argument("resource_name", required=True)
+@click.argument("resource_template", required=False)
+@click.pass_obj
+def env_add(
+    shepherd: ShepherdMng,
+    resource_type: str,
+    resource_name: str,
+    resource_template: Optional[str] = None,
+):
+    """Add a resource to the current environment.
+
+    RESOURCE_TYPE: The type of resource to add (e.g., svc).
+    RESOURCE_NAME: The name of the resource (e.g., svc-name).
+    RESOURCE_TEMPLATE: Optional template for the resource.
+    """
+    if resource_type == "svc":
+        shepherd.environmentMng.add_service(
+            None, resource_name, resource_template
+        )
+    else:
+        raise click.UsageError(f"Unsupported resource type: {resource_type}")
 
 
 @cli.group()

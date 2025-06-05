@@ -52,6 +52,38 @@ class ServiceTypeCfg:
     properties: Optional[dict[str, str]] = field(default_factory=dict)
     subject_alternative_name: Optional[str] = None
 
+    @classmethod
+    def from_tag(cls, service_type: str):
+        """
+        Creates a ServiceTypeCfg object from a type-tag.
+        """
+        return ServiceTypeCfg(
+            type=service_type,
+            image="",
+            ingress=False,
+            empty_env=None,
+            envvars={},
+            ports={},
+            properties={},
+            subject_alternative_name=None,
+        )
+
+    @classmethod
+    def from_other(cls, other: "ServiceTypeCfg"):
+        """
+        Creates a copy of an existing ServiceTypeCfg object.
+        """
+        return cls(
+            type=other.type,
+            image=other.image,
+            ingress=other.ingress,
+            empty_env=other.empty_env,
+            envvars=deepcopy(other.envvars),
+            ports=deepcopy(other.ports),
+            properties=deepcopy(other.properties),
+            subject_alternative_name=other.subject_alternative_name,
+        )
+
 
 @dataclass
 class ServiceCfg:
@@ -69,6 +101,60 @@ class ServiceCfg:
     properties: Optional[dict[str, str]] = field(default_factory=dict)
     subject_alternative_name: Optional[str] = None
     upstreams: Optional[List[UpstreamCfg]] = field(default_factory=list)
+
+    @classmethod
+    def from_tag(cls, service_type: str, service_tag: str):
+        """
+        Creates a ServiceCfg object from a tag.
+        """
+        return ServiceCfg(
+            type=service_type,
+            tag=service_tag,
+            image="",
+            ingress=False,
+            empty_env=None,
+            envvars={},
+            ports={},
+            properties={},
+            subject_alternative_name=None,
+            upstreams=[],
+        )
+
+    @classmethod
+    def from_other(cls, other: "ServiceCfg"):
+        """
+        Creates a copy of an existing ServiceCfg object.
+        """
+        return cls(
+            type=other.type,
+            tag=other.tag,
+            image=other.image,
+            ingress=other.ingress,
+            empty_env=other.empty_env,
+            envvars=deepcopy(other.envvars),
+            ports=deepcopy(other.ports),
+            properties=deepcopy(other.properties),
+            subject_alternative_name=other.subject_alternative_name,
+            upstreams=deepcopy(other.upstreams),
+        )
+
+    @classmethod
+    def from_service_type(cls, service_type: ServiceTypeCfg, service_tag: str):
+        """
+        Creates a ServiceCfg object from a ServiceTypeCfg object.
+        """
+        return cls(
+            type=service_type.type,
+            tag=service_tag,
+            image=service_type.image,
+            ingress=service_type.ingress,
+            empty_env=service_type.empty_env,
+            envvars=deepcopy(service_type.envvars),
+            ports=deepcopy(service_type.ports),
+            properties=deepcopy(service_type.properties),
+            subject_alternative_name=service_type.subject_alternative_name,
+            upstreams=[],
+        )
 
 
 @dataclass
@@ -483,6 +569,19 @@ class ConfigMng:
         for env in self.config.envs:
             if env.tag == envTag:
                 return env
+        return None
+
+    def get_service_type(self, serviceType: str) -> Optional[ServiceTypeCfg]:
+        """
+        Retrieves a service type configuration by its type.
+
+        :param serviceType: The type of the service to retrieve.
+        :return: The service type configuration if found, else None.
+        """
+        if self.config.service_types:
+            for svc_type in self.config.service_types:
+                if svc_type.type == serviceType:
+                    return svc_type
         return None
 
     def get_environments(self) -> List[EnvironmentCfg]:

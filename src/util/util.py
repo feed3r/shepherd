@@ -130,6 +130,15 @@ class Util:
         default_config: Dict[Any, Any] = {
             "service_types": [
                 {
+                    "type": "docker",
+                    "image": "",
+                    "ingress": False,
+                    "envvars": {},
+                    "ports": {},
+                    "properties": {},
+                    "subject_alternative_name": None,
+                },
+                {
                     "type": "oracle",
                     "image": "${ora_image}",
                     "empty_env": "${ora_empty_env}",
