@@ -18,7 +18,7 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from typing import Dict
+from typing import Dict, Optional
 
 from config import ConfigMng, ServiceCfg
 
@@ -33,7 +33,7 @@ class Service(ABC):
     envvars: Dict[str, str]
     ports: Dict[str, str]
     properties: Dict[str, str]
-    subject_alternative_name: str
+    subject_alternative_name: Optional[str]
 
     def __init__(self, configMng: ConfigMng, svcCfg: ServiceCfg):
         self.configMng = configMng
@@ -45,11 +45,7 @@ class Service(ABC):
         self.envvars = svcCfg.envvars if svcCfg.envvars else {}
         self.ports = svcCfg.ports if svcCfg.ports else {}
         self.properties = svcCfg.properties if svcCfg.properties else {}
-        self.subject_alternative_name = (
-            svcCfg.subject_alternative_name
-            if svcCfg.subject_alternative_name
-            else ""
-        )
+        self.subject_alternative_name = svcCfg.subject_alternative_name
 
     @abstractmethod
     def clone(self, dst_svc_tag: str) -> Service:

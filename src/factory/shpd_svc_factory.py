@@ -34,7 +34,6 @@ class ShpdServiceFactory(ServiceFactory):
         """
         Create a service.
         """
-
         match svc_type:
             case Constants.SVC_TYPE_DOCKER:
                 return DockerSvc(
@@ -52,4 +51,7 @@ class ShpdServiceFactory(ServiceFactory):
             case Constants.SVC_TYPE_DOCKER:
                 return DockerSvc(self.configMng, svcCfg)
             case _:
-                raise ValueError(f"Unknown service type: {svcCfg.type}")
+                raise ValueError(
+                    f"""Unknown service type: {svcCfg.type},
+                    plugins not supported yet!"""
+                )

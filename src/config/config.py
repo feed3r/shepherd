@@ -195,6 +195,20 @@ class EnvironmentCfg:
             active=other.active,
         )
 
+    def get_service(self, svcTag: str) -> Optional[ServiceCfg]:
+        """
+        Retrieves a service configuration by its tag.
+
+        :param svcTag: The tag of the service to retrieve.
+        :return: The service configuration if found, else None.
+        """
+        if not self.services:
+            return None
+        for svc in self.services:
+            if svc.tag == svcTag:
+                return svc
+        return None
+
 
 @dataclass
 class ShpdRegistryCfg:

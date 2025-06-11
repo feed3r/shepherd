@@ -253,12 +253,12 @@ def env_status(shepherd: ShepherdMng):
     shepherd.environmentMng.status_env()
 
 
-@env.command(name="add")
+@env.command(name="add-resource")
 @click.argument("resource_type", required=True)
 @click.argument("resource_name", required=True)
 @click.argument("resource_template", required=False)
 @click.pass_obj
-def env_add(
+def env_add_resource(
     shepherd: ShepherdMng,
     resource_type: str,
     resource_name: str,

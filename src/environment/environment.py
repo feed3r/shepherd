@@ -318,6 +318,11 @@ class EnvironmentMng:
                 Util.print_error_and_die("No active environment configured.")
 
         if envCfg:
+            if envCfg.get_service(svc_name):
+                Util.print_error_and_die(
+                    f"""Service with name '{svc_name}' already
+                    exists in environment '{envCfg.tag}'."""
+                )
             env = self.envFactory.new_environment_cfg(envCfg)
         else:
             env = self.envFactory.new_environment(
@@ -340,7 +345,7 @@ class EnvironmentMng:
             service = self.svcFactory.new_service_cfg(svcCfg)
             env.add_service(service)
             Util.print(
-                f"Service '{service.tag}' added to environment '{service.tag}'."
+                f"Service '{service.tag}' added to environment '{env.tag}'."
             )
         except ValueError as e:
             Util.print_error_and_die(f"Failed to create service: {e}")
