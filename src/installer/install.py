@@ -241,7 +241,7 @@ def should_download_sources(install_shepctl_dir: str) -> bool:
     else:
         # The directory exists and is not empty, should not download again
         print_color(
-            f"Directory {install_shepctl_dir} already exists and is not empty. "
+            f"Directory {install_shepctl_dir} already exists and is not empty."
             "Assuming existing installation.",
             RED,
         )
