@@ -102,13 +102,13 @@ def install_missing_packages(
         missing_packages: List of packages to install
         check: Whether to raise an exception on failure
     """
-    if not missing_packages:  # Safeguard against empty lists
+    if not missing_packages:
         print_color("No packages to install", YELLOW)
         return
 
-    cmd_list = INSTALL_COMMANDS[distro].copy()  # Create a copy of the list
-    cmd_list.extend(missing_packages)  # Modify the copy
-    run_command(cmd_list, check=check)  # Pass the modified list
+    cmd_list = INSTALL_COMMANDS[distro].copy()
+    cmd_list.extend(missing_packages)
+    run_command(cmd_list, check=check)
 
 
 def add_docker_repository(distro: str, codename: str) -> None:
@@ -147,7 +147,6 @@ def install_docker_packages(distro: str, codename: str) -> None:
     else:
         print_color("Docker is not installed. Installing...", YELLOW)
         new_docker = True
-        # check keyring file existing
         if not check_file_exists(KEYRING_PATH):
             print_color("Docker keyring file is missing. Installing...", YELLOW)
             run_command(
@@ -163,7 +162,6 @@ def install_docker_packages(distro: str, codename: str) -> None:
         else:
             print_color("Docker keyring file is already installed.", GREEN)
 
-        # check if the repository is already added
         if not check_file_exists(REPO_PATHS[distro]):
             print_color("Docker repository is missing. Adding...", YELLOW)
             add_docker_repository(distro, codename)
@@ -238,14 +236,11 @@ def install_required_packages(distro: str) -> None:
     """
     missing_packages: List[str] = []
     for pkg in REQUIRED_PKGS:
-        print(f"Checking for package: {pkg}")  # Debug print
         if not check_package_installed(pkg):
             print_color(f"Package {pkg} is missing.", YELLOW)
             missing_packages.append(pkg)
         else:
             print_color(f"Package {pkg} is already installed.", GREEN)
-
-    print(f"Missing packages: {missing_packages}")  # Debug print
 
     if missing_packages:
         print_color(
@@ -266,7 +261,6 @@ def install_python_packages(distro: str) -> None:
     executed_python_version = run_command(
         ["python3", "--version"], check=False, capture_output=True
     )
-    # parse result
     python_version = executed_python_version.stdout.split()[1]
     major, minor, _ = map(int, python_version.split("."))
     if major < 3 or (major == 3 and minor < 12):
@@ -279,14 +273,11 @@ def install_python_packages(distro: str) -> None:
 
     missing_python_packages: List[str] = []
     for pkg in REQUIRED_PYTHON_PKGS:
-        print(f"Checking for Python package: {pkg}")  # Debug print
         if not check_package_installed(pkg):
             print_color(f"Python package {pkg} is missing.", YELLOW)
             missing_python_packages.append(pkg)
         else:
             print_color(f"Python package {pkg} is already installed.", GREEN)
-
-    print(f"Missing Python packages: {missing_python_packages}")  # Debug print
 
     if missing_python_packages:
         print_color(

@@ -23,8 +23,6 @@ from typing import Any
 import click
 
 from installer import constants
-
-# Import utility functions
 from installer.install_utils import (
     BLUE,
     GREEN,
@@ -97,20 +95,17 @@ def cli(
     ctx.obj["force_source_download"] = force_source_download
 
 
-####################################################
-
-
 # Main install entrypoint
 @cli.command()
 @click.pass_context
 def install(ctx: click.Context) -> None:
     """Install shepctl."""
-    # Check if running as root
+    # Installer needs to run as root
+    # to install system-wide
     if not is_root():
         print_color("This script must be run as root.", RED)
         sys.exit(1)
 
-    # Get options from context
     global verbose, skip_ensure_deps, install_method
     verbose = ctx.obj["verbose"]
     skip_ensure_deps = ctx.obj["skip_deps"]
@@ -124,7 +119,6 @@ def install(ctx: click.Context) -> None:
 @click.pass_context
 def uninstall(ctx: click.Context) -> None:
     """Uninstall shepctl."""
-    # Check if running as root
     if not is_root():
         print_color("This script must be run as root.", RED)
         sys.exit(1)
@@ -138,7 +132,6 @@ def uninstall(ctx: click.Context) -> None:
     uninstall_shepctl()
 
 
-# Binaries installer
 def install_binary() -> None:
     """Install shepctl from binary release."""
     install_shepctl_dir: str = os.environ.get(
@@ -155,7 +148,6 @@ def install_binary() -> None:
     print_color("Downloading shepctl binary...", BLUE)
     download_package(url, f"{install_shepctl_dir}/shepctl-{version}.tar.gz")
 
-    # Extract the tar.gz file
     print_color("Extracting...", BLUE)
     extract_package(
         f"{install_shepctl_dir}/shepctl-{version}.tar.gz",
@@ -190,7 +182,6 @@ def manage_dependencies() -> None:
     )
 
 
-# Python specific dependency manager
 def manage_python_dependencies() -> None:
     # Install Python dependencies
     print_color("Installing Python dependencies...", BLUE)
@@ -218,10 +209,9 @@ def manage_python_dependencies() -> None:
         os.chdir(original_dir)
 
 
-# Determine if source files should be downloaded
 def should_download_sources(install_shepctl_dir: str) -> bool:
     """Check if sources should be downloaded."""
-    if force_source_download:  # Source download is forced by user
+    if force_source_download:
         print_color(
             "Forcing source download as per user request.",
             BLUE,
@@ -248,7 +238,6 @@ def should_download_sources(install_shepctl_dir: str) -> bool:
         return False
 
 
-# Source files download function
 def download_sources(install_shepctl_dir: str, version: str) -> None:
     print_color("Downloading and extracting source package", BLUE)
     download_package(
@@ -295,7 +284,6 @@ def install_source() -> None:
     if should_download_sources(install_shepctl_dir):
         download_sources(install_shepctl_dir, version)
 
-    # Link do download the sources code package
     print_color("Installing shepctl from source...", BLUE)
 
     if not skip_ensure_deps:
@@ -306,7 +294,6 @@ def install_source() -> None:
     print_color("Source installation complete!", GREEN)
 
 
-# Shepherd install implementation
 def install_shepctl() -> None:
     """Install shepctl."""
     print_color("Installing shepctl...", BLUE)
@@ -321,8 +308,6 @@ def install_shepctl() -> None:
         shutil.rmtree(Path(install_shepctl_dir))
     os.makedirs(Path(install_shepctl_dir), exist_ok=True)
 
-    # Call appropriate installation function based
-    # on install method passed as argument
     if install_method == "binary":
         install_binary()
     elif install_method == "source":
@@ -332,7 +317,6 @@ def install_shepctl() -> None:
         sys.exit(1)
 
 
-# shepherd uninstall implementation
 def uninstall_shepctl() -> None:
     """Uninstall shepctl."""
     print_color("Uninstalling shepctl...", BLUE)
@@ -353,15 +337,7 @@ def uninstall_shepctl() -> None:
     print("shepctl uninstalled successfully")
 
 
-execution_count = 0  # Global counter to track main function executions
-
-
 if __name__ == "__main__":
-    # Global variables to store command line options
-    verbose = False
-    skip_ensure_deps = False
-    install_method = "binary"
-    force_source_download = False
 
     # Run the CLI
     cli()
