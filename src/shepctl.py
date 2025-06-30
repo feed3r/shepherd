@@ -226,13 +226,6 @@ def env_delete(shepherd: ShepherdMng, env_tag: str):
     shepherd.environmentMng.delete_env(env_tag)
 
 
-@env.command(name="noactive")
-@click.pass_obj
-def env_set_noactive(shepherd: ShepherdMng):
-    """Set all environments as non-active."""
-    shepherd.environmentMng.set_all_envs_non_active()
-
-
 @env.command(name="list")
 @click.pass_obj
 def env_list(shepherd: ShepherdMng):

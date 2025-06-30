@@ -267,14 +267,6 @@ class EnvironmentMng:
             env.delete()
             Util.print(f"Deleted: {env.tag}")
 
-    def set_all_envs_non_active(self):
-        """Set all environments as non-active."""
-        envs = self.configMng.get_environments()
-        for env in envs:
-            env.active = False
-        self.configMng.store()
-        Util.print("All environments set to non-active.")
-
     def list_envs(self):
         """List all available environments."""
         envs = self.configMng.get_environments()

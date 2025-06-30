@@ -564,18 +564,6 @@ def test_cli_env_checkout(
 
 
 @pytest.mark.shpd
-def test_cli_env_set_noactive(
-    temp_home: Path, runner: CliRunner, mocker: MockerFixture
-):
-    mock_noactive = mocker.patch.object(
-        EnvironmentMng, "set_all_envs_non_active"
-    )
-    result = runner.invoke(cli, ["env", "noactive"])
-    assert result.exit_code == 0
-    mock_noactive.assert_called_once()
-
-
-@pytest.mark.shpd
 def test_cli_env_list(
     temp_home: Path, runner: CliRunner, mocker: MockerFixture
 ):

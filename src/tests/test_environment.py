@@ -260,45 +260,6 @@ def test_env_checkout(
 
 
 @pytest.mark.env
-@pytest.mark.parametrize("expanduser_side_effects", [7])
-def test_env_setnoactive(
-    temp_home: Path,
-    runner: CliRunner,
-    mocker: MockerFixture,
-    expanduser_side_effects: int,
-):
-    side_effect = make_expanduser_side_effect(
-        temp_home, expanduser_side_effects
-    )
-    mocker.patch("os.path.expanduser", side_effect=side_effect)
-
-    result = runner.invoke(cli, ["env", "init", "docker-compose", "test-1"])
-    assert result.exit_code == 0
-
-    result = runner.invoke(cli, ["env", "init", "docker-compose", "test-2"])
-    assert result.exit_code == 0
-
-    sm = ShepherdMng()
-    env = sm.configMng.get_active_environment()
-    assert env is None
-
-    result = runner.invoke(cli, ["env", "checkout", "test-1"])
-    assert result.exit_code == 0
-
-    sm = ShepherdMng()
-    env = sm.configMng.get_active_environment()
-    assert env is not None
-    assert env.tag == "test-1"
-
-    result = runner.invoke(cli, ["env", "noactive"])
-    assert result.exit_code == 0
-
-    sm = ShepherdMng()
-    env = sm.configMng.get_active_environment()
-    assert env is None
-
-
-@pytest.mark.env
 @pytest.mark.parametrize("expanduser_side_effects", [2])
 def test_env_list(
     temp_home: Path,
