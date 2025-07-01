@@ -151,7 +151,6 @@ class TestInstallScript:
         # Check uninstall_shepctl was called
         mock_uninstall_shepctl.assert_called_once()
 
-    @patch("installer.install_utils.print_color")
     @patch("installer.install.get_os_info")
     @patch("installer.install.install_packages")
     @patch("os.makedirs")
@@ -168,7 +167,6 @@ class TestInstallScript:
         mock_makedirs: MagicMock,
         mock_install_pkgs: MagicMock,
         mock_get_os_info: MagicMock,
-        mock_print: MagicMock,
     ) -> None:
         """Test install function with dependency installation."""
         # Mock skip_ensure_deps
@@ -198,7 +196,6 @@ class TestInstallScript:
         # Verify the binary installation was called
         mock_install_binary.assert_called_once()
 
-    @patch("installer.install.print_color")
     @patch("installer.install.get_os_info")
     @patch("installer.install.install_packages")
     @patch("os.makedirs")
@@ -211,7 +208,6 @@ class TestInstallScript:
         mock_makedirs: MagicMock,
         mock_install_pkgs: MagicMock,
         mock_get_os_info: MagicMock,
-        mock_print: MagicMock,
     ) -> None:
         """Test install function while skipping dependencies."""
         # Mock skip_ensure_deps
@@ -235,14 +231,12 @@ class TestInstallScript:
         # Verify the binary installation was called
         mock_install_binary.assert_called_once()
 
-    @patch("installer.install.print_color")
     @patch("os.makedirs")
     @patch("shutil.rmtree")
     def test_install_unknown_method(
         self,
         mock_rmtree: MagicMock,
         mock_makedirs: MagicMock,
-        mock_print: MagicMock,
     ) -> None:
         """Test install function with unknown install method."""
         # Set unknown install method
@@ -254,11 +248,8 @@ class TestInstallScript:
             with pytest.raises(SystemExit):
                 install.install_shepctl()
 
-    @patch("installer.install.print_color")
     @patch("shutil.rmtree")
-    def test_uninstall(
-        self, mock_rmtree: MagicMock, mock_print: MagicMock
-    ) -> None:
+    def test_uninstall(self, mock_rmtree: MagicMock) -> None:
         """Test uninstall function."""
         # Mock Path.exists and Path.unlink
         with (
@@ -324,10 +315,7 @@ class TestInstallScript:
         mock_check_package_installed.assert_called_with("docker-compose-plugin")
 
     @patch("installer.install_utils.run_command")
-    @patch("installer.install.print_color")
-    def test_install_binary(
-        self, mock_print: MagicMock, mock_run_command: MagicMock
-    ) -> None:
+    def test_install_binary(self, mock_run_command: MagicMock) -> None:
         """Test binary installation method."""
         # Mock successful command execution
         mock_run_command.return_value = MagicMock(returncode=0)
@@ -387,10 +375,7 @@ class TestInstallScript:
                 )
 
     @patch("installer.install_utils.run_command")
-    @patch("installer.install.print_color")
-    def test_install_source(
-        self, mock_print: MagicMock, mock_run_command: MagicMock
-    ) -> None:
+    def test_install_source(self, mock_run_command: MagicMock) -> None:
         """Test source installation method."""
         # Mock successful command execution
         mock_run_command.return_value = MagicMock(returncode=0)

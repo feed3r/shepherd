@@ -20,18 +20,7 @@ from installer.constants import (
     REQUIRED_PYTHON_PKGS,
     UPDATE_COMMANDS,
 )
-
-# Color constants (ANSI color codes)
-RED = "\033[0;31m"
-NC = "\033[0m"  # No Color
-YELLOW = "\033[0;33m"
-GREEN = "\033[0;32m"
-BLUE = "\033[0;36m"
-
-
-def print_color(message: str, color: str = NC) -> None:
-    """Print a message with color."""
-    print(f"{color}{message}{NC}")
+from util import Util
 
 
 def is_root() -> bool:
@@ -69,7 +58,7 @@ def run_command(
         )
         return result
     except subprocess.CalledProcessError as e:
-        print_color(f"Command failed: {e}", RED)
+        Util.console.print(f"Command failed: {e}", style="red")
         if check:
             sys.exit(1)
         return e
@@ -103,7 +92,7 @@ def install_missing_packages(
         check: Whether to raise an exception on failure
     """
     if not missing_packages:
-        print_color("No packages to install", YELLOW)
+        Util.console.print("No packages to install", style="yellow")
         return
 
     cmd_list = INSTALL_COMMANDS[distro].copy()
@@ -131,7 +120,7 @@ def add_docker_repository(distro: str, codename: str) -> None:
 
     update_command = UPDATE_COMMANDS[distro].split()
     run_command(update_command, check=True)  # Update the package list
-    print_color("Repository added successfully.", GREEN)
+    Util.console.print("Repository added successfully.", style="green")
 
 
 def install_docker_packages(distro: str, codename: str) -> None:
@@ -142,13 +131,17 @@ def install_docker_packages(distro: str, codename: str) -> None:
         codename: The codename of the Linux distribution
     """
     if any(check_package_installed(pkg) for pkg in REQUIRED_DOCKER_PKGS):
-        print_color("Docker is already installed.", GREEN)
+        Util.console.print("Docker is already installed.", style="green")
         new_docker = False
     else:
-        print_color("Docker is not installed. Installing...", YELLOW)
+        Util.console.print(
+            "Docker is not installed. Installing...", style="yellow"
+        )
         new_docker = True
         if not check_file_exists(KEYRING_PATH):
-            print_color("Docker keyring file is missing. Installing...", YELLOW)
+            Util.console.print(
+                "Docker keyring file is missing. Installing...", style="yellow"
+            )
             run_command(
                 [
                     "curl",
@@ -160,43 +153,60 @@ def install_docker_packages(distro: str, codename: str) -> None:
                 check=True,
             )
         else:
-            print_color("Docker keyring file is already installed.", GREEN)
+            Util.console.print(
+                "Docker keyring file is already installed.", style="green"
+            )
 
         if not check_file_exists(REPO_PATHS[distro]):
-            print_color("Docker repository is missing. Adding...", YELLOW)
+            Util.console.print(
+                "Docker repository is missing. Adding...", style="yellow"
+            )
             add_docker_repository(distro, codename)
         else:
-            print_color("Docker repository already exist.", GREEN)
+            Util.console.print(
+                "Docker repository already exists.", style="green"
+            )
 
         missing_packages: List[str] = []
         for pkg in REQUIRED_DOCKER_PKGS:
-            print_color(f"Checking for package: {pkg}", BLUE)  # Debug print
+            Util.console.print(
+                f"Checking for package: {pkg}", style="blue"
+            )  # Debug print
             if not check_package_installed(pkg):
-                print_color(f"Package {pkg} is missing.", YELLOW)
+                Util.console.print(f"Package {pkg} is missing.", style="yellow")
                 missing_packages.append(pkg)
             else:
-                print_color(f"Package {pkg} is already installed.", GREEN)
+                Util.console.print(
+                    f"Package {pkg} is already installed.", style="green"
+                )
 
-        print(f"Missing packages: {missing_packages}")  # Debug print
+        Util.console.print(
+            f"Missing packages: {missing_packages}"
+        )  # Debug print
 
         if missing_packages:
-            print_color(
+            Util.console.print(
                 f"Installing missing packages: {', '.join(missing_packages)}",
-                BLUE,
+                style="blue",
             )
             install_missing_packages(distro, missing_packages, check=False)
         else:
-            print_color("All required packages are already installed.", GREEN)
+            Util.console.print(
+                "All required packages are already installed.", style="green"
+            )
 
         docker_version = run_command(
             ["docker", "--version"], check=False, capture_output=True
         )
-        print_color(f"Docker version: {docker_version.stdout}", GREEN)
+        Util.console.print(
+            f"Docker version: {docker_version.stdout}", style="green"
+        )
         docker_compose_version = run_command(
             ["docker-compose", "--version"], check=False, capture_output=True
         )
-        print_color(
-            f"Docker Compose version: {docker_compose_version.stdout}", GREEN
+        Util.console.print(
+            f"Docker Compose version: {docker_compose_version.stdout}",
+            style="green",
         )
         if new_docker:
             run_command(["sudo", "systemctl", "enable", "docker"], check=True)
@@ -207,9 +217,11 @@ def install_docker_packages(distro: str, codename: str) -> None:
                 f"Docker installed and user {running_user} "
                 "added to docker group."
             )
-            print("Please log out and back in for group membership to apply.")
+            Util.console.print(
+                "Please log out and back in for group membership to apply."
+            )
 
-        print_color("Docker installation complete!", GREEN)
+        Util.console.print("Docker installation complete!", style="green")
 
 
 def get_architecture() -> str:
@@ -237,18 +249,23 @@ def install_required_packages(distro: str) -> None:
     missing_packages: List[str] = []
     for pkg in REQUIRED_PKGS:
         if not check_package_installed(pkg):
-            print_color(f"Package {pkg} is missing.", YELLOW)
+            Util.console.print(f"Package {pkg} is missing.", style="yellow")
             missing_packages.append(pkg)
         else:
-            print_color(f"Package {pkg} is already installed.", GREEN)
+            Util.console.print(
+                f"Package {pkg} is already installed.", style="green"
+            )
 
     if missing_packages:
-        print_color(
-            f"Installing missing packages: {', '.join(missing_packages)}", BLUE
+        Util.console.print(
+            f"Installing missing packages: {', '.join(missing_packages)}",
+            style="blue",
         )
         install_missing_packages(distro, missing_packages)
     else:
-        print_color("All required packages are already installed.", GREEN)
+        Util.console.print(
+            "All required packages are already installed.", style="green"
+        )
 
 
 def install_python_packages(distro: str) -> None:
@@ -264,33 +281,40 @@ def install_python_packages(distro: str) -> None:
     python_version = executed_python_version.stdout.split()[1]
     major, minor, _ = map(int, python_version.split("."))
     if major < 3 or (major == 3 and minor < 12):
-        print_color("Python version is less than 3.12. Going to update", YELLOW)
+        Util.console.print(
+            "Python version is less than 3.12. Going to update", style="yellow"
+        )
         install_missing_packages(distro, ["python3"])
     else:
-        print_color(
-            "Python version is 3.12 or greater. No need to update", GREEN
+        Util.console.print(
+            "Python version is 3.12 or greater. No need to update",
+            style="green",
         )
 
     missing_python_packages: List[str] = []
     for pkg in REQUIRED_PYTHON_PKGS:
         if not check_package_installed(pkg):
-            print_color(f"Python package {pkg} is missing.", YELLOW)
+            Util.console.print(
+                f"Python package {pkg} is missing.", style="yellow"
+            )
             missing_python_packages.append(pkg)
         else:
-            print_color(f"Python package {pkg} is already installed.", GREEN)
+            Util.console.print(
+                f"Python package {pkg} is already installed.", style="green"
+            )
 
     if missing_python_packages:
-        print_color(
+        Util.console.print(
             (
                 "Installing missing Python packages: "
                 f"{', '.join(missing_python_packages)}"
             ),
-            BLUE,
+            style="blue",
         )
         install_missing_packages(distro, missing_python_packages)
     else:
-        print_color(
-            "All required Python packages are already installed.", GREEN
+        Util.console.print(
+            "All required Python packages are already installed.", style="green"
         )
 
 
@@ -350,10 +374,10 @@ def check_package_installed(pkg: str) -> bool:
 def download_package(url: str, dest: str) -> None:
     """Download a package from a URL to a destination path."""
     run_command(["curl", "-fsSL", url, "-o", dest], check=True)
-    print_color(f"Package downloaded to {dest}", GREEN)
+    Util.console.print(f"Package downloaded to {dest}", style="green")
 
 
 def extract_package(package_path: str, extract_to: str) -> None:
     """Extract a tar.gz package to a specified directory."""
     run_command(["tar", "-xzf", package_path, "-C", extract_to], check=True)
-    print_color(f"Package extracted to {extract_to}", GREEN)
+    Util.console.print(f"Package extracted to {extract_to}", style="green")

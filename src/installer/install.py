@@ -24,17 +24,14 @@ import click
 
 from installer import constants
 from installer.install_utils import (
-    BLUE,
-    GREEN,
-    RED,
     download_package,
     extract_package,
     get_os_info,
     install_packages,
     is_root,
-    print_color,
     run_command,
 )
+from util import Util
 
 # Global variables to store command line options
 verbose = False
@@ -103,8 +100,7 @@ def install(ctx: click.Context) -> None:
     # Installer needs to run as root
     # to install system-wide
     if not is_root():
-        print_color("This script must be run as root.", RED)
-        sys.exit(1)
+        Util.print_error_and_die("This script must be run as root")
 
     global verbose, skip_ensure_deps, install_method
     verbose = ctx.obj["verbose"]
@@ -120,8 +116,7 @@ def install(ctx: click.Context) -> None:
 def uninstall(ctx: click.Context) -> None:
     """Uninstall shepctl."""
     if not is_root():
-        print_color("This script must be run as root.", RED)
-        sys.exit(1)
+        Util.print_error_and_die("This script must be run as root")
 
     # Get options from context
     global verbose, skip_ensure_deps, install_method
@@ -145,17 +140,19 @@ def install_binary() -> None:
     )
 
     # Download the binary package
-    print_color("Downloading shepctl binary...", BLUE)
+    Util.console.print(
+        f"[bold blue]Downloading shepctl binary from {url}...[/bold blue]"
+    )
     download_package(url, f"{install_shepctl_dir}/shepctl-{version}.tar.gz")
 
-    print_color("Extracting...", BLUE)
+    Util.console.print("[bold blue]Extracting...[/bold blue]")
     extract_package(
         f"{install_shepctl_dir}/shepctl-{version}.tar.gz",
         str(install_shepctl_dir),
     )
 
     # Make the binary executable
-    print_color("Setting permissions...", BLUE)
+    Util.console.print("[bold blue]Setting permissions...[/bold blue]")
     os.chmod(f"{install_shepctl_dir}/shepctl", 0o755)
 
     # Create symlink if it doesn't exist
@@ -164,13 +161,15 @@ def install_binary() -> None:
     ).resolve()
     symlink_path = symlink_dir / "shepctl"
     if not symlink_path.exists():
-        print_color("Creating symlink...", BLUE)
+        Util.console.print(
+            f"[bold blue]Creating symlink in {symlink_dir}...[/bold blue]"
+        )
         os.symlink(f"{install_shepctl_dir}/shepctl", symlink_path)
 
 
 # OS packages dependency manager
 def manage_dependencies() -> None:
-    print_color("Ensuring dependencies...", BLUE)
+    Util.console.print("Ensuring dependencies...", style="blue")
 
     os_info: Any = get_os_info()
 
@@ -184,7 +183,7 @@ def manage_dependencies() -> None:
 
 def manage_python_dependencies() -> None:
     # Install Python dependencies
-    print_color("Installing Python dependencies...", BLUE)
+    Util.console.print("Installing Python dependencies...", style="blue")
 
     # Save current directory
     original_dir = os.getcwd()
@@ -212,9 +211,9 @@ def manage_python_dependencies() -> None:
 def should_download_sources(install_shepctl_dir: str) -> bool:
     """Check if sources should be downloaded."""
     if force_source_download:
-        print_color(
+        Util.console.print(
             "Forcing source download as per user request.",
-            BLUE,
+            style="blue",
         )
         return True
     elif (
@@ -222,24 +221,26 @@ def should_download_sources(install_shepctl_dir: str) -> bool:
         or not any(Path(install_shepctl_dir).iterdir())
         # The directory does not exist or is empty
     ):
-        print_color(
+        Util.console.print(
             f"Directory {install_shepctl_dir} does not exist or is empty. "
             "Downloading sources...",
-            BLUE,
+            style="blue",
         )
         return True
     else:
         # The directory exists and is not empty, should not download again
-        print_color(
+        Util.console.print(
             f"Directory {install_shepctl_dir} already exists and is not empty."
             "Assuming existing installation.",
-            RED,
+            style="red",
         )
         return False
 
 
 def download_sources(install_shepctl_dir: str, version: str) -> None:
-    print_color("Downloading and extracting source package", BLUE)
+    Util.console.print(
+        "Downloading and extracting source package", style="blue"
+    )
     download_package(
         constants.SHEPCTL_SOURCE_URL.format(version=version),
         f"{install_shepctl_dir}/shepctl-{version}.tar.gz",
@@ -263,7 +264,7 @@ def manage_source_symlinks() -> None:
     if symlink_path.exists():
         symlink_path.unlink()
 
-    print_color(f"Creating symlink in {symlink_dir}...", BLUE)
+    Util.console.print(f"Creating symlink in {symlink_dir}...", style="blue")
     os.symlink(str(bin_path), symlink_path)
 
 
@@ -284,19 +285,19 @@ def install_source() -> None:
     if should_download_sources(install_shepctl_dir):
         download_sources(install_shepctl_dir, version)
 
-    print_color("Installing shepctl from source...", BLUE)
+    Util.console.print("Installing shepctl from source...", style="blue")
 
     if not skip_ensure_deps:
         manage_python_dependencies()
 
     # Create symlink if it doesn't exist
     manage_source_symlinks()
-    print_color("Source installation complete!", GREEN)
+    Util.console.print("Source installation complete!", style="green")
 
 
 def install_shepctl() -> None:
     """Install shepctl."""
-    print_color("Installing shepctl...", BLUE)
+    Util.console.print("Installing shepctl...", style="blue")
 
     if not skip_ensure_deps:
         manage_dependencies()
@@ -313,28 +314,30 @@ def install_shepctl() -> None:
     elif install_method == "source":
         install_source()
     else:
-        print_color(f"Error: Unknown install method '{install_method}'", RED)
+        Util.console.print(
+            f"Error: Unknown install method '{install_method}'", style="red"
+        )
         sys.exit(1)
 
 
 def uninstall_shepctl() -> None:
     """Uninstall shepctl."""
-    print_color("Uninstalling shepctl...", BLUE)
+    Util.console.print("Uninstalling shepctl...", style="blue")
 
     # Remove installation directory
     if Path(install_shepctl_dir).exists():
         import shutil
 
         shutil.rmtree(install_shepctl_dir)
-        print(f"Removed {install_shepctl_dir}")
+        Util.print(f"Removed {install_shepctl_dir}")
 
     # Remove symlink
     symlink_path: Path = Path(symlink_dir) / "shepctl"
     if symlink_path.exists():
         symlink_path.unlink()
-        print(f"Removed symlink {symlink_path}")
+        Util.print(f"Removed symlink {symlink_path}")
 
-    print("shepctl uninstalled successfully")
+    Util.print("shepctl uninstalled successfully")
 
 
 if __name__ == "__main__":
