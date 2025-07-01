@@ -26,6 +26,12 @@ from config import Config, ConfigMng
 from util import Constants
 
 config_json = """{
+  "logging": {
+    "file": "${log_file}",
+    "level": "${log_level}",
+    "stdout": "${log_stdout}",
+    "format": "${log_format}"
+  },
   "shpd_registry": {
     "ftp_server": "${shpd_registry}",
     "ftp_user": "${shpd_registry_ftp_usr}",
@@ -250,6 +256,12 @@ values = """
   db_sys_psw=sys
   db_usr=docker
   db_psw=docker
+
+  # Logging Configuration
+  log_file=shepctl.log
+  log_level=WARNING
+  log_stdout=false
+  log_format=%(asctime)s - %(levelname)s - %(message)s
   """
 
 
@@ -268,6 +280,11 @@ def test_load_config(mocker: MockerFixture):
 
     cMng = ConfigMng(".shpd.conf")
     config: Config = cMng.load_config()
+
+    assert config.logging.file == "shepctl.log"
+    assert config.logging.level == "WARNING"
+    assert not config.logging.stdout
+    assert config.logging.format == "%(asctime)s - %(levelname)s - %(message)s"
 
     service_types = config.service_types
     assert service_types and service_types[0].type == "oracle"

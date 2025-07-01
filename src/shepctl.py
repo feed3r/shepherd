@@ -16,6 +16,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
+import logging
 from typing import Dict, Optional
 
 import click
@@ -26,7 +27,7 @@ from database import DatabaseMng
 from environment import EnvironmentMng
 from factory import ShpdEnvironmentFactory, ShpdServiceFactory
 from service import ServiceMng
-from util import Util
+from util import Util, setup_logging
 
 
 class ShepherdMng:
@@ -36,6 +37,16 @@ class ShepherdMng:
         Util.ensure_dirs(self.configMng.constants)
         Util.ensure_config_file(self.configMng.constants)
         self.configMng.load()
+        setup_logging(
+            self.configMng.config.logging.file,
+            self.configMng.config.logging.format,
+            self.configMng.config.logging.level,
+            self.configMng.config.logging.stdout,
+        )
+        logging.debug(
+            "### shepctl version:%s started",
+            self.configMng.constants.APP_VERSION,
+        )
         self.completionMng = CompletionMng(self.cli_flags, self.configMng)
         self.svcFactory = ShpdServiceFactory(self.configMng)
         self.envFactory = ShpdEnvironmentFactory(

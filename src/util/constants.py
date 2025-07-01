@@ -18,6 +18,7 @@
 
 import os
 from dataclasses import dataclass
+from typing import Any, Dict
 
 
 @dataclass(frozen=True)
@@ -68,3 +69,58 @@ class Constants:
     # Service types
 
     SVC_TYPE_DOCKER: str = "docker"
+
+    # Default configuration values
+
+    @property
+    def DEFAULT_CONFIG(self) -> Dict[Any, Any]:
+        return {
+            "logging": {
+                "file": "${log_file}",
+                "level": "${log_level}",
+                "stdout": "${log_stdout}",
+                "format": "${log_format}",
+            },
+            "service_types": [
+                {
+                    "type": "docker",
+                    "image": "",
+                    "ingress": False,
+                    "envvars": {},
+                    "ports": {},
+                    "properties": {},
+                    "subject_alternative_name": None,
+                },
+            ],
+            "shpd_registry": {
+                "ftp_server": "${shpd_registry}",
+                "ftp_user": "${shpd_registry_ftp_usr}",
+                "ftp_psw": "${shpd_registry_ftp_psw}",
+                "ftp_shpd_path": "${shpd_registry_ftp_shpd_path}",
+                "ftp_env_imgs_path": "${shpd_registry_ftp_imgs_path}",
+            },
+            "host_inet_ip": "${host_inet_ip}",
+            "domain": "${domain}",
+            "dns_type": "${dns_type}",
+            "ca": {
+                "country": "${ca_country}",
+                "state": "${ca_state}",
+                "locality": "${ca_locality}",
+                "organization": "${ca_org}",
+                "organizational_unit": "${ca_org_unit}",
+                "common_name": "${ca_cn}",
+                "email": "${ca_email}",
+                "passphrase": "${ca_passphrase}",
+            },
+            "cert": {
+                "country": "${cert_country}",
+                "state": "${cert_state}",
+                "locality": "${cert_locality}",
+                "organization": "${cert_org}",
+                "organizational_unit": "${cert_org_unit}",
+                "common_name": "${cert_cn}",
+                "email": "${cert_email}",
+                "subject_alternative_names": [],
+            },
+            "envs": [],
+        }

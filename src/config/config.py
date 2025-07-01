@@ -26,6 +26,18 @@ from util import Constants, Util
 
 
 @dataclass
+class LoggingCfg:
+    """
+    Represents the logging configuration.
+    """
+
+    file: str
+    level: str
+    stdout: bool
+    format: str
+
+
+@dataclass
 class UpstreamCfg:
     """
     Represents an upstream service configuration.
@@ -261,6 +273,7 @@ class Config:
     Represents the shepherd configuration.
     """
 
+    logging: LoggingCfg
     shpd_registry: ShpdRegistryCfg
     host_inet_ip: str
     domain: str
@@ -277,6 +290,23 @@ def parse_config(json_str: str) -> Config:
     """
 
     data = json.loads(json_str)
+
+    def str_to_bool(val: str) -> bool:
+        if val == "true":
+            return True
+        if val == "false":
+            return False
+        raise ValueError(
+            f"Invalid boolean string: {val!r}. Expected 'true' or 'false'."
+        )
+
+    def parse_logging(item: Any) -> LoggingCfg:
+        return LoggingCfg(
+            file=item["file"],
+            level=item["level"],
+            stdout=str_to_bool(item["stdout"]),
+            format=item["format"],
+        )
 
     def parse_upstream(item: Any) -> UpstreamCfg:
         return UpstreamCfg(
@@ -369,6 +399,7 @@ def parse_config(json_str: str) -> Config:
         domain=data["domain"],
         dns_type=data["dns_type"],
         ca=parse_ca_config(data["ca"]),
+        logging=parse_logging(data["logging"]),
         cert=parse_cert_config(data["cert"]),
         envs=[parse_environment(env) for env in data["envs"]],
     )
