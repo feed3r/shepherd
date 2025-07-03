@@ -22,7 +22,6 @@ from typing import Any
 
 import click
 
-from installer import constants
 from installer.install_utils import (
     download_package,
     extract_package,
@@ -31,7 +30,7 @@ from installer.install_utils import (
     is_root,
     run_command,
 )
-from util import Util
+from util import Util, constants
 
 # Global variables to store command line options
 verbose = False
@@ -134,10 +133,7 @@ def install_binary() -> None:
     )
 
     version = os.environ.get("VER", "latest")
-    url = (
-        f"https://github.com/LunaticFringers/shepherd/releases/download/"
-        f"v{version}/shepctl-{version}.tar.gz"
-    )
+    url = constants.SHEPCTL_BINARY_URL.format(version=version)
 
     # Download the binary package
     Util.console.print(

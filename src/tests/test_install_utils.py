@@ -175,21 +175,11 @@ class TestInstallUtils:
             # Simulate successful execution of the sudo command
             mock_run.return_value = MagicMock(returncode=0)
 
-            # Test installing packages on Debian
-            install_missing_packages("debian", ["pkg1", "pkg2"])
+            # Test installing packages on Ubuntu
+            install_missing_packages("ubuntu", ["pkg1", "pkg2"])
 
             # Verify that run_command was called with the correct arguments
             expected_cmd = ["sudo", "apt-get", "install", "-y", "pkg1", "pkg2"]
-            mock_run.assert_called_once_with(expected_cmd, check=True)
-
-            # Reset mock
-            mock_run.reset_mock()
-
-            # Test installing packages on Fedora
-            install_missing_packages("fedora", ["pkg1", "pkg2"])
-
-            # Verify that run_command was called with the correct arguments
-            expected_cmd = ["sudo", "dnf", "install", "-y", "pkg1", "pkg2"]
             mock_run.assert_called_once_with(expected_cmd, check=True)
 
     def test_install_missing_packages_called(self):

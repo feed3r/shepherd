@@ -8,19 +8,7 @@ from typing import Any, List, Optional, Union
 
 import distro
 
-from installer.constants import (
-    ARCH_MAPPING,
-    GPG_KEYS,
-    INSTALL_COMMANDS,
-    KEYRING_PATH,
-    REPO_PATHS,
-    REPO_STRINGS,
-    REQUIRED_DOCKER_PKGS,
-    REQUIRED_PKGS,
-    REQUIRED_PYTHON_PKGS,
-    UPDATE_COMMANDS,
-)
-from util import Util
+from util import Util, constants
 
 
 def is_root() -> bool:
@@ -95,22 +83,22 @@ def install_missing_packages(
         Util.console.print("No packages to install", style="yellow")
         return
 
-    cmd_list = INSTALL_COMMANDS[distro].copy()
+    cmd_list = constants.INSTALL_COMMANDS[distro].copy()
     cmd_list.extend(missing_packages)
     run_command(cmd_list, check=check)
 
 
 def add_docker_repository(distro: str, codename: str) -> None:
     """Add the proper repository for the detected distribution."""
-    if distro not in REPO_STRINGS:
+    if distro not in constants.REPO_STRINGS:
         raise RuntimeError(f"Unsupported distribution: {distro}")
 
     architecture = get_architecture()
 
-    repo_string = REPO_STRINGS[distro].format(
+    repo_string = constants.REPO_STRINGS[distro].format(
         architecture=architecture, release=codename
     )
-    repo_path = REPO_PATHS[distro]
+    repo_path = constants.REPO_PATHS[distro]
 
     if os.path.exists(repo_path):
         return  # Exit early if the repository file already exists
@@ -118,7 +106,7 @@ def add_docker_repository(distro: str, codename: str) -> None:
     with open(repo_path, "w") as f:
         f.write(repo_string)
 
-    update_command = UPDATE_COMMANDS[distro].split()
+    update_command = constants.UPDATE_COMMANDS[distro].split()
     run_command(update_command, check=True)  # Update the package list
     Util.console.print("Repository added successfully.", style="green")
 
@@ -130,7 +118,9 @@ def install_docker_packages(distro: str, codename: str) -> None:
         distro: The Linux distribution
         codename: The codename of the Linux distribution
     """
-    if any(check_package_installed(pkg) for pkg in REQUIRED_DOCKER_PKGS):
+    if any(
+        check_package_installed(pkg) for pkg in constants.REQUIRED_DOCKER_PKGS
+    ):
         Util.console.print("Docker is already installed.", style="green")
         new_docker = False
     else:
@@ -138,7 +128,7 @@ def install_docker_packages(distro: str, codename: str) -> None:
             "Docker is not installed. Installing...", style="yellow"
         )
         new_docker = True
-        if not check_file_exists(KEYRING_PATH):
+        if not check_file_exists(constants.KEYRING_PATH):
             Util.console.print(
                 "Docker keyring file is missing. Installing...", style="yellow"
             )
@@ -146,9 +136,9 @@ def install_docker_packages(distro: str, codename: str) -> None:
                 [
                     "curl",
                     "-fsSL",
-                    GPG_KEYS[distro],
+                    constants.GPG_KEYS[distro],
                     "| gpg --dearmor -o ",
-                    KEYRING_PATH,
+                    constants.KEYRING_PATH,
                 ],
                 check=True,
             )
@@ -157,7 +147,7 @@ def install_docker_packages(distro: str, codename: str) -> None:
                 "Docker keyring file is already installed.", style="green"
             )
 
-        if not check_file_exists(REPO_PATHS[distro]):
+        if not check_file_exists(constants.REPO_PATHS[distro]):
             Util.console.print(
                 "Docker repository is missing. Adding...", style="yellow"
             )
@@ -168,7 +158,7 @@ def install_docker_packages(distro: str, codename: str) -> None:
             )
 
         missing_packages: List[str] = []
-        for pkg in REQUIRED_DOCKER_PKGS:
+        for pkg in constants.REQUIRED_DOCKER_PKGS:
             Util.console.print(
                 f"Checking for package: {pkg}", style="blue"
             )  # Debug print
@@ -229,8 +219,8 @@ def get_architecture() -> str:
     machine = platform.machine().lower()
 
     # First try the combination of bits and linkage
-    if (bits, linkage) in ARCH_MAPPING:
-        return ARCH_MAPPING[(bits, linkage)]
+    if (bits, linkage) in constants.ARCH_MAPPING:
+        return constants.ARCH_MAPPING[(bits, linkage)]
 
     # Fall back to machine type for ARM architectures
     if "arm" in machine or "aarch" in machine:
@@ -247,7 +237,7 @@ def install_required_packages(distro: str) -> None:
         distro: The Linux distribution
     """
     missing_packages: List[str] = []
-    for pkg in REQUIRED_PKGS:
+    for pkg in constants.REQUIRED_PKGS:
         if not check_package_installed(pkg):
             Util.console.print(f"Package {pkg} is missing.", style="yellow")
             missing_packages.append(pkg)
@@ -292,7 +282,7 @@ def install_python_packages(distro: str) -> None:
         )
 
     missing_python_packages: List[str] = []
-    for pkg in REQUIRED_PYTHON_PKGS:
+    for pkg in constants.REQUIRED_PYTHON_PKGS:
         if not check_package_installed(pkg):
             Util.console.print(
                 f"Python package {pkg} is missing.", style="yellow"
