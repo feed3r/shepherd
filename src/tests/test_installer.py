@@ -25,7 +25,8 @@ from unittest.mock import MagicMock, call, patch
 import pytest
 
 # Import the module under test
-from installer import install, install_utils
+from installer import install
+from installer.repository_manager import RepositoryManager
 from util import Util
 
 
@@ -159,8 +160,8 @@ class TestInstallScript:
         # Check uninstall_shepctl was called
         mock_uninstall_shepctl.assert_called_once()
 
+    @patch("installer.install.RepositoryManager.install_packages")
     @patch("installer.install.get_os_info")
-    @patch("installer.install.install_packages")
     @patch("os.makedirs")
     @patch("shutil.rmtree")
     @patch("installer.install.install_binary")
@@ -171,8 +172,8 @@ class TestInstallScript:
         mock_install_binary: MagicMock,
         mock_rmtree: MagicMock,
         mock_makedirs: MagicMock,
-        mock_install_pkgs: MagicMock,
         mock_get_os_info: MagicMock,
+        mock_install_packages: MagicMock,
     ) -> None:
         """Test install function with dependency installation."""
         # Mock skip_ensure_deps
@@ -193,7 +194,7 @@ class TestInstallScript:
 
         # Check dependencies were installed
         mock_get_os_info.assert_called_once()
-        mock_install_pkgs.assert_called_once_with(
+        mock_install_packages.assert_called_once_with(
             mock_os_info.distro, mock_os_info.codename, False
         )
 
@@ -207,7 +208,7 @@ class TestInstallScript:
         mock_install_binary.assert_called_once()
 
     @patch("installer.install.get_os_info")
-    @patch("installer.install.install_packages")
+    @patch("installer.install.RepositoryManager.install_packages")
     @patch("os.makedirs")
     @patch("shutil.rmtree")
     @patch("installer.install.install_binary")
@@ -216,8 +217,8 @@ class TestInstallScript:
         mock_install_binary: MagicMock,
         mock_rmtree: MagicMock,
         mock_makedirs: MagicMock,
-        mock_install_pkgs: MagicMock,
         mock_get_os_info: MagicMock,
+        mock_install_packages: MagicMock,
     ) -> None:
         """Test install function while skipping dependencies."""
         # Mock skip_ensure_deps
@@ -230,7 +231,7 @@ class TestInstallScript:
 
         # Check dependencies were not installed
         mock_get_os_info.assert_not_called()
-        mock_install_pkgs.assert_not_called()
+        mock_install_packages.assert_not_called()
 
         # Check directory was recreated
         mock_rmtree.assert_called_once_with(install.install_shepctl_dir)
@@ -276,9 +277,17 @@ class TestInstallScript:
 
     @patch("util.Util.check_file_exists", return_value=False)
     @patch("util.Util.run_command")
-    @patch("installer.install_utils.check_package_installed")
-    @patch("installer.install_utils.add_docker_repository")
-    @patch("installer.install_utils.install_missing_packages")
+    @patch(
+        "installer.repository_manager.RepositoryManager."
+        "check_package_installed"
+    )
+    @patch(
+        "installer.repository_manager.RepositoryManager.add_docker_repository"
+    )
+    @patch(
+        "installer.repository_manager.RepositoryManager."
+        "install_missing_packages"
+    )
     def test_install_docker_packages(
         self,
         mock_install_missing_packages: MagicMock,
@@ -299,7 +308,7 @@ class TestInstallScript:
         )
 
         # Call the function under test
-        install_utils.install_docker_packages("debian", "buster")
+        RepositoryManager.install_docker_packages("debian", "buster")
 
         # Verify that add_docker_repository was called with correct arguments
         mock_add_docker_repository.assert_called_once_with("debian", "buster")

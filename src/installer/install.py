@@ -22,7 +22,7 @@ from typing import Any
 
 import click
 
-from installer.install_utils import install_packages
+from installer.repository_manager import RepositoryManager
 from util import Util, constants
 
 # Global variables to store command line options
@@ -41,10 +41,10 @@ install_shepctl_dir = Path(install_shepctl_dir).resolve()
 symlink_dir = os.environ.get("SYMLINK_DIR", "/usr/local/bin")
 symlink_dir = Path(symlink_dir)
 
-# Alias per compatibilità test: is_root = Util.is_root
+# Alias for test compatibility: is_root = Util.is_root
 is_root = Util.is_root
 
-# Alias per compatibilità test: get_os_info = Util.get_os_info
+# Alias for test compatibility: get_os_info = Util.get_os_info
 get_os_info = Util.get_os_info
 
 
@@ -105,7 +105,7 @@ def install(ctx: click.Context) -> None:
     skip_ensure_deps = ctx.obj["skip_deps"]
     install_method = ctx.obj["install_method"]
 
-    install_shepctl()  # Usa l'alias patchabile
+    install_shepctl()  # Use the patchable alias
 
 
 # Main uninstall entrypoint
@@ -122,7 +122,7 @@ def uninstall(ctx: click.Context) -> None:
     skip_ensure_deps = ctx.obj["skip_deps"]
     install_method = ctx.obj["install_method"]
 
-    uninstall_shepctl()  # Usa l'alias patchabile
+    uninstall_shepctl()  # Use the patchable alias
 
 
 def install_binary() -> None:
@@ -169,10 +169,10 @@ def install_binary() -> None:
 def manage_dependencies() -> None:
     Util.console.print("Ensuring dependencies...", style="blue")
 
-    os_info: Any = get_os_info()  # Usa l'alias patchabile
+    os_info: Any = get_os_info()  # Use the patchable alias
 
     # Manage dependencies based on OS
-    install_packages(
+    RepositoryManager.install_packages(
         os_info.distro,
         os_info.codename,
         install_method == "source",

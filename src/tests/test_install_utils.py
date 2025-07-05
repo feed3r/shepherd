@@ -21,11 +21,13 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from installer.install_utils import (
-    check_package_installed,
-    install_missing_packages,
-)
-from util import Util
+from installer.repository_manager import RepositoryManager
+from util.util import Util
+
+# Aliases for test compatibility
+run_command = Util.run_command
+check_file_exists = Util.check_file_exists
+check_package_installed = RepositoryManager.check_package_installed
 
 
 class TestInstallUtils:
@@ -66,7 +68,7 @@ class TestInstallUtils:
             mock_result.returncode = 0
             mock_run.return_value = mock_result
 
-            Util.run_command("echo test")  # type: ignore[assignment]
+            Util.run_command("echo test")
             mock_run.assert_called_once_with(
                 ["echo", "test"],
                 check=True,
@@ -171,7 +173,9 @@ class TestInstallUtils:
             mock_run.return_value = MagicMock(returncode=0)
 
             # Test installing packages on Ubuntu
-            install_missing_packages("ubuntu", ["pkg1", "pkg2"])
+            RepositoryManager.install_missing_packages(
+                "ubuntu", ["pkg1", "pkg2"]
+            )
 
             # Verify that run_command was called with the correct arguments
             expected_cmd = ["sudo", "apt-get", "install", "-y", "pkg1", "pkg2"]
@@ -186,12 +190,13 @@ class TestInstallUtils:
             missing_pkgs: List[str] = ["pkg1"]  # Simulate a missing package
             print("Simulated missing packages:", missing_pkgs)  # Debug print
             # Call install_missing_packages directly
-            install_missing_packages(distro, missing_pkgs)
+            RepositoryManager.install_missing_packages(distro, missing_pkgs)
 
         # Mock the install_missing_packages function
         with (
             patch(
-                "test_install_utils.install_missing_packages"
+                "installer.repository_manager.RepositoryManager."
+                "install_missing_packages"
             ) as mock_install_missing_packages,
             patch("util.util.Util.run_command") as mock_run_command,
         ):
@@ -228,7 +233,7 @@ class TestInstallUtils:
             print("Identified missing packages:", missing)  # Debug print
 
             if missing:
-                install_missing_packages(distro, missing)
+                RepositoryManager.install_missing_packages(distro, missing)
 
         # Set up our test packages and check results
         test_pkgs: List[str] = ["pkg1", "pkg2", "pkg3"]
@@ -238,7 +243,8 @@ class TestInstallUtils:
         # Mock install_missing_packages
         with (
             patch(
-                "test_install_utils.install_missing_packages"
+                "installer.repository_manager.RepositoryManager."
+                "install_missing_packages"
             ) as mock_install_missing_packages,
             patch("util.util.Util.run_command") as mock_run_command,
         ):
