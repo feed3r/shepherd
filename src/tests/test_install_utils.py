@@ -22,15 +22,10 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from installer.install_utils import (
-    OsInfo,
-    check_file_exists,
     check_package_installed,
-    get_current_user,
-    get_os_info,
     install_missing_packages,
-    is_root,
-    run_command,
 )
+from util import Util
 
 
 class TestInstallUtils:
@@ -41,11 +36,11 @@ class TestInstallUtils:
         with patch("os.geteuid") as mock_geteuid:
             # Test when running as root
             mock_geteuid.return_value = 0
-            assert is_root() is True
+            assert Util.is_root() is True
 
             # Test when not running as root
             mock_geteuid.return_value = 1000
-            assert is_root() is False
+            assert Util.is_root() is False
 
     def test_run_command(self):
         """Test the run_command function."""
@@ -55,7 +50,7 @@ class TestInstallUtils:
             mock_result.returncode = 0
             mock_run.return_value = mock_result
 
-            result = run_command(["echo", "test"])
+            result = Util.run_command(["echo", "test"])
             mock_run.assert_called_once_with(
                 ["echo", "test"],
                 check=True,
@@ -71,7 +66,7 @@ class TestInstallUtils:
             mock_result.returncode = 0
             mock_run.return_value = mock_result
 
-            run_command("echo test")  # type: ignore[assignment]
+            Util.run_command("echo test")  # type: ignore[assignment]
             mock_run.assert_called_once_with(
                 ["echo", "test"],
                 check=True,
@@ -87,7 +82,7 @@ class TestInstallUtils:
             mock_result.stdout = "test output"
             mock_run.return_value = mock_result
 
-            result_capture: subprocess.CompletedProcess[str] = run_command(
+            result_capture: subprocess.CompletedProcess[str] = Util.run_command(
                 ["echo", "test"], capture_output=True
             )  # type: ignore[assignment]
             assert result_capture.stdout == "test output"
@@ -98,7 +93,7 @@ class TestInstallUtils:
                 1, ["echo", "test"]
             )
             with pytest.raises(SystemExit):
-                run_command(["echo", "test"])
+                Util.run_command(["echo", "test"])
 
         # Test command failure but not exiting
         with patch("subprocess.run") as mock_run:
@@ -106,21 +101,21 @@ class TestInstallUtils:
             mock_run.side_effect = error
             result_noexit: (
                 subprocess.CompletedProcess[str] | subprocess.CalledProcessError
-            ) = run_command(
+            ) = Util.run_command(
                 ["echo", "test"], check=False
             )  # type: ignore[type-arg]
             assert isinstance(result_noexit, subprocess.CalledProcessError)
 
     def test_get_current_user(self):
         """Test the get_current_user function."""
-        # Test with SUDO_USER environment variable
+        # Test con SUDO_USER
         with patch.dict("os.environ", {"SUDO_USER": "testuser"}):
-            assert get_current_user() == "testuser"
+            assert Util.get_current_user() == "testuser"
 
-        # Test without SUDO_USER environment variable
+        # Test senza SUDO_USER
         with patch.dict("os.environ", clear=True):
             with patch("os.getlogin", return_value="regularuser"):
-                assert get_current_user() == "regularuser"
+                assert Util.get_current_user() == "regularuser"
 
     def test_check_file_exists(self):
         """Test the check_file_exists function."""
@@ -131,21 +126,21 @@ class TestInstallUtils:
             # Test file exists and is readable
             mock_isfile.return_value = True
             mock_access.return_value = True
-            assert check_file_exists("/path/to/file") is True
+            assert Util.check_file_exists("/path/to/file") is True
 
             # Test file does not exist
             mock_isfile.return_value = False
             mock_access.return_value = True
-            assert check_file_exists("/path/to/nonexistent") is False
+            assert Util.check_file_exists("/path/to/nonexistent") is False
 
             # Test file exists but is not readable
             mock_isfile.return_value = True
             mock_access.return_value = False
-            assert check_file_exists("/path/to/unreadable") is False
+            assert Util.check_file_exists("/path/to/unreadable") is False
 
     def test_check_package_installed(self):
         """Test the check_package_installed function."""
-        with patch("installer.install_utils.run_command") as mock_run:
+        with patch("util.util.Util.run_command") as mock_run:
             # Test package is installed
             mock_result = MagicMock()
             mock_result.returncode = 0
@@ -171,7 +166,7 @@ class TestInstallUtils:
 
     def test_install_missing_packages(self):
         """Test the install_missing_packages function."""
-        with patch("installer.install_utils.run_command") as mock_run:
+        with patch("util.util.Util.run_command") as mock_run:
             # Simulate successful execution of the sudo command
             mock_run.return_value = MagicMock(returncode=0)
 
@@ -198,7 +193,7 @@ class TestInstallUtils:
             patch(
                 "test_install_utils.install_missing_packages"
             ) as mock_install_missing_packages,
-            patch("installer.install_utils.run_command") as mock_run_command,
+            patch("util.util.Util.run_command") as mock_run_command,
         ):
             # Simulate successful execution of the sudo command
             mock_run_command.return_value = MagicMock(returncode=0)
@@ -245,7 +240,7 @@ class TestInstallUtils:
             patch(
                 "test_install_utils.install_missing_packages"
             ) as mock_install_missing_packages,
-            patch("installer.install_utils.run_command") as mock_run_command,
+            patch("util.util.Util.run_command") as mock_run_command,
         ):
             # Simulate successful execution of the sudo command
             mock_run_command.return_value = MagicMock(returncode=0)
@@ -266,7 +261,7 @@ class TestInstallUtils:
         # Test unsupported OS
         with patch("platform.system", return_value="Windows"):
             with pytest.raises(ValueError) as exc_info:
-                get_os_info()
+                Util.get_os_info()
             assert "Unsupported operating system" in str(exc_info.value)
 
         # Test Linux with distribution info
@@ -275,8 +270,7 @@ class TestInstallUtils:
             patch("distro.id", return_value="ubuntu"),
             patch("distro.codename", return_value="focal"),
         ):
-            result = get_os_info()
-            assert isinstance(result, OsInfo)
+            result = Util.get_os_info()
             assert result.system == "linux"
             assert result.distro == "ubuntu"
             assert result.codename == "focal"

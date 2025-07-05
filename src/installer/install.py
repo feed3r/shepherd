@@ -22,14 +22,7 @@ from typing import Any
 
 import click
 
-from installer.install_utils import (
-    download_package,
-    extract_package,
-    get_os_info,
-    install_packages,
-    is_root,
-    run_command,
-)
+from installer.install_utils import install_packages
 from util import Util, constants
 
 # Global variables to store command line options
@@ -47,6 +40,12 @@ install_shepctl_dir = os.environ.get("INSTALL_SHEPCTL_DIR", "/opt/shepctl")
 install_shepctl_dir = Path(install_shepctl_dir).resolve()
 symlink_dir = os.environ.get("SYMLINK_DIR", "/usr/local/bin")
 symlink_dir = Path(symlink_dir)
+
+# Alias per compatibilità test: is_root = Util.is_root
+is_root = Util.is_root
+
+# Alias per compatibilità test: get_os_info = Util.get_os_info
+get_os_info = Util.get_os_info
 
 
 ####################################################
@@ -106,7 +105,7 @@ def install(ctx: click.Context) -> None:
     skip_ensure_deps = ctx.obj["skip_deps"]
     install_method = ctx.obj["install_method"]
 
-    install_shepctl()
+    install_shepctl()  # Usa l'alias patchabile
 
 
 # Main uninstall entrypoint
@@ -123,7 +122,7 @@ def uninstall(ctx: click.Context) -> None:
     skip_ensure_deps = ctx.obj["skip_deps"]
     install_method = ctx.obj["install_method"]
 
-    uninstall_shepctl()
+    uninstall_shepctl()  # Usa l'alias patchabile
 
 
 def install_binary() -> None:
@@ -139,10 +138,13 @@ def install_binary() -> None:
     Util.console.print(
         f"[bold blue]Downloading shepctl binary from {url}...[/bold blue]"
     )
-    download_package(url, f"{install_shepctl_dir}/shepctl-{version}.tar.gz")
+    Util.download_package(
+        url,
+        f"{install_shepctl_dir}/shepctl-{version}.tar.gz",
+    )
 
     Util.console.print("[bold blue]Extracting...[/bold blue]")
-    extract_package(
+    Util.extract_package(
         f"{install_shepctl_dir}/shepctl-{version}.tar.gz",
         str(install_shepctl_dir),
     )
@@ -167,7 +169,7 @@ def install_binary() -> None:
 def manage_dependencies() -> None:
     Util.console.print("Ensuring dependencies...", style="blue")
 
-    os_info: Any = get_os_info()
+    os_info: Any = get_os_info()  # Usa l'alias patchabile
 
     # Manage dependencies based on OS
     install_packages(
@@ -188,7 +190,7 @@ def manage_python_dependencies() -> None:
     try:
         # Use pip to install
         python_path = sys.executable
-        run_command(
+        Util.run_command(
             [
                 python_path,
                 "-m",
@@ -237,12 +239,12 @@ def download_sources(install_shepctl_dir: str, version: str) -> None:
     Util.console.print(
         "Downloading and extracting source package", style="blue"
     )
-    download_package(
+    Util.download_package(
         constants.SHEPCTL_SOURCE_URL.format(version=version),
         f"{install_shepctl_dir}/shepctl-{version}.tar.gz",
     )
 
-    extract_package(
+    Util.extract_package(
         f"{install_shepctl_dir}/shepctl-{version}.tar.gz",
         install_shepctl_dir,
     )

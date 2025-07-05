@@ -26,7 +26,7 @@ import pytest
 
 # Import the module under test
 from installer import install, install_utils
-from installer.install_utils import OsInfo
+from util import Util
 
 
 class TestInstallScript:
@@ -107,12 +107,16 @@ class TestInstallScript:
         # Should exit with code 1
         assert result.exit_code == 1
 
+    @patch("shutil.rmtree")
+    @patch("os.makedirs")
     @patch("installer.install.is_root")
     @patch("installer.install.install_shepctl")
     def test_cli_install_as_root(
         self,
         mock_install_shepctl: MagicMock,
         mock_is_root: MagicMock,
+        mock_makedirs: MagicMock,
+        mock_rmtree: MagicMock,
     ) -> None:
         """Test install command when running as root."""
         from click.testing import CliRunner
@@ -130,12 +134,16 @@ class TestInstallScript:
         # Check install_shepctl was called
         mock_install_shepctl.assert_called_once()
 
+    @patch("shutil.rmtree")
+    @patch("os.makedirs")
     @patch("installer.install.is_root")
     @patch("installer.install.uninstall_shepctl")
     def test_cli_uninstall_as_root(
         self,
         mock_uninstall_shepctl: MagicMock,
         mock_is_root: MagicMock,
+        mock_makedirs: MagicMock,
+        mock_rmtree: MagicMock,
     ) -> None:
         """Test uninstall command when running as root."""
         from click.testing import CliRunner
@@ -155,10 +163,8 @@ class TestInstallScript:
     @patch("installer.install.install_packages")
     @patch("os.makedirs")
     @patch("shutil.rmtree")
-    @patch("installer.install.install_binary")  # Mock binary installation
-    @patch(
-        "installer.install_utils.run_command"
-    )  # Mock run_command to prevent real system calls
+    @patch("installer.install.install_binary")
+    @patch("util.Util.run_command")  # Patch the static method directly
     def test_install_with_dependencies(
         self,
         mock_run_command: MagicMock,
@@ -174,7 +180,11 @@ class TestInstallScript:
         install.install_method = "binary"
 
         # Mock OS info
-        mock_os_info = OsInfo(system="linux", distro="ubuntu", codename="focal")
+        mock_os_info = Util.OsInfo(
+            system="linux",
+            distro="ubuntu",
+            codename="focal",
+        )
         mock_get_os_info.return_value = mock_os_info
 
         # Mock install_shepctl_dir exists
@@ -200,7 +210,7 @@ class TestInstallScript:
     @patch("installer.install.install_packages")
     @patch("os.makedirs")
     @patch("shutil.rmtree")
-    @patch("installer.install.install_binary")  # Mock binary installation
+    @patch("installer.install.install_binary")
     def test_install_skip_dependencies(
         self,
         mock_install_binary: MagicMock,
@@ -264,8 +274,8 @@ class TestInstallScript:
             # Check symlink was removed
             mock_unlink.assert_called_once()
 
-    @patch("installer.install_utils.check_file_exists", return_value=False)
-    @patch("installer.install_utils.run_command")
+    @patch("util.Util.check_file_exists", return_value=False)
+    @patch("util.Util.run_command")
     @patch("installer.install_utils.check_package_installed")
     @patch("installer.install_utils.add_docker_repository")
     @patch("installer.install_utils.install_missing_packages")
@@ -314,7 +324,7 @@ class TestInstallScript:
         # Verify that the package installation function was called
         mock_check_package_installed.assert_called_with("docker-compose-plugin")
 
-    @patch("installer.install_utils.run_command")
+    @patch("util.Util.run_command")
     def test_install_binary(self, mock_run_command: MagicMock) -> None:
         """Test binary installation method."""
         # Mock successful command execution
@@ -374,7 +384,7 @@ class TestInstallScript:
                     Path(f"{os.environ['SYMLINK_DIR']}/shepctl"),
                 )
 
-    @patch("installer.install_utils.run_command")
+    @patch("util.Util.run_command")
     def test_install_source(self, mock_run_command: MagicMock) -> None:
         """Test source installation method."""
         # Mock successful command execution
