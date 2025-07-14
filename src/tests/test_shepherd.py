@@ -379,6 +379,17 @@ def test_cli_flags_checkout(
     mock_init.assert_called_with(flags)
 
 
+# completion tests
+
+
+@pytest.mark.shpd
+def test_cli_complete(
+    temp_home: Path, runner: CliRunner, mocker: MockerFixture
+):
+    result = runner.invoke(cli, ["__complete", "env"])
+    assert result.exit_code == 0
+
+
 # service tests
 
 

@@ -20,6 +20,7 @@ from typing import Dict, Optional
 
 import click
 
+from completion import CompletionMng
 from config import ConfigMng
 from database import DatabaseMng
 from environment import EnvironmentMng
@@ -35,6 +36,7 @@ class ShepherdMng:
         Util.ensure_dirs(self.configMng.constants)
         Util.ensure_config_file(self.configMng.constants)
         self.configMng.load()
+        self.completionMng = CompletionMng(self.cli_flags, self.configMng)
         self.svcFactory = ShpdServiceFactory(self.configMng)
         self.envFactory = ShpdEnvironmentFactory(
             self.configMng, self.svcFactory
@@ -103,6 +105,19 @@ def cli(
 def empty():
     """Empty testing purpose stub"""
     pass
+
+
+@cli.command(name="__complete", hidden=True)
+@click.argument("args", nargs=-1)
+@click.pass_obj
+def complete(shepherd: ShepherdMng, args: list[str]):
+    """
+    Internal shell completion entrypoint.
+    Usage: shepctl __complete <args...>
+    """
+    completions = shepherd.completionMng.get_completions(args)
+    for c in completions:
+        click.echo(c)
 
 
 @cli.group()
