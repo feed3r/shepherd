@@ -125,9 +125,9 @@ def db_bootstrap(shepherd: ShepherdMng):
     shepherd.databaseMng.bootstrap_svc("")
 
 
-@db.command(name="start")
+@db.command(name="up")
 @click.pass_obj
-def db_start(shepherd: ShepherdMng):
+def db_up(shepherd: ShepherdMng):
     """Start database service."""
     shepherd.databaseMng.start_svc("")
 
@@ -225,9 +225,9 @@ def env_list(shepherd: ShepherdMng):
     shepherd.environmentMng.list_envs()
 
 
-@env.command(name="start")
+@env.command(name="up")
 @click.pass_obj
-def env_start(shepherd: ShepherdMng):
+def env_up(shepherd: ShepherdMng):
     """Start environment."""
     shepherd.environmentMng.start_env()
 
@@ -300,10 +300,10 @@ def srv_bootstrap(shepherd: ShepherdMng, service_type: str):
     shepherd.serviceMng.bootstrap_svc(service_type)
 
 
-@svc.command(name="start")
+@svc.command(name="up")
 @click.argument("service_type", type=str, required=True)
 @click.pass_obj
-def srv_start(shepherd: ShepherdMng, service_type: str):
+def srv_up(shepherd: ShepherdMng, service_type: str):
     """Start service."""
     shepherd.serviceMng.start_svc(service_type)
 
