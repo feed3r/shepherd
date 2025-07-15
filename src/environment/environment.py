@@ -322,14 +322,18 @@ class EnvironmentMng:
             )
 
         svc_type_cfg = self.configMng.get_service_type(
-            svc_template if svc_template else Constants.SVC_TYPE_DOCKER
+            svc_template if svc_template else Constants.SVC_TYPE_GENERIC_IMAGE
         )
 
         if svc_type_cfg:
             svcCfg = ServiceCfg.from_service_type(svc_type_cfg, svc_name)
         else:
             svcCfg = ServiceCfg.from_tag(
-                svc_template if svc_template else Constants.SVC_TYPE_DOCKER,
+                (
+                    svc_template
+                    if svc_template
+                    else Constants.SVC_TYPE_GENERIC_IMAGE
+                ),
                 svc_name,
             )
 

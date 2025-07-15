@@ -68,7 +68,7 @@ class Constants:
 
     # Service types
 
-    SVC_TYPE_DOCKER: str = "docker"
+    SVC_TYPE_GENERIC_IMAGE: str = "image"
 
     # Default configuration values
 
@@ -83,7 +83,7 @@ class Constants:
             },
             "service_types": [
                 {
-                    "type": "docker",
+                    "type": "image",
                     "image": "",
                     "ingress": False,
                     "envvars": {},

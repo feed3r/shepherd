@@ -35,7 +35,7 @@ class ShpdServiceFactory(ServiceFactory):
         Create a service.
         """
         match svc_type:
-            case Constants.SVC_TYPE_DOCKER:
+            case Constants.SVC_TYPE_GENERIC_IMAGE:
                 return DockerSvc(
                     self.configMng, ServiceCfg.from_tag(svc_type, svc_tag)
                 )
@@ -48,7 +48,7 @@ class ShpdServiceFactory(ServiceFactory):
         Get a service.
         """
         match svcCfg.type:
-            case Constants.SVC_TYPE_DOCKER:
+            case Constants.SVC_TYPE_GENERIC_IMAGE:
                 return DockerSvc(self.configMng, svcCfg)
             case _:
                 raise ValueError(
