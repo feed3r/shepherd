@@ -78,6 +78,118 @@ values = """
   log_format=%(asctime)s - %(levelname)s - %(message)s
   """
 
+shpd_config_svc_default = """
+{
+  "logging": {
+    "file": "${log_file}",
+    "level": "${log_level}",
+    "stdout": "${log_stdout}",
+    "format": "${log_format}"
+  },
+  "shpd_registry": {
+    "ftp_server": "${shpd_registry}",
+    "ftp_user": "${shpd_registry_ftp_usr}",
+    "ftp_psw": "${shpd_registry_ftp_psw}",
+    "ftp_shpd_path": "${shpd_registry_ftp_shpd_path}",
+    "ftp_env_imgs_path": "${shpd_registry_ftp_imgs_path}"
+  },
+  "host_inet_ip": "${host_inet_ip}",
+  "domain": "${domain}",
+  "dns_type": "${dns_type}",
+  "ca": {
+    "country": "${ca_country}",
+    "state": "${ca_state}",
+    "locality": "${ca_locality}",
+    "organization": "${ca_org}",
+    "organizational_unit": "${ca_org_unit}",
+    "common_name": "${ca_cn}",
+    "email": "${ca_email}",
+    "passphrase": "${ca_passphrase}"
+  },
+  "cert": {
+    "country": "${cert_country}",
+    "state": "${cert_state}",
+    "locality": "${cert_locality}",
+    "organization": "${cert_org}",
+    "organizational_unit": "${cert_org_unit}",
+    "common_name": "${cert_cn}",
+    "email": "${cert_email}",
+    "subject_alternative_names": []
+  },
+  "service_types": [
+    {
+      "type": "image",
+      "image": "test-image:latest",
+      "labels": [
+        "com.example.label1=value1",
+        "com.example.label2=value2"
+      ],
+      "workdir": "/test",
+      "volumes": [
+          "/home/test/.ssh:/home/test/.ssh",
+          "/etc/ssh:/etc/ssh"
+      ],
+      "ingress": false,
+      "empty_env": null,
+      "environment": [],
+      "ports": [
+        "80:80",
+        "443:443",
+        "8080:8080"
+      ],
+      "properties": {},
+      "networks": [
+        "default"
+      ],
+      "extra_hosts": [
+        "host.docker.internal:host-gateway"
+      ],
+      "subject_alternative_name": null
+    }
+  ],
+  "envs": [
+    {
+      "type": "docker-compose",
+      "tag": "test-1",
+      "services": [
+        {
+          "type": "image",
+          "tag": "test",
+          "image": "test-image:latest",
+          "labels": [
+            "com.example.label1=value1",
+            "com.example.label2=value2"
+          ],
+          "workdir": "/test",
+          "volumes": [
+              "/home/test/.ssh:/home/test/.ssh",
+              "/etc/ssh:/etc/ssh"
+          ],
+          "ingress": false,
+          "empty_env": null,
+          "environment": [],
+          "ports": [
+            "80:80",
+            "443:443",
+            "8080:8080"
+          ],
+          "properties": {},
+          "networks": [
+            "default"
+          ],
+          "extra_hosts": [
+            "host.docker.internal:host-gateway"
+          ],
+          "subject_alternative_name": null
+        }
+      ],
+      "archived": false,
+      "active": true
+    }
+  ]
+}
+"""
+
 shpd_config_pg_template = """
 {
   "logging": {
@@ -118,7 +230,7 @@ shpd_config_pg_template = """
   },
   "service_types": [
     {
-      "type": "docker",
+      "type": "image",
       "image": "",
       "ingress": false,
       "empty_env": null,
@@ -374,7 +486,7 @@ def test_svc_add_one_with_template(
         cli, ["env", "add-resource", "svc", "pg-1", "postgres"]
     )
 
-    # we still doesn't support templates, so this should fail
+    # we still don't support templates, so this should fail
     assert result.exit_code == 1
 
     sm = ShepherdMng()
@@ -383,3 +495,49 @@ def test_svc_add_one_with_template(
     assert env is not None, "Active environment should not be None"
     assert env.services is not None, "Services should not be None"
     assert len(env.services) == 0, "There should be exactly zero services"
+
+
+@pytest.mark.svc
+@pytest.mark.parametrize("expanduser_side_effects", [1])
+def test_svc_render_compose_service(
+    temp_home: Path,
+    runner: CliRunner,
+    mocker: MockerFixture,
+    expanduser_side_effects: int,
+):
+    side_effect = make_expanduser_side_effect(
+        temp_home, expanduser_side_effects
+    )
+    mocker.patch("os.path.expanduser", side_effect=side_effect)
+    shpd_dir = temp_home / "shpd"
+    shpd_dir.mkdir(parents=True, exist_ok=True)
+    shpd_json = shpd_dir / ".shpd.json"
+    shpd_json.write_text(shpd_config_svc_default)
+
+    sm = ShepherdMng()
+
+    env = sm.environmentMng.get_environment("test-1")
+    assert env is not None, "Environment should not be None"
+    svc = env.get_service("test")
+    assert svc is not None, "Service should not be None"
+    assert svc.render() == (
+        "services:\n"
+        "  test-test-1:\n"
+        "    image: test-image:latest\n"
+        "    hostname: test-test-1\n"
+        "    container_name: test-test-1\n"
+        "    labels:\n"
+        "    - com.example.label1=value1\n"
+        "    - com.example.label2=value2\n"
+        "    volumes:\n"
+        "    - /home/test/.ssh:/home/test/.ssh\n"
+        "    - /etc/ssh:/etc/ssh\n"
+        "    ports:\n"
+        "    - 80:80\n"
+        "    - 443:443\n"
+        "    - 8080:8080\n"
+        "    extra_hosts:\n"
+        "    - host.docker.internal:host-gateway\n"
+        "    networks:\n"
+        "    - default\n"
+    )

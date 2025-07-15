@@ -162,6 +162,13 @@ class Environment(ABC):
         """Return the list of services in the environment."""
         return self.services
 
+    def get_service(self, svc_name: str) -> Optional[Service]:
+        """Get a service by name."""
+        for service in self.services:
+            if service.tag == svc_name:
+                return service
+        return None
+
 
 class EnvironmentFactory(ABC):
     """
@@ -293,11 +300,7 @@ class EnvironmentMng:
         """Get environment status."""
         pass
 
-    def add_service(
-        self, env_tag: Optional[str], svc_name: str, svc_template: Optional[str]
-    ):
-        """Add a service to an environment."""
-
+    def get_environment(self, env_tag: Optional[str]) -> Optional[Environment]:
         if env_tag and env_tag.strip():
             envCfg = self.configMng.get_environment(env_tag)
             if not envCfg:
@@ -310,12 +313,24 @@ class EnvironmentMng:
                 Util.print_error_and_die("No active environment configured.")
 
         if envCfg:
-            if envCfg.get_service(svc_name):
+            env = self.envFactory.new_environment_cfg(envCfg)
+            return env
+        else:
+            return None
+
+    def add_service(
+        self, env_tag: Optional[str], svc_tag: str, svc_template: Optional[str]
+    ):
+        """Add a service to an environment."""
+        env = self.get_environment(env_tag)
+
+        if env:
+            envCfg = env.to_config()
+            if env.get_service(svc_tag):
                 Util.print_error_and_die(
-                    f"""Service with name '{svc_name}' already
+                    f"""Service with tag '{svc_tag}' already
                     exists in environment '{envCfg.tag}'."""
                 )
-            env = self.envFactory.new_environment_cfg(envCfg)
             svc_type_cfg = self.configMng.get_service_type(
                 svc_template
                 if svc_template
@@ -323,7 +338,7 @@ class EnvironmentMng:
             )
 
             if svc_type_cfg:
-                svcCfg = ServiceCfg.from_service_type(svc_type_cfg, svc_name)
+                svcCfg = ServiceCfg.from_service_type(svc_type_cfg, svc_tag)
             else:
                 svcCfg = ServiceCfg.from_tag(
                     (
@@ -331,7 +346,7 @@ class EnvironmentMng:
                         if svc_template
                         else Constants.SVC_TYPE_GENERIC_IMAGE
                     ),
-                    svc_name,
+                    svc_tag,
                 )
 
             try:

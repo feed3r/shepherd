@@ -18,7 +18,9 @@
 
 from __future__ import annotations
 
-from typing import override
+from typing import Any, override
+
+import yaml
 
 from config import ConfigMng, EnvironmentCfg, ServiceCfg
 from service import Service
@@ -43,6 +45,34 @@ class DockerSvc(Service):
             clonedCfg,
         )
         return clonedSvc
+
+    @override
+    def render(self) -> str:
+        """
+        Render the docker-compose service configuration for this service.
+        """
+        service_def: dict[str, Any] = {
+            "image": self.image,
+            "hostname": self.hostname,
+            "container_name": self.container_name,
+        }
+
+        if self.labels:
+            service_def["labels"] = self.labels
+        if self.environment:
+            service_def["environment"] = self.environment
+        if self.volumes:
+            service_def["volumes"] = self.volumes
+        if self.ports:
+            service_def["ports"] = self.ports
+        if self.extra_hosts:
+            service_def["extra_hosts"] = self.extra_hosts
+        if self.networks:
+            service_def["networks"] = self.networks
+
+        return yaml.dump(
+            {"services": {self.name: service_def}}, sort_keys=False
+        )
 
     @override
     def build(self):

@@ -21,7 +21,6 @@ from abc import ABC, abstractmethod
 from typing import Optional
 
 from config import ConfigMng, EnvironmentCfg, ServiceCfg
-from util import Constants
 
 
 class Service(ABC):
@@ -77,11 +76,18 @@ class Service(ABC):
         """
         Get the canonical name of the service.
         """
-        return f"{self.tag}-{Constants.SVC_TKN}-{self.envCfg.tag}"
+        return f"{self.tag}-{self.envCfg.tag}"
 
     @abstractmethod
     def clone(self, dst_svc_tag: str) -> Service:
         """Clone a service."""
+        pass
+
+    @abstractmethod
+    def render(self) -> str:
+        """
+        Render the service configuration.
+        """
         pass
 
     @abstractmethod
