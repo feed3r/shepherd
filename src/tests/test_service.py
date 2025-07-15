@@ -217,8 +217,10 @@ def test_svc_add_one_default(
     assert env.services[0].image == "", "Service image should be ''"
 
     assert env.services[0].ingress is False, "Service ingress should be False"
-    assert env.services[0].envvars == {}, "Service envvars should be empty"
-    assert env.services[0].ports == {}, "Service ports should be empty"
+    assert (
+        env.services[0].environment == []
+    ), "Service environment should be empty"
+    assert env.services[0].ports == [], "Service ports should be empty"
     assert (
         env.services[0].properties == {}
     ), "Service properties should be empty"
@@ -265,8 +267,10 @@ def test_svc_add_two_default(
     assert env.services[0].image == "", "Service image should be ''"
 
     assert env.services[0].ingress is False, "Service ingress should be False"
-    assert env.services[0].envvars == {}, "Service envvars should be empty"
-    assert env.services[0].ports == {}, "Service ports should be empty"
+    assert (
+        env.services[0].environment == []
+    ), "Service environment should be empty"
+    assert env.services[0].ports == [], "Service ports should be empty"
     assert (
         env.services[0].properties == {}
     ), "Service properties should be empty"
@@ -279,8 +283,10 @@ def test_svc_add_two_default(
     assert env.services[1].image == "", "Service image should be ''"
 
     assert env.services[1].ingress is False, "Service ingress should be False"
-    assert env.services[1].envvars == {}, "Service envvars should be empty"
-    assert env.services[1].ports == {}, "Service ports should be empty"
+    assert (
+        env.services[1].environment == []
+    ), "Service environment should be empty"
+    assert env.services[1].ports == [], "Service ports should be empty"
     assert (
         env.services[1].properties == {}
     ), "Service properties should be empty"
@@ -327,8 +333,10 @@ def test_svc_add_two_same_tag_default(
     assert env.services[0].image == "", "Service image should be ''"
 
     assert env.services[0].ingress is False, "Service ingress should be False"
-    assert env.services[0].envvars == {}, "Service envvars should be empty"
-    assert env.services[0].ports == {}, "Service ports should be empty"
+    assert (
+        env.services[0].environment == []
+    ), "Service environment should be empty"
+    assert env.services[0].ports == [], "Service ports should be empty"
     assert (
         env.services[0].properties == {}
     ), "Service properties should be empty"

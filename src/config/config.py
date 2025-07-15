@@ -18,9 +18,10 @@
 
 import json
 import os
+import re
 from copy import deepcopy
 from dataclasses import asdict, dataclass, field
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 
 from util import Constants, Util
 
@@ -57,11 +58,18 @@ class ServiceTypeCfg:
 
     type: str
     image: str
+    hostname: Optional[str] = None
+    container_name: Optional[str] = None
+    labels: Optional[list[str]] = field(default_factory=list)
+    workdir: Optional[str] = None
+    volumes: Optional[list[str]] = field(default_factory=list)
     ingress: Optional[bool] = None
     empty_env: Optional[str] = None
-    envvars: Optional[dict[str, str]] = field(default_factory=dict)
-    ports: Optional[dict[str, str]] = field(default_factory=dict)
+    environment: Optional[list[str]] = field(default_factory=list)
+    ports: Optional[list[str]] = field(default_factory=list)
     properties: Optional[dict[str, str]] = field(default_factory=dict)
+    networks: Optional[list[str]] = field(default_factory=list)
+    extra_hosts: Optional[list[str]] = field(default_factory=list)
     subject_alternative_name: Optional[str] = None
 
     @classmethod
@@ -72,11 +80,18 @@ class ServiceTypeCfg:
         return ServiceTypeCfg(
             type=service_type,
             image="",
+            hostname=None,
+            container_name=None,
+            labels=[],
+            workdir=None,
+            volumes=[],
             ingress=False,
             empty_env=None,
-            envvars={},
-            ports={},
+            environment=[],
+            ports=[],
             properties={},
+            networks=[],
+            extra_hosts=[],
             subject_alternative_name=None,
         )
 
@@ -88,11 +103,18 @@ class ServiceTypeCfg:
         return cls(
             type=other.type,
             image=other.image,
+            hostname=other.hostname,
+            container_name=other.container_name,
+            labels=deepcopy(other.labels),
+            workdir=other.workdir,
+            volumes=deepcopy(other.volumes),
             ingress=other.ingress,
             empty_env=other.empty_env,
-            envvars=deepcopy(other.envvars),
+            environment=deepcopy(other.environment),
             ports=deepcopy(other.ports),
             properties=deepcopy(other.properties),
+            networks=deepcopy(other.networks),
+            extra_hosts=deepcopy(other.extra_hosts),
             subject_alternative_name=other.subject_alternative_name,
         )
 
@@ -106,13 +128,20 @@ class ServiceCfg:
     type: str
     tag: str
     image: str
+    hostname: Optional[str] = None
+    container_name: Optional[str] = None
+    labels: Optional[list[str]] = field(default_factory=list)
+    workdir: Optional[str] = None
+    volumes: Optional[list[str]] = field(default_factory=list)
     ingress: Optional[bool] = None
     empty_env: Optional[str] = None
-    envvars: Optional[dict[str, str]] = field(default_factory=dict)
-    ports: Optional[dict[str, str]] = field(default_factory=dict)
+    environment: Optional[list[str]] = field(default_factory=list)
+    ports: Optional[list[str]] = field(default_factory=list)
     properties: Optional[dict[str, str]] = field(default_factory=dict)
+    networks: Optional[list[str]] = field(default_factory=list)
+    extra_hosts: Optional[list[str]] = field(default_factory=list)
     subject_alternative_name: Optional[str] = None
-    upstreams: Optional[List[UpstreamCfg]] = field(default_factory=list)
+    upstreams: Optional[list[UpstreamCfg]] = field(default_factory=list)
 
     @classmethod
     def from_tag(cls, service_type: str, service_tag: str):
@@ -123,11 +152,18 @@ class ServiceCfg:
             type=service_type,
             tag=service_tag,
             image="",
+            hostname=None,
+            container_name=None,
+            labels=[],
+            workdir=None,
+            volumes=[],
             ingress=False,
             empty_env=None,
-            envvars={},
-            ports={},
+            environment=[],
+            ports=[],
             properties={},
+            networks=[],
+            extra_hosts=[],
             subject_alternative_name=None,
             upstreams=[],
         )
@@ -141,11 +177,18 @@ class ServiceCfg:
             type=other.type,
             tag=other.tag,
             image=other.image,
+            hostname=other.hostname,
+            container_name=other.container_name,
+            labels=deepcopy(other.labels),
+            workdir=other.workdir,
+            volumes=deepcopy(other.volumes),
             ingress=other.ingress,
             empty_env=other.empty_env,
-            envvars=deepcopy(other.envvars),
+            environment=deepcopy(other.environment),
             ports=deepcopy(other.ports),
             properties=deepcopy(other.properties),
+            networks=deepcopy(other.networks),
+            extra_hosts=deepcopy(other.extra_hosts),
             subject_alternative_name=other.subject_alternative_name,
             upstreams=deepcopy(other.upstreams),
         )
@@ -159,11 +202,18 @@ class ServiceCfg:
             type=service_type.type,
             tag=service_tag,
             image=service_type.image,
+            hostname=service_type.hostname,
+            container_name=service_type.container_name,
+            labels=deepcopy(service_type.labels),
+            workdir=service_type.workdir,
+            volumes=deepcopy(service_type.volumes),
             ingress=service_type.ingress,
             empty_env=service_type.empty_env,
-            envvars=deepcopy(service_type.envvars),
+            environment=deepcopy(service_type.environment),
             ports=deepcopy(service_type.ports),
             properties=deepcopy(service_type.properties),
+            networks=deepcopy(service_type.networks),
+            extra_hosts=deepcopy(service_type.extra_hosts),
             subject_alternative_name=service_type.subject_alternative_name,
             upstreams=[],
         )
@@ -177,7 +227,7 @@ class EnvironmentCfg:
 
     type: str
     tag: str
-    services: Optional[List[ServiceCfg]]
+    services: Optional[list[ServiceCfg]]
     archived: bool
     active: bool
 
@@ -264,7 +314,7 @@ class CertCfg:
     organizational_unit: str
     common_name: str
     email: str
-    subject_alternative_names: List[str] = field(default_factory=list)
+    subject_alternative_names: list[str] = field(default_factory=list)
 
 
 @dataclass
@@ -280,8 +330,8 @@ class Config:
     dns_type: str
     ca: CACfg
     cert: CertCfg
-    service_types: Optional[List[ServiceTypeCfg]] = field(default_factory=list)
-    envs: List[EnvironmentCfg] = field(default_factory=list)
+    service_types: Optional[list[ServiceTypeCfg]] = field(default_factory=list)
+    envs: list[EnvironmentCfg] = field(default_factory=list)
 
 
 def parse_config(json_str: str) -> Config:
@@ -320,11 +370,18 @@ def parse_config(json_str: str) -> Config:
         return ServiceTypeCfg(
             type=item["type"],
             image=item["image"],
+            hostname=item.get("hostname"),
+            container_name=item.get("container_name"),
+            labels=item.get("labels", []),
+            workdir=item.get("workdir"),
+            volumes=item.get("volumes", []),
             ingress=item.get("ingress"),
             empty_env=item.get("empty_env"),
-            envvars=item.get("envvars", {}),
-            ports=item.get("ports", {}),
+            environment=item.get("environment", []),
+            ports=item.get("ports", []),
             properties=item.get("properties", {}),
+            networks=item.get("networks", []),
+            extra_hosts=item.get("extra_hosts", []),
             subject_alternative_name=item.get("subject_alternative_name"),
         )
 
@@ -333,11 +390,18 @@ def parse_config(json_str: str) -> Config:
             type=item["type"],
             tag=item["tag"],
             image=item["image"],
+            hostname=item.get("hostname"),
+            container_name=item.get("container_name"),
+            labels=item.get("labels", []),
+            workdir=item.get("workdir"),
+            volumes=item.get("volumes", []),
             ingress=item.get("ingress"),
             empty_env=item.get("empty_env"),
-            envvars=item.get("envvars", {}),
-            ports=item.get("ports", {}),
+            environment=item.get("environment", []),
+            ports=item.get("ports", []),
             properties=item.get("properties", {}),
+            networks=item.get("networks", []),
+            extra_hosts=item.get("extra_hosts", []),
             subject_alternative_name=item.get("subject_alternative_name"),
             upstreams=[
                 parse_upstream(upstream)
@@ -508,22 +572,18 @@ class ConfigMng:
         :return: A new dictionary with placeholders replaced by actual values.
         """
 
+        placeholder_pattern = re.compile(r"\$\{([^}]+)\}")
+
         def replace(value: Any, path: str = "") -> Any:
-            """
-            Helper function to recursively replace placeholders in
-            nested structures.
-            Tracks original placeholders for potential restoration
-            during saving.
-            """
-            if (
-                isinstance(value, str)
-                and value.startswith("${")
-                and value.endswith("}")
-            ):
-                key = value[2:-1]
-                if path:
-                    self.original_placeholders[path] = value
-                return values.get(key, None)
+            if isinstance(value, str):
+                # Replace all placeholders in the string
+                def replacer(match: re.Match[str]) -> str:
+                    key = match.group(1)
+                    if path:
+                        self.original_placeholders[path] = value
+                    return str(values.get(key, None))
+
+                return placeholder_pattern.sub(replacer, value)
 
             elif isinstance(value, dict):
                 valDict: Dict[Any, Any] = value
@@ -533,7 +593,7 @@ class ConfigMng:
                 }
 
             elif isinstance(value, list):
-                valList: List[Any] = value
+                valList: list[Any] = value
                 return [
                     replace(v, f"{path}[{self.get_list_item_key(v, i)}]")
                     for i, v in enumerate(valList)
@@ -606,7 +666,7 @@ class ConfigMng:
                 return new_dict
 
             elif isinstance(config, list):
-                configList: List[Any] = config
+                configList: list[Any] = config
                 return [
                     replace_keys_with_placeholders(
                         item,
@@ -614,6 +674,9 @@ class ConfigMng:
                     )
                     for i, item in enumerate(configList)
                 ]
+
+            elif isinstance(config, str):
+                return self.original_placeholders.get(parent_key, config)
 
             return config
 
@@ -653,7 +716,7 @@ class ConfigMng:
                     return svc_type
         return None
 
-    def get_environments(self) -> List[EnvironmentCfg]:
+    def get_environments(self) -> list[EnvironmentCfg]:
         """
         Retrieves all environments.
 

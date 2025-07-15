@@ -17,7 +17,7 @@
 
 
 import logging
-from typing import Dict, Optional
+from typing import Optional
 
 import click
 
@@ -31,7 +31,7 @@ from util import Util, setup_logging
 
 
 class ShepherdMng:
-    def __init__(self, cli_flags: Dict[str, bool] = {}):
+    def __init__(self, cli_flags: dict[str, bool] = {}):
         self.configMng = ConfigMng("~/.shpd.conf")
         self.cli_flags = cli_flags
         Util.ensure_dirs(self.configMng.constants)

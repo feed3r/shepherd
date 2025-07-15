@@ -20,7 +20,7 @@ from __future__ import annotations
 
 import os
 from abc import ABC, abstractmethod
-from typing import Dict, List, Optional
+from typing import Optional
 
 from config import ConfigMng, EnvironmentCfg, ServiceCfg
 from service import Service, ServiceFactory
@@ -33,7 +33,7 @@ class Environment(ABC):
     tag: str
     archived: bool
     active: bool
-    services: List[Service]
+    services: list[Service]
 
     def __init__(
         self,
@@ -49,7 +49,7 @@ class Environment(ABC):
         self.active = envCfg.active
         self.services = (
             [
-                self.svcFactory.new_service_cfg(svcCfg)
+                self.svcFactory.new_service_from_cfg(envCfg, svcCfg)
                 for svcCfg in envCfg.services
             ]
             if envCfg.services
@@ -158,7 +158,7 @@ class Environment(ABC):
         self.services.remove(service)
         self.sync_config()
 
-    def get_services(self) -> List[Service]:
+    def get_services(self) -> list[Service]:
         """Return the list of services in the environment."""
         return self.services
 
@@ -190,7 +190,7 @@ class EnvironmentMng:
 
     def __init__(
         self,
-        cli_flags: Dict[str, bool],
+        cli_flags: dict[str, bool],
         configMng: ConfigMng,
         envFactory: EnvironmentFactory,
         svcFactory: ServiceFactory,
@@ -316,32 +316,31 @@ class EnvironmentMng:
                     exists in environment '{envCfg.tag}'."""
                 )
             env = self.envFactory.new_environment_cfg(envCfg)
-        else:
-            env = self.envFactory.new_environment(
-                Constants.ENV_TYPE_DOCKER_COMPOSE, "-"
+            svc_type_cfg = self.configMng.get_service_type(
+                svc_template
+                if svc_template
+                else Constants.SVC_TYPE_GENERIC_IMAGE
             )
 
-        svc_type_cfg = self.configMng.get_service_type(
-            svc_template if svc_template else Constants.SVC_TYPE_GENERIC_IMAGE
-        )
+            if svc_type_cfg:
+                svcCfg = ServiceCfg.from_service_type(svc_type_cfg, svc_name)
+            else:
+                svcCfg = ServiceCfg.from_tag(
+                    (
+                        svc_template
+                        if svc_template
+                        else Constants.SVC_TYPE_GENERIC_IMAGE
+                    ),
+                    svc_name,
+                )
 
-        if svc_type_cfg:
-            svcCfg = ServiceCfg.from_service_type(svc_type_cfg, svc_name)
-        else:
-            svcCfg = ServiceCfg.from_tag(
-                (
-                    svc_template
-                    if svc_template
-                    else Constants.SVC_TYPE_GENERIC_IMAGE
-                ),
-                svc_name,
-            )
-
-        try:
-            service = self.svcFactory.new_service_cfg(svcCfg)
-            env.add_service(service)
-            Util.print(
-                f"Service '{service.tag}' added to environment '{env.tag}'."
-            )
-        except ValueError as e:
-            Util.print_error_and_die(f"Failed to create service: {e}")
+            try:
+                service = self.svcFactory.new_service_from_cfg(
+                    envCfg or None, svcCfg
+                )
+                env.add_service(service)
+                Util.print(
+                    f"Service '{service.tag}' added to environment '{env.tag}'."
+                )
+            except ValueError as e:
+                Util.print_error_and_die(f"Failed to create service: {e}")

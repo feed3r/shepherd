@@ -18,7 +18,7 @@
 
 from typing import override
 
-from config import ConfigMng, ServiceCfg
+from config import ConfigMng, EnvironmentCfg, ServiceCfg
 from docker import DockerSvc
 from service import Service, ServiceFactory
 from util import Constants
@@ -30,26 +30,15 @@ class ShpdServiceFactory(ServiceFactory):
         self.configMng = configMng
 
     @override
-    def new_service(self, svc_type: str, svc_tag: str) -> Service:
-        """
-        Create a service.
-        """
-        match svc_type:
-            case Constants.SVC_TYPE_GENERIC_IMAGE:
-                return DockerSvc(
-                    self.configMng, ServiceCfg.from_tag(svc_type, svc_tag)
-                )
-            case _:
-                raise ValueError(f"Unknown service type: {svc_type}")
-
-    @override
-    def new_service_cfg(self, svcCfg: ServiceCfg) -> Service:
+    def new_service_from_cfg(
+        self, envCfg: EnvironmentCfg, svcCfg: ServiceCfg
+    ) -> Service:
         """
         Get a service.
         """
         match svcCfg.type:
             case Constants.SVC_TYPE_GENERIC_IMAGE:
-                return DockerSvc(self.configMng, svcCfg)
+                return DockerSvc(self.configMng, envCfg, svcCfg)
             case _:
                 raise ValueError(
                     f"""Unknown service type: {svcCfg.type},

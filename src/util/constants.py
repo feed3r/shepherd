@@ -69,6 +69,7 @@ class Constants:
     # Service types
 
     SVC_TYPE_GENERIC_IMAGE: str = "image"
+    SVC_TKN: str = "svc"
 
     # Default configuration values
 

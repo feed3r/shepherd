@@ -15,7 +15,6 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from typing import Dict
 
 from config import ConfigMng
 
@@ -39,7 +38,7 @@ class CompletionMng:
         "add-resource",
     ]
 
-    def __init__(self, cli_flags: Dict[str, bool], configMng: ConfigMng):
+    def __init__(self, cli_flags: dict[str, bool], configMng: ConfigMng):
         self.cli_flags = cli_flags
         self.configMng = configMng
 

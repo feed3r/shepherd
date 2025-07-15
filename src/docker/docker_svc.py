@@ -20,15 +20,17 @@ from __future__ import annotations
 
 from typing import override
 
-from config import ConfigMng, ServiceCfg
+from config import ConfigMng, EnvironmentCfg, ServiceCfg
 from service import Service
 
 
 class DockerSvc(Service):
 
-    def __init__(self, config: ConfigMng, svcCfg: ServiceCfg):
+    def __init__(
+        self, config: ConfigMng, envCfg: EnvironmentCfg, svcCfg: ServiceCfg
+    ):
         """Initialize a Docker service."""
-        super().__init__(config, svcCfg)
+        super().__init__(config, envCfg, svcCfg)
 
     @override
     def clone(self, dst_svc_tag: str) -> DockerSvc:
@@ -37,6 +39,7 @@ class DockerSvc(Service):
         clonedCfg.tag = dst_svc_tag
         clonedSvc = DockerSvc(
             self.configMng,
+            self.envCfg,
             clonedCfg,
         )
         return clonedSvc

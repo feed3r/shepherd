@@ -18,9 +18,10 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from typing import Dict, Optional
+from typing import Optional
 
-from config import ConfigMng, ServiceCfg
+from config import ConfigMng, EnvironmentCfg, ServiceCfg
+from util import Constants
 
 
 class Service(ABC):
@@ -28,24 +29,55 @@ class Service(ABC):
     type: str
     tag: str
     image: str
+    name: str
+    hostname: str
+    container_name: str
+    labels: list[str]
+    workdir: str
+    volumes: list[str]
     ingress: bool
     empty_env: str
-    envvars: Dict[str, str]
-    ports: Dict[str, str]
-    properties: Dict[str, str]
+    environment: list[str]
+    ports: list[str]
+    properties: dict[str, str]
+    networks: list[str]
+    extra_hosts: list[str]
     subject_alternative_name: Optional[str]
 
-    def __init__(self, configMng: ConfigMng, svcCfg: ServiceCfg):
+    def __init__(
+        self, configMng: ConfigMng, envCfg: EnvironmentCfg, svcCfg: ServiceCfg
+    ):
         self.configMng = configMng
+        self.envCfg = envCfg
         self.type = svcCfg.type
         self.tag = svcCfg.tag
         self.image = svcCfg.image
+        self.name = self.canonical_name()
+        self.hostname = (
+            svcCfg.hostname if svcCfg.hostname else self.canonical_name()
+        )
+        self.container_name = (
+            svcCfg.container_name
+            if svcCfg.container_name
+            else self.canonical_name()
+        )
+        self.labels = svcCfg.labels if svcCfg.labels else []
+        self.workdir = svcCfg.workdir if svcCfg.workdir else ""
+        self.volumes = svcCfg.volumes if svcCfg.volumes else []
         self.ingress = svcCfg.ingress if svcCfg.ingress else False
         self.empty_env = svcCfg.empty_env if svcCfg.empty_env else ""
-        self.envvars = svcCfg.envvars if svcCfg.envvars else {}
-        self.ports = svcCfg.ports if svcCfg.ports else {}
+        self.environment = svcCfg.environment if svcCfg.environment else []
+        self.ports = svcCfg.ports if svcCfg.ports else []
         self.properties = svcCfg.properties if svcCfg.properties else {}
+        self.networks = svcCfg.networks if svcCfg.networks else []
+        self.extra_hosts = svcCfg.extra_hosts if svcCfg.extra_hosts else []
         self.subject_alternative_name = svcCfg.subject_alternative_name
+
+    def canonical_name(self) -> str:
+        """
+        Get the canonical name of the service.
+        """
+        return f"{self.tag}-{Constants.SVC_TKN}-{self.envCfg.tag}"
 
     @abstractmethod
     def clone(self, dst_svc_tag: str) -> Service:
@@ -92,11 +124,18 @@ class Service(ABC):
             type=self.type,
             tag=self.tag,
             image=self.image,
+            hostname=self.hostname,
+            container_name=self.container_name,
+            labels=self.labels,
+            workdir=self.workdir,
+            volumes=self.volumes,
             ingress=self.ingress,
             empty_env=self.empty_env,
-            envvars=self.envvars,
+            environment=self.environment,
             ports=self.ports,
             properties=self.properties,
+            networks=self.networks,
+            extra_hosts=self.extra_hosts,
             subject_alternative_name=self.subject_alternative_name,
         )
 
@@ -110,14 +149,9 @@ class ServiceFactory(ABC):
         self.config = config
 
     @abstractmethod
-    def new_service(self, svc_type: str, svc_tag: str) -> Service:
-        """
-        Create a new service.
-        """
-        pass
-
-    @abstractmethod
-    def new_service_cfg(self, svcCfg: ServiceCfg) -> Service:
+    def new_service_from_cfg(
+        self, envCfg: EnvironmentCfg, svcCfg: ServiceCfg
+    ) -> Service:
         """
         Create a new service.
         """
@@ -126,7 +160,7 @@ class ServiceFactory(ABC):
 
 class ServiceMng:
 
-    def __init__(self, cli_flags: Dict[str, bool], configMng: ConfigMng):
+    def __init__(self, cli_flags: dict[str, bool], configMng: ConfigMng):
         self.cli_flags = cli_flags
         self.configMng = configMng
         pass

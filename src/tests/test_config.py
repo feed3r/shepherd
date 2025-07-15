@@ -66,12 +66,17 @@ config_json = """{
     {
       "type": "oracle",
       "image": "${ora_image}",
+      "hostname": null,
+      "container_name": null,
+      "labels": [],
+      "workdir": null,
+      "volumes": [],
       "ingress": false,
       "empty_env": "${ora_empty_env}",
-      "envvars": {},
-      "ports": {
-        "net_listener_port": "${ora_listener_port}"
-      },
+      "environment": [],
+      "ports": [
+        "1521:${ora_listener_port}"
+      ],
       "properties": {
         "pump_dir_name": "${ora_pump_dir}",
         "root_db_name": "${ora_root_db_name}",
@@ -81,23 +86,32 @@ config_json = """{
         "user": "${db_usr}",
         "psw": "${db_psw}"
       },
+      "networks": [],
+      "extra_hosts": [],
       "subject_alternative_name": null
     },
     {
       "type": "postgres",
       "image": "${pg_image}",
+      "hostname": null,
+      "container_name": null,
+      "labels": [],
+      "workdir": null,
+      "volumes": [],
       "ingress": false,
       "empty_env": "${pg_empty_env}",
-      "envvars": {},
-      "ports": {
-        "net_listener_port": "${pg_listener_port}"
-      },
+      "environment": [],
+      "ports": [
+        "5432:${pg_listener_port}"
+      ],
       "properties": {
         "sys_user": "${db_sys_usr}",
         "sys_psw": "${db_sys_psw}",
         "user": "${db_usr}",
         "psw": "${db_psw}"
       },
+      "networks": [],
+      "extra_hosts": [],
       "subject_alternative_name": null
     }
   ],
@@ -110,16 +124,23 @@ config_json = """{
           "type": "postgres",
           "tag": "pg-1",
           "image": "ghcr.io/lunaticfringers/shepherd/postgres:17-3.5",
+          "hostname": null,
+          "container_name": null,
+          "labels": [],
+          "workdir": null,
+          "volumes": [],
           "ingress": null,
           "empty_env": null,
-          "envvars": null,
-          "ports": {},
+          "environment": null,
+          "ports": [],
           "properties": {
             "sys_user": "syspg1",
             "sys_psw": "syspg1",
             "user": "pg1",
             "psw": "pg1"
           },
+          "networks": [],
+          "extra_hosts": [],
           "subject_alternative_name": null,
           "upstreams": [
             {
@@ -156,11 +177,18 @@ config_json = """{
           "type": "traefik",
           "tag": "traefik-1",
           "image": "",
+          "hostname": null,
+          "container_name": null,
+          "labels": [],
+          "workdir": null,
+          "volumes": [],
           "ingress": true,
           "empty_env": null,
-          "envvars": null,
-          "ports": {},
+          "environment": null,
+          "ports": [],
           "properties": {},
+          "networks": [],
+          "extra_hosts": [],
           "subject_alternative_name": null,
           "upstreams": []
         },
@@ -168,14 +196,21 @@ config_json = """{
           "type": "custom-1",
           "tag": "primary",
           "image": "",
+          "hostname": null,
+          "container_name": null,
+          "labels": [],
+          "workdir": null,
+          "volumes": [],
           "ingress": true,
           "empty_env": null,
-          "envvars": null,
+          "environment": null,
           "ports": null,
           "properties": {
             "instance.name": "primary",
             "instance.id": 1
           },
+          "networks": [],
+          "extra_hosts": [],
           "subject_alternative_name": null,
           "upstreams": []
         },
@@ -183,16 +218,23 @@ config_json = """{
           "type": "nodejs",
           "tag": "poke",
           "image": "",
+          "hostname": null,
+          "container_name": null,
+          "labels": [],
+          "workdir": null,
+          "volumes": [],
           "ingress": null,
           "empty_env": null,
-          "envvars": {
-            "USER": "user",
-            "PSW": "psw"
-          },
-          "ports": {
-            "http": "3000:3000"
-          },
+          "environment": [
+            "USER=user",
+            "PSW=psw"
+          ],
+          "ports": [
+            "3000:3000"
+          ],
           "properties": {},
+          "networks": [],
+          "extra_hosts": [],
           "subject_alternative_name": null,
           "upstreams": []
         }
@@ -293,11 +335,8 @@ def test_load_config(mocker: MockerFixture):
     )
     assert service_types[0].empty_env == "fresh-ora-19300"
     assert service_types[0].ingress is False
-    assert service_types[0].envvars == {}
-    assert (
-        service_types[0].ports
-        and service_types[0].ports["net_listener_port"] == "1521"
-    )
+    assert service_types[0].environment == []
+    assert service_types[0].ports and service_types[0].ports[0] == "1521:1521"
     assert (
         service_types[0].properties
         and service_types[0].properties["pump_dir_name"] == "PUMP_DIR"
@@ -315,11 +354,8 @@ def test_load_config(mocker: MockerFixture):
     )
     assert service_types[1].empty_env == "fresh-pg-1735"
     assert service_types[1].ingress is False
-    assert service_types[1].envvars == {}
-    assert (
-        service_types[1].ports
-        and service_types[1].ports["net_listener_port"] == "5432"
-    )
+    assert service_types[1].environment == []
+    assert service_types[1].ports and service_types[1].ports[0] == "5432:5432"
     assert (
         service_types[1].properties
         and service_types[1].properties["sys_user"] == "sys"
@@ -370,11 +406,11 @@ def test_load_config(mocker: MockerFixture):
     assert services[2].tag == "primary"
     assert services[3].type == "nodejs"
     assert services[3].tag == "poke"
-    envvars = services[3].envvars
-    assert envvars and envvars.get("USER") == "user"
-    assert envvars and envvars.get("PSW") == "psw"
+    environment = services[3].environment
+    assert environment and environment[0] == "USER=user"
+    assert environment and environment[1] == "PSW=psw"
     ports = services[3].ports
-    assert ports and ports["http"] == "3000:3000"
+    assert ports and ports[0] == "3000:3000"
     assert config.host_inet_ip == "127.0.0.1"
     assert config.domain == "sslip.io"
     assert config.dns_type == "autoresolving"
