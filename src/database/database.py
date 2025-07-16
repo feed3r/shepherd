@@ -82,18 +82,22 @@ class DatabaseMng(ServiceMng):
         self.configMng = configMng
         pass
 
-    def sql_shell_svc(self):
+    def sql_shell_svc(self, env_tag: str, svc_tag: str):
         """Get a SQL shell session."""
         pass
 
-    def create_database_user_svc(self, user: str, psw: str):
+    def create_database_user_svc(
+        self, env_tag: str, svc_tag: str, user: str, psw: str
+    ):
         """Create a new database user."""
         pass
 
-    def create_database_directory_svc(self, user: str, directory_name: str):
+    def create_database_directory_svc(
+        self, env_tag: str, svc_tag: str, user: str, directory_name: str
+    ):
         """Create a directory object in a database."""
         pass
 
-    def remove_database_user_svc(self, user: str):
+    def remove_database_user_svc(self, env_tag: str, svc_tag: str, user: str):
         """Drop an existing user."""
         pass

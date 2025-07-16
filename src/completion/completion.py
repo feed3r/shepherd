@@ -22,7 +22,15 @@ from config import ConfigMng
 class CompletionMng:
 
     CATEGORIES = ["db", "env", "svc"]
-    COMMANDS_SVC = ["build", "bootstrap", "up", "halt", "stdout", "shell"]
+    COMMANDS_SVC = [
+        "build",
+        "bootstrap",
+        "up",
+        "halt",
+        "stdout",
+        "shell",
+        "render",
+    ]
     COMMANDS_DB = COMMANDS_SVC + ["sql-shell"]
     COMMANDS_ENV = [
         "init",

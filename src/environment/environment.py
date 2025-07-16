@@ -207,6 +207,24 @@ class EnvironmentMng:
         self.envFactory = envFactory
         self.svcFactory = svcFactory
 
+    def get_environment(self, env_tag: Optional[str]) -> Optional[Environment]:
+        if env_tag and env_tag.strip():
+            envCfg = self.configMng.get_environment(env_tag)
+            if not envCfg:
+                Util.print_error_and_die(
+                    f"Environment with tag '{env_tag}' does not exist."
+                )
+        else:
+            envCfg = self.configMng.get_active_environment()
+            if not envCfg:
+                Util.print_error_and_die("No active environment configured.")
+
+        if envCfg:
+            env = self.envFactory.new_environment_cfg(envCfg)
+            return env
+        else:
+            return None
+
     def init_env(self, env_type: str, env_tag: str):
         """Initialize an environment."""
         if self.configMng.get_environment(env_tag):
@@ -300,24 +318,6 @@ class EnvironmentMng:
         """Get environment status."""
         pass
 
-    def get_environment(self, env_tag: Optional[str]) -> Optional[Environment]:
-        if env_tag and env_tag.strip():
-            envCfg = self.configMng.get_environment(env_tag)
-            if not envCfg:
-                Util.print_error_and_die(
-                    f"Environment with tag '{env_tag}' does not exist."
-                )
-        else:
-            envCfg = self.configMng.get_active_environment()
-            if not envCfg:
-                Util.print_error_and_die("No active environment configured.")
-
-        if envCfg:
-            env = self.envFactory.new_environment_cfg(envCfg)
-            return env
-        else:
-            return None
-
     def add_service(
         self, env_tag: Optional[str], svc_tag: str, svc_template: Optional[str]
     ):
@@ -350,9 +350,7 @@ class EnvironmentMng:
                 )
 
             try:
-                service = self.svcFactory.new_service_from_cfg(
-                    envCfg or None, svcCfg
-                )
+                service = self.svcFactory.new_service_from_cfg(envCfg, svcCfg)
                 env.add_service(service)
                 Util.print(
                     f"Service '{service.tag}' added to environment '{env.tag}'."
