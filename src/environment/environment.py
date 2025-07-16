@@ -319,7 +319,11 @@ class EnvironmentMng:
         pass
 
     def add_service(
-        self, env_tag: Optional[str], svc_tag: str, svc_template: Optional[str]
+        self,
+        env_tag: Optional[str],
+        svc_tag: str,
+        svc_class: Optional[str],
+        svc_template: Optional[str],
     ):
         """Add a service to an environment."""
         env = self.get_environment(env_tag)
@@ -338,7 +342,9 @@ class EnvironmentMng:
             )
 
             if svc_type_cfg:
-                svcCfg = ServiceCfg.from_service_type(svc_type_cfg, svc_tag)
+                svcCfg = ServiceCfg.from_service_type(
+                    svc_type_cfg, svc_tag, svc_class
+                )
             else:
                 svcCfg = ServiceCfg.from_tag(
                     (
@@ -347,6 +353,7 @@ class EnvironmentMng:
                         else Constants.SVC_TYPE_GENERIC_IMAGE
                     ),
                     svc_tag,
+                    svc_class,
                 )
 
             try:

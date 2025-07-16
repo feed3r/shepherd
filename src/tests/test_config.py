@@ -123,6 +123,7 @@ config_json = """{
         {
           "type": "postgres",
           "tag": "pg-1",
+          "service_class": null,
           "image": "ghcr.io/lunaticfringers/shepherd/postgres:17-3.5",
           "hostname": null,
           "container_name": null,
@@ -176,6 +177,7 @@ config_json = """{
         {
           "type": "traefik",
           "tag": "traefik-1",
+          "service_class": null,
           "image": "",
           "hostname": null,
           "container_name": null,
@@ -195,6 +197,7 @@ config_json = """{
         {
           "type": "custom-1",
           "tag": "primary",
+          "service_class": null,
           "image": "",
           "hostname": null,
           "container_name": null,
@@ -217,6 +220,7 @@ config_json = """{
         {
           "type": "nodejs",
           "tag": "poke",
+          "service_class": null,
           "image": "",
           "hostname": null,
           "container_name": null,

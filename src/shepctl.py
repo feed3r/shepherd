@@ -296,6 +296,7 @@ def env_status(shepherd: ShepherdMng):
 @env.command(name="add-resource")
 @click.argument("resource_type", required=True)
 @click.argument("resource_name", required=True)
+@click.argument("resource_class", required=False)
 @click.argument("resource_template", required=False)
 @click.pass_obj
 @require_active_env
@@ -304,17 +305,19 @@ def env_add_resource(
     envCfg: EnvironmentCfg,
     resource_type: str,
     resource_name: str,
+    resource_class: Optional[str] = None,
     resource_template: Optional[str] = None,
 ):
     """Add a resource to the current environment.
 
     RESOURCE_TYPE: The type of resource to add (e.g., svc).
     RESOURCE_NAME: The name of the resource (e.g., svc-name).
+    RESOURCE_CLASS: Optional class of the resource (e.g., svc-class).
     RESOURCE_TEMPLATE: Optional template for the resource.
     """
     if resource_type == "svc":
         shepherd.environmentMng.add_service(
-            envCfg.tag, resource_name, resource_template
+            envCfg.tag, resource_name, resource_class, resource_template
         )
     else:
         raise click.UsageError(f"Unsupported resource type: {resource_type}")

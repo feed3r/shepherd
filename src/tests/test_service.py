@@ -483,7 +483,7 @@ def test_svc_add_one_with_template(
     assert result.exit_code == 0
 
     result = runner.invoke(
-        cli, ["env", "add-resource", "svc", "pg-1", "postgres"]
+        cli, ["env", "add-resource", "svc", "pg-1", "database", "postgres"]
     )
 
     # we still don't support templates, so this should fail

@@ -127,7 +127,8 @@ class ServiceCfg:
 
     type: str
     tag: str
-    image: str
+    service_class: Optional[str] = None
+    image: str = ""
     hostname: Optional[str] = None
     container_name: Optional[str] = None
     labels: Optional[list[str]] = field(default_factory=list)
@@ -144,13 +145,19 @@ class ServiceCfg:
     upstreams: Optional[list[UpstreamCfg]] = field(default_factory=list)
 
     @classmethod
-    def from_tag(cls, service_type: str, service_tag: str):
+    def from_tag(
+        cls,
+        service_type: str,
+        service_tag: str,
+        service_class: Optional[str],
+    ):
         """
         Creates a ServiceCfg object from a tag.
         """
         return ServiceCfg(
             type=service_type,
             tag=service_tag,
+            service_class=service_class,
             image="",
             hostname=None,
             container_name=None,
@@ -176,6 +183,7 @@ class ServiceCfg:
         return cls(
             type=other.type,
             tag=other.tag,
+            service_class=other.service_class,
             image=other.image,
             hostname=other.hostname,
             container_name=other.container_name,
@@ -194,13 +202,19 @@ class ServiceCfg:
         )
 
     @classmethod
-    def from_service_type(cls, service_type: ServiceTypeCfg, service_tag: str):
+    def from_service_type(
+        cls,
+        service_type: ServiceTypeCfg,
+        service_tag: str,
+        service_class: Optional[str],
+    ):
         """
         Creates a ServiceCfg object from a ServiceTypeCfg object.
         """
         return cls(
             type=service_type.type,
             tag=service_tag,
+            service_class=service_class,
             image=service_type.image,
             hostname=service_type.hostname,
             container_name=service_type.container_name,
@@ -389,6 +403,7 @@ def parse_config(json_str: str) -> Config:
         return ServiceCfg(
             type=item["type"],
             tag=item["tag"],
+            service_class=item.get("service_class"),
             image=item["image"],
             hostname=item.get("hostname"),
             container_name=item.get("container_name"),
