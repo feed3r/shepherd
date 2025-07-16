@@ -823,3 +823,25 @@ class ConfigMng:
             else:
                 env.active = False
         self.store()
+
+    def get_resource_classes(
+        self, env_tag: str, resource_type: str
+    ) -> list[str]:
+        """
+        Retrieves all unique resource classes from the service configurations.
+
+        :return: A list of unique resource classes.
+        """
+        match resource_type:
+            case self.constants.RESOURCE_TYPE_SVC:
+                return sorted(
+                    {
+                        svc.service_class
+                        for env in self.config.envs
+                        if env.tag == env_tag and env.services
+                        for svc in env.services
+                        if svc.service_class
+                    }
+                )
+            case _:
+                return []

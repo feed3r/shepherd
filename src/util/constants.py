@@ -66,9 +66,25 @@ class Constants:
 
     ENV_TYPE_DOCKER_COMPOSE: str = "docker-compose"
 
+    @property
+    def ENV_TYPES(self) -> list[str]:
+        return [
+            self.ENV_TYPE_DOCKER_COMPOSE,
+        ]
+
     # Service types
 
     SVC_TYPE_GENERIC_IMAGE: str = "image"
+
+    # Resource types
+
+    RESOURCE_TYPE_SVC: str = "svc"
+
+    @property
+    def RESOURCE_TYPES(self) -> list[str]:
+        return [
+            self.RESOURCE_TYPE_SVC,
+        ]
 
     # Default configuration values
 

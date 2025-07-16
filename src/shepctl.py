@@ -219,8 +219,7 @@ def env():
 @click.argument("env_tag", required=True)
 @click.pass_obj
 def env_init(shepherd: ShepherdMng, env_type: str, env_tag: str):
-    """Init an environment with an environment type,
-    a database type and an environment's tag name."""
+    """Init an environment of type ENV_TYPE with tag ENV_TAG."""
     shepherd.environmentMng.init_env(env_type, env_tag)
 
 
@@ -315,7 +314,7 @@ def env_add_resource(
     RESOURCE_CLASS: Optional class of the resource (e.g., svc-class).
     RESOURCE_TEMPLATE: Optional template for the resource.
     """
-    if resource_type == "svc":
+    if resource_type == shepherd.configMng.constants.RESOURCE_TYPE_SVC:
         shepherd.environmentMng.add_service(
             envCfg.tag, resource_name, resource_class, resource_template
         )

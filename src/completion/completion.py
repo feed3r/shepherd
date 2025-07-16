@@ -16,69 +16,52 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
+from typing import Optional, override
+
+from completion.completion_db import CompletionDbMng
+from completion.completion_env import CompletionEnvMng
+from completion.completion_mng import AbstractCompletionMng
+from completion.completion_svc import CompletionSvcMng
 from config import ConfigMng
 
 
-class CompletionMng:
+class CompletionMng(AbstractCompletionMng):
 
     CATEGORIES = ["db", "env", "svc"]
-    COMMANDS_SVC = [
-        "build",
-        "bootstrap",
-        "up",
-        "halt",
-        "stdout",
-        "shell",
-        "render",
-    ]
-    COMMANDS_DB = COMMANDS_SVC + ["sql-shell"]
-    COMMANDS_ENV = [
-        "init",
-        "clone",
-        "rename",
-        "checkout",
-        "delete",
-        "list",
-        "up",
-        "halt",
-        "reload",
-        "status",
-        "add-resource",
-    ]
 
     def __init__(self, cli_flags: dict[str, bool], configMng: ConfigMng):
         self.cli_flags = cli_flags
         self.configMng = configMng
+        self.completionEnvMng = CompletionEnvMng(cli_flags, configMng)
+        self.completionSvcMng = CompletionSvcMng(cli_flags, configMng)
+        self.completionDbMng = CompletionDbMng(cli_flags, configMng)
 
     def is_category_chosen(self, args: list[str]) -> bool:
         """
         Checks if the first argument is a valid category.
         """
-        if not args:
+        if not args or len(args) < 1:
             return False
         return args[0] in self.CATEGORIES
 
-    def get_commands_for_category(self, category: str) -> list[str]:
-        if category == "db":
-            return self.COMMANDS_DB
-        elif category == "env":
-            return self.COMMANDS_ENV
-        elif category == "svc":
-            return self.COMMANDS_SVC
-        return []
+    def get_completion_manager(
+        self, args: list[str]
+    ) -> Optional[AbstractCompletionMng]:
+        """
+        Returns the appropriate completion manager based on the category.
+        """
 
-    def is_command_chosen(self, args: list[str]) -> bool:
-        """
-        Checks if the second argument is a valid command
-        for the chosen category.
-        """
-        if len(args) < 2:
-            return False
         category = args[0]
-        command = args[1]
-        commands = self.get_commands_for_category(category)
-        return command in commands
+        if category == "env":
+            return self.completionEnvMng
+        elif category == "svc":
+            return self.completionSvcMng
+        elif category == "db":
+            return self.completionDbMng
+        else:
+            return None
 
+    @override
     def get_completions(self, args: list[str]) -> list[str]:
         """
         Returns a list of completions based on the provided arguments.
@@ -87,7 +70,8 @@ class CompletionMng:
         if not self.is_category_chosen(args):
             return self.CATEGORIES
 
-        if not self.is_command_chosen(args):
-            return self.get_commands_for_category(args[0])
+        completion_manager = self.get_completion_manager(args)
+        if completion_manager:
+            return completion_manager.get_completions(args[1:])
 
         return []

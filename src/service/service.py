@@ -27,6 +27,7 @@ class Service(ABC):
 
     type: str
     tag: str
+    svc_class: str
     image: str
     name: str
     hostname: str
