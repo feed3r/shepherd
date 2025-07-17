@@ -329,48 +329,52 @@ def svc():
 
 
 @svc.command(name="build")
-@click.argument("service_type", type=str, required=True)
+@click.argument("service_template", type=str, required=True)
 @click.pass_obj
-def srv_build(shepherd: ShepherdMng, service_type: str):
+def srv_build(shepherd: ShepherdMng, service_template: str):
     """Build service image."""
-    shepherd.serviceMng.build_image_svc(service_type)
+    shepherd.serviceMng.build_image_svc(service_template)
 
 
 @svc.command(name="bootstrap")
-@click.argument("service_type", type=str, required=True)
+@click.argument("service_template", type=str, required=True)
 @click.pass_obj
-def srv_bootstrap(shepherd: ShepherdMng, service_type: str):
+def srv_bootstrap(shepherd: ShepherdMng, service_template: str):
     """Bootstrap service."""
-    shepherd.serviceMng.bootstrap_svc(service_type)
+    shepherd.serviceMng.bootstrap_svc(service_template)
 
 
 @svc.command(name="up")
-@click.argument("service_type", type=str, required=True)
+@click.argument("service_template", type=str, required=True)
 @click.pass_obj
 @require_active_env
-def srv_up(shepherd: ShepherdMng, envCfg: EnvironmentCfg, service_type: str):
+def srv_up(
+    shepherd: ShepherdMng, envCfg: EnvironmentCfg, service_template: str
+):
     """Start service."""
-    shepherd.serviceMng.start_svc(envCfg.tag, service_type)
+    shepherd.serviceMng.start_svc(envCfg.tag, service_template)
 
 
 @svc.command(name="halt")
-@click.argument("service_type", type=str, required=True)
+@click.argument("service_template", type=str, required=True)
 @click.pass_obj
 @require_active_env
-def srv_halt(shepherd: ShepherdMng, envCfg: EnvironmentCfg, service_type: str):
+def srv_halt(
+    shepherd: ShepherdMng, envCfg: EnvironmentCfg, service_template: str
+):
     """Halt service."""
-    shepherd.serviceMng.halt_svc(envCfg.tag, service_type)
+    shepherd.serviceMng.halt_svc(envCfg.tag, service_template)
 
 
 @svc.command(name="reload")
-@click.argument("service_type", type=str, required=True)
+@click.argument("service_template", type=str, required=True)
 @click.pass_obj
 @require_active_env
 def srv_reload(
-    shepherd: ShepherdMng, envCfg: EnvironmentCfg, service_type: str
+    shepherd: ShepherdMng, envCfg: EnvironmentCfg, service_template: str
 ):
     """Reload service."""
-    shepherd.serviceMng.reload_svc(envCfg.tag, service_type)
+    shepherd.serviceMng.reload_svc(envCfg.tag, service_template)
 
 
 @svc.command(name="render")

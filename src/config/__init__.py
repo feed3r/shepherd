@@ -23,7 +23,7 @@ from .config import (
     ConfigMng,
     EnvironmentCfg,
     ServiceCfg,
-    ServiceTypeCfg,
+    ServiceTemplateCfg,
     ShpdRegistryCfg,
     UpstreamCfg,
 )
@@ -33,7 +33,7 @@ __all__ = [
     "CertCfg",
     "Config",
     "EnvironmentCfg",
-    "ServiceTypeCfg",
+    "ServiceTemplateCfg",
     "ServiceCfg",
     "ShpdRegistryCfg",
     "UpstreamCfg",

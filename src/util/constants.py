@@ -97,9 +97,9 @@ class Constants:
                 "stdout": "${log_stdout}",
                 "format": "${log_format}",
             },
-            "service_types": [
+            "service_templates": [
                 {
-                    "type": "image",
+                    "template": "image",
                     "image": "",
                     "ingress": False,
                     "envvars": {},

@@ -116,9 +116,9 @@ shpd_config_svc_default = """
     "email": "${cert_email}",
     "subject_alternative_names": []
   },
-  "service_types": [
+  "service_templates": [
     {
-      "type": "image",
+      "template": "image",
       "image": "test-image:latest",
       "labels": [
         "com.example.label1=value1",
@@ -153,7 +153,7 @@ shpd_config_svc_default = """
       "tag": "test-1",
       "services": [
         {
-          "type": "image",
+          "template": "image",
           "tag": "test",
           "image": "test-image:latest",
           "labels": [
@@ -228,9 +228,9 @@ shpd_config_pg_template = """
     "email": "${cert_email}",
     "subject_alternative_names": []
   },
-  "service_types": [
+  "service_templates": [
     {
-      "type": "image",
+      "template": "image",
       "image": "",
       "ingress": false,
       "empty_env": null,
@@ -240,7 +240,7 @@ shpd_config_pg_template = """
       "subject_alternative_name": null
     },
     {
-      "type": "postgres",
+      "template": "postgres",
       "image": "${pg_image}",
       "ingress": false,
       "empty_env": "${pg_empty_env}",
@@ -325,7 +325,7 @@ def test_svc_add_one_default(
     assert env.services is not None, "Services should not be None"
     assert len(env.services) == 1, "There should be exactly one service"
     assert env.services[0].tag == "svc-1", "Service tag should be 'svc-1'"
-    assert env.services[0].type == "image", "Service type should be 'image'"
+    assert env.services[0].template == "image", "Service type should be 'image'"
     assert env.services[0].image == "", "Service image should be ''"
 
     assert env.services[0].ingress is False, "Service ingress should be False"
@@ -375,7 +375,7 @@ def test_svc_add_two_default(
     assert env.services is not None, "Services should not be None"
     assert len(env.services) == 2, "There should be exactly two services"
     assert env.services[0].tag == "svc-1", "Service tag should be 'svc-1'"
-    assert env.services[0].type == "image", "Service type should be 'image'"
+    assert env.services[0].template == "image", "Service type should be 'image'"
     assert env.services[0].image == "", "Service image should be ''"
 
     assert env.services[0].ingress is False, "Service ingress should be False"
@@ -391,7 +391,7 @@ def test_svc_add_two_default(
     ), "Service SAN should be None"
 
     assert env.services[1].tag == "svc-2", "Service tag should be 'svc-2'"
-    assert env.services[1].type == "image", "Service type should be 'image'"
+    assert env.services[1].template == "image", "Service type should be 'image'"
     assert env.services[1].image == "", "Service image should be ''"
 
     assert env.services[1].ingress is False, "Service ingress should be False"
@@ -441,7 +441,7 @@ def test_svc_add_two_same_tag_default(
     assert env.services is not None, "Services should not be None"
     assert len(env.services) == 1, "There should be exactly one service"
     assert env.services[0].tag == "svc-1", "Service tag should be 'svc-1'"
-    assert env.services[0].type == "image", "Service type should be 'image'"
+    assert env.services[0].template == "image", "Service type should be 'image'"
     assert env.services[0].image == "", "Service image should be ''"
 
     assert env.services[0].ingress is False, "Service ingress should be False"

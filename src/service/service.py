@@ -137,22 +137,22 @@ class ServiceMng:
         else:
             return None
 
-    def build_image_svc(self, service_type: str):
+    def build_image_svc(self, service_template: str):
         pass
 
-    def bootstrap_svc(self, service_type: str):
+    def bootstrap_svc(self, service_template: str):
         """Bootstrap a service."""
         pass
 
-    def start_svc(self, env_tag: str, service_type: str):
+    def start_svc(self, env_tag: str, service_template: str):
         """Start a service."""
         pass
 
-    def halt_svc(self, env_tag: str, service_type: str):
+    def halt_svc(self, env_tag: str, service_template: str):
         """Halt a service."""
         pass
 
-    def reload_svc(self, env_tag: str, service_type: str):
+    def reload_svc(self, env_tag: str, service_template: str):
         """Reload a service."""
         pass
 

@@ -332,7 +332,7 @@ class EnvironmentMng:
             )
 
             if svc_type_cfg:
-                svcCfg = ServiceCfg.from_service_type(
+                svcCfg = ServiceCfg.from_service_template(
                     svc_type_cfg, svc_tag, svc_class
                 )
             else:
