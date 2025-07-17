@@ -235,7 +235,7 @@ shpd_config_pg_template = """
       "ingress": false,
       "empty_env": null,
       "envvars": {},
-      "ports": {},
+      "ports": [],
       "properties": {},
       "subject_alternative_name": null
     },
@@ -245,9 +245,9 @@ shpd_config_pg_template = """
       "ingress": false,
       "empty_env": "${pg_empty_env}",
       "envvars": {},
-      "ports": {
-        "net_listener_port": "${pg_listener_port}"
-      },
+      "ports": [
+        "net_listener_port:${pg_listener_port}"
+      ],
       "properties": {
         "sys_user": "${db_sys_usr}",
         "sys_psw": "${db_sys_psw}",

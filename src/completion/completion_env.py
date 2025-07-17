@@ -172,5 +172,4 @@ class CompletionEnvMng(AbstractCompletionMng):
             return []
         if not self.is_resource_class_chosen(args):
             return self.get_resource_classes(args)
-
         return []

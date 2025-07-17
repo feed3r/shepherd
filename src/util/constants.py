@@ -103,7 +103,7 @@ class Constants:
                     "image": "",
                     "ingress": False,
                     "envvars": {},
-                    "ports": {},
+                    "ports": [],
                     "properties": {},
                     "subject_alternative_name": None,
                 },
