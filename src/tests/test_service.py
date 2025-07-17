@@ -70,10 +70,22 @@ values = """
   db_sys_psw=sys
   db_usr=docker
   db_psw=docker
+
+  # Logging Configuration
+  log_file=~/shpd/shepctl.log
+  log_level=WARNING
+  log_stdout=false
+  log_format=%(asctime)s - %(levelname)s - %(message)s
   """
 
 shpd_config_pg_template = """
 {
+  "logging": {
+    "file": "${log_file}",
+    "level": "${log_level}",
+    "stdout": "${log_stdout}",
+    "format": "${log_format}"
+  },
   "shpd_registry": {
     "ftp_server": "${shpd_registry}",
     "ftp_user": "${shpd_registry_ftp_usr}",
@@ -157,10 +169,16 @@ def runner() -> CliRunner:
 
 def make_expanduser_side_effect(path: Path, calls: int):
     """Generate a list of `os.path.expanduser` return
-    values alternating config and folder paths."""
+    values repeating [shpd, .shpd.conf, shpd/shepctl.log]."""
     return [
-        path / ".shpd.conf" if i % 2 == 0 else path / "shpd"
-        for i in range(calls * 2)
+        (
+            path / ".shpd.conf"
+            if i % 3 == 0
+            else (
+                path / "shpd" if i % 3 == 1 else path / "shpd" / "shepctl.log"
+            )
+        )
+        for i in range(calls * 3)
     ]
 
 

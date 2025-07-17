@@ -16,6 +16,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
+from .logging import setup_logging
 from .util import Constants, Util
 
-__all__ = ["Constants", "Util"]
+__all__ = ["Constants", "Util", "setup_logging"]
