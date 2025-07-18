@@ -29,11 +29,6 @@ class DatabaseService(Service):
         pass
 
     @override
-    def bootstrap(self):
-        """Bootstrap the DBMS service."""
-        pass
-
-    @override
     def start(self):
         """Start the DBMS service."""
         pass

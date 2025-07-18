@@ -65,11 +65,6 @@ class Service(ABC):
         pass
 
     @abstractmethod
-    def bootstrap(self):
-        """Bootstrap the service."""
-        pass
-
-    @abstractmethod
     def start(self):
         """Start the service."""
         pass

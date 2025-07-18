@@ -26,7 +26,6 @@ class CompletionSvcMng(AbstractCompletionMng):
 
     COMMANDS_SVC = [
         "build",
-        "bootstrap",
         "up",
         "halt",
         "stdout",
@@ -57,8 +56,6 @@ class CompletionSvcMng(AbstractCompletionMng):
         match command:
             case "build":
                 return self.get_build_completions(args[1:])
-            case "bootstrap":
-                return self.get_bootstrap_completions(args[1:])
             case "up":
                 return self.get_up_completions(args[1:])
             case "halt":

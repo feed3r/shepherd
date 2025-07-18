@@ -160,13 +160,6 @@ def db_build(shepherd: ShepherdMng):
     shepherd.databaseMng.build_image_svc("")
 
 
-@db.command(name="bootstrap")
-@click.pass_obj
-def db_bootstrap(shepherd: ShepherdMng):
-    """Bootstrap database service."""
-    shepherd.databaseMng.bootstrap_svc("")
-
-
 @db.command(name="up")
 @click.pass_obj
 @require_active_env
@@ -334,14 +327,6 @@ def svc():
 def srv_build(shepherd: ShepherdMng, service_template: str):
     """Build service image."""
     shepherd.serviceMng.build_image_svc(service_template)
-
-
-@svc.command(name="bootstrap")
-@click.argument("service_template", type=str, required=True)
-@click.pass_obj
-def srv_bootstrap(shepherd: ShepherdMng, service_template: str):
-    """Bootstrap service."""
-    shepherd.serviceMng.bootstrap_svc(service_template)
 
 
 @svc.command(name="up")

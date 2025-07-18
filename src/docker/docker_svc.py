@@ -80,11 +80,6 @@ class DockerSvc(Service):
         pass
 
     @override
-    def bootstrap(self):
-        """Bootstrap the service."""
-        pass
-
-    @override
     def start(self):
         """Start the service."""
         pass

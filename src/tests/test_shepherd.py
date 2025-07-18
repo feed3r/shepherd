@@ -629,25 +629,6 @@ def test_cli_srv_build(
 
 @pytest.mark.shpd
 @pytest.mark.parametrize("expanduser_side_effects", [1])
-def test_cli_srv_bootstrap(
-    temp_home: Path,
-    runner: CliRunner,
-    mocker: MockerFixture,
-    expanduser_side_effects: int,
-):
-    mock_bootstrap = mocker.patch.object(ServiceMng, "bootstrap_svc")
-    side_effect = make_expanduser_side_effect(
-        temp_home, expanduser_side_effects
-    )
-    mocker.patch("os.path.expanduser", side_effect=side_effect)
-
-    result = runner.invoke(cli, ["svc", "bootstrap", "service_template"])
-    assert result.exit_code == 0
-    mock_bootstrap.assert_called_once_with("service_template")
-
-
-@pytest.mark.shpd
-@pytest.mark.parametrize("expanduser_side_effects", [1])
 def test_cli_srv_up(
     temp_home: Path,
     runner: CliRunner,
@@ -804,25 +785,6 @@ def test_cli_db_build(
     result = runner.invoke(cli, ["db", "build"])
     assert result.exit_code == 0
     mock_build.assert_called_once()
-
-
-@pytest.mark.shpd
-@pytest.mark.parametrize("expanduser_side_effects", [1])
-def test_cli_db_bootstrap(
-    temp_home: Path,
-    runner: CliRunner,
-    mocker: MockerFixture,
-    expanduser_side_effects: int,
-):
-    mock_bootstrap = mocker.patch.object(DatabaseMng, "bootstrap_svc")
-    side_effect = make_expanduser_side_effect(
-        temp_home, expanduser_side_effects
-    )
-    mocker.patch("os.path.expanduser", side_effect=side_effect)
-
-    result = runner.invoke(cli, ["db", "bootstrap"])
-    assert result.exit_code == 0
-    mock_bootstrap.assert_called_once()
 
 
 @pytest.mark.shpd
