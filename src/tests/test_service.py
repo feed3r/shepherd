@@ -315,7 +315,7 @@ def test_svc_add_one_default(
     result = runner.invoke(cli, ["env", "checkout", "test-svc-add"])
     assert result.exit_code == 0
 
-    result = runner.invoke(cli, ["env", "add-resource", "svc", "svc-1"])
+    result = runner.invoke(cli, ["env", "add", "svc", "svc-1"])
     assert result.exit_code == 0
 
     sm = ShepherdMng()
@@ -362,10 +362,10 @@ def test_svc_add_two_default(
     result = runner.invoke(cli, ["env", "checkout", "test-svc-add"])
     assert result.exit_code == 0
 
-    result = runner.invoke(cli, ["env", "add-resource", "svc", "svc-1"])
+    result = runner.invoke(cli, ["env", "add", "svc", "svc-1"])
     assert result.exit_code == 0
 
-    result = runner.invoke(cli, ["env", "add-resource", "svc", "svc-2"])
+    result = runner.invoke(cli, ["env", "add", "svc", "svc-2"])
     assert result.exit_code == 0
 
     sm = ShepherdMng()
@@ -428,10 +428,10 @@ def test_svc_add_two_same_tag_default(
     result = runner.invoke(cli, ["env", "checkout", "test-svc-add"])
     assert result.exit_code == 0
 
-    result = runner.invoke(cli, ["env", "add-resource", "svc", "svc-1"])
+    result = runner.invoke(cli, ["env", "add", "svc", "svc-1"])
     assert result.exit_code == 0
 
-    result = runner.invoke(cli, ["env", "add-resource", "svc", "svc-1"])
+    result = runner.invoke(cli, ["env", "add", "svc", "svc-1"])
     assert result.exit_code == 1
 
     sm = ShepherdMng()
@@ -483,7 +483,7 @@ def test_svc_add_one_with_template(
     assert result.exit_code == 0
 
     result = runner.invoke(
-        cli, ["env", "add-resource", "svc", "pg-1", "database", "postgres"]
+        cli, ["env", "add", "svc", "pg-1", "database", "postgres"]
     )
 
     # we still don't support templates, so this should fail

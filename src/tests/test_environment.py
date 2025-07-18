@@ -374,5 +374,5 @@ def test_env_add_nonexisting_resource(
     result = runner.invoke(cli, ["env", "checkout", "test-svc-add"])
     assert result.exit_code == 0
 
-    result = runner.invoke(cli, ["env", "add-resource", "foo", "foo-1"])
+    result = runner.invoke(cli, ["env", "add", "foo", "foo-1"])
     assert result.exit_code == 2

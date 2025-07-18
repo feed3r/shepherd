@@ -312,8 +312,8 @@ class EnvironmentMng:
         self,
         env_tag: Optional[str],
         svc_tag: str,
-        svc_class: Optional[str],
         svc_template: Optional[str],
+        svc_class: Optional[str],
     ):
         """Add a service to an environment."""
         env = self.get_environment(env_tag)
@@ -325,7 +325,7 @@ class EnvironmentMng:
                     f"""Service with tag '{svc_tag}' already
                     exists in environment '{envCfg.tag}'."""
                 )
-            svc_type_cfg = self.configMng.get_service_type(
+            svc_type_cfg = self.configMng.get_service_template(
                 svc_template
                 if svc_template
                 else Constants.SVC_TYPE_GENERIC_IMAGE
