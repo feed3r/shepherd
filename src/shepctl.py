@@ -134,13 +134,20 @@ def empty():
     pass
 
 
-@cli.command(name="__complete", hidden=True)
-@click.argument("args", nargs=-1)
+@cli.command(
+    name="__complete",
+    hidden=True,
+    context_settings={"ignore_unknown_options": True, "allow_extra_args": True},
+)
+@click.argument("args", nargs=-1, type=click.UNPROCESSED)
 @click.pass_obj
 def complete(shepherd: ShepherdMng, args: list[str]):
     """
     Internal shell completion entrypoint.
     Usage: shepctl __complete <args...>
+
+    This command disables Click’s usual option parsing
+    to treat all arguments as raw strings.
     """
     completions = shepherd.completionMng.get_completions(args)
     for c in completions:

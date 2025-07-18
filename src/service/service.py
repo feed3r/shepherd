@@ -127,9 +127,7 @@ class ServiceMng:
         self, envCfg: EnvironmentCfg, svc_tag: str
     ) -> Optional[Service]:
         """Get a service by environment tag and service tag."""
-        if (envCfg := self.configMng.get_environment(env_tag)) and (
-            svcCfg := envCfg.get_service(svc_tag)
-        ):
+        if svcCfg := envCfg.get_service(svc_tag):
             return self.svcFactory.new_service_from_cfg(envCfg, svcCfg)
         else:
             return None
