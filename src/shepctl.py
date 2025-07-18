@@ -153,45 +153,6 @@ def db():
     pass
 
 
-@db.command(name="build")
-@click.pass_obj
-def db_build(shepherd: ShepherdMng):
-    """Build database image."""
-    shepherd.databaseMng.build_image_svc("")
-
-
-@db.command(name="up")
-@click.pass_obj
-@require_active_env
-def db_up(shepherd: ShepherdMng, envCfg: EnvironmentCfg):
-    """Start database service."""
-    shepherd.databaseMng.start_svc(envCfg.tag, "database")
-
-
-@db.command(name="halt")
-@click.pass_obj
-@require_active_env
-def db_halt(shepherd: ShepherdMng, envCfg: EnvironmentCfg):
-    """Halt database service."""
-    shepherd.databaseMng.halt_svc(envCfg.tag, "database")
-
-
-@db.command(name="stdout")
-@click.pass_obj
-@require_active_env
-def db_stdout(shepherd: ShepherdMng, envCfg: EnvironmentCfg):
-    """Show database service stdout."""
-    shepherd.databaseMng.stdout_svc(envCfg.tag, "db-id")
-
-
-@db.command(name="shell")
-@click.pass_obj
-@require_active_env
-def db_shell(shepherd: ShepherdMng, envCfg: EnvironmentCfg):
-    """Get a shell session for the database service."""
-    shepherd.databaseMng.shell_svc(envCfg.tag, "db-id")
-
-
 @db.command(name="sql-shell")
 @click.pass_obj
 @require_active_env

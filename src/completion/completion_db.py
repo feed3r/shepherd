@@ -18,13 +18,13 @@
 
 from typing import override
 
-from completion.completion_svc import CompletionSvcMng
+from completion.completion_mng import AbstractCompletionMng
 from config import ConfigMng
 
 
-class CompletionDbMng(CompletionSvcMng):
+class CompletionDbMng(AbstractCompletionMng):
 
-    COMMANDS_DB = CompletionSvcMng.COMMANDS_SVC + ["sql-shell"]
+    COMMANDS_DB = ["sql-shell"]
 
     def __init__(self, cli_flags: dict[str, bool], configMng: ConfigMng):
         self.cli_flags = cli_flags

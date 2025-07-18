@@ -16,42 +16,12 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
-from typing import override
-
 from config import ConfigMng
-from service import Service, ServiceMng
+from docker.docker_svc import DockerSvc
+from service import ServiceMng
 
 
-class DatabaseService(Service):
-    @override
-    def build(self):
-        """Build the DBMS image."""
-        pass
-
-    @override
-    def start(self):
-        """Start the DBMS service."""
-        pass
-
-    @override
-    def halt(self):
-        """Halt the DBMS service."""
-        pass
-
-    @override
-    def reload(self):
-        """Reload the DBMS service."""
-        pass
-
-    @override
-    def show_stdout(self):
-        """Show the DBMS stdout."""
-        pass
-
-    @override
-    def get_shell(self):
-        """Get a shell session for the DBMS."""
-        pass
+class DatabaseService(DockerSvc):
 
     def get_sql_shell(self):
         """Get a SQL shell session."""
