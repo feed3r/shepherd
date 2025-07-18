@@ -123,7 +123,9 @@ class ServiceMng:
         self.configMng = configMng
         self.svcFactory = svcFactory
 
-    def get_service(self, env_tag: str, svc_tag: str) -> Optional[Service]:
+    def get_service(
+        self, envCfg: EnvironmentCfg, svc_tag: str
+    ) -> Optional[Service]:
         """Get a service by environment tag and service tag."""
         if (envCfg := self.configMng.get_environment(env_tag)) and (
             svcCfg := envCfg.get_service(svc_tag)
@@ -139,29 +141,29 @@ class ServiceMng:
         """Bootstrap a service."""
         pass
 
-    def start_svc(self, env_tag: str, service_template: str):
+    def start_svc(self, envCfg: EnvironmentCfg, service_template: str):
         """Start a service."""
         pass
 
-    def halt_svc(self, env_tag: str, service_template: str):
+    def halt_svc(self, envCfg: EnvironmentCfg, service_template: str):
         """Halt a service."""
         pass
 
-    def reload_svc(self, env_tag: str, service_template: str):
+    def reload_svc(self, envCfg: EnvironmentCfg, service_template: str):
         """Reload a service."""
         pass
 
-    def render_svc(self, env_tag: str, svc_tag: str) -> Optional[str]:
+    def render_svc(self, envCfg: EnvironmentCfg, svc_tag: str) -> Optional[str]:
         """Render a service configuration."""
-        service = self.get_service(env_tag, svc_tag)
+        service = self.get_service(envCfg, svc_tag)
         if service:
             return service.render()
         return None
 
-    def stdout_svc(self, env_tag: str, svc_tag: str):
+    def stdout_svc(self, envCfg: EnvironmentCfg, svc_tag: str):
         """Get service stdout."""
         pass
 
-    def shell_svc(self, env_tag: str, svc_tag: str):
+    def shell_svc(self, envCfg: EnvironmentCfg, svc_tag: str):
         """Get a shell session for a service."""
         pass

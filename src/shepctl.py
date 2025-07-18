@@ -220,30 +220,34 @@ def env_list(shepherd: ShepherdMng):
 
 @env.command(name="up")
 @click.pass_obj
-def env_up(shepherd: ShepherdMng):
+@require_active_env
+def env_up(shepherd: ShepherdMng, envCfg: EnvironmentCfg):
     """Start environment."""
-    shepherd.environmentMng.start_env()
+    shepherd.environmentMng.start_env(envCfg)
 
 
 @env.command(name="halt")
 @click.pass_obj
-def env_halt(shepherd: ShepherdMng):
+@require_active_env
+def env_halt(shepherd: ShepherdMng, envCfg: EnvironmentCfg):
     """Halt environment."""
-    shepherd.environmentMng.halt_env()
+    shepherd.environmentMng.halt_env(envCfg)
 
 
 @env.command(name="reload")
 @click.pass_obj
-def env_reload(shepherd: ShepherdMng):
+@require_active_env
+def env_reload(shepherd: ShepherdMng, envCfg: EnvironmentCfg):
     """Reload environment."""
-    shepherd.environmentMng.reload_env()
+    shepherd.environmentMng.reload_env(envCfg)
 
 
 @env.command(name="status")
 @click.pass_obj
-def env_status(shepherd: ShepherdMng):
+@require_active_env
+def env_status(shepherd: ShepherdMng, envCfg: EnvironmentCfg):
     """Print environment's status."""
-    shepherd.environmentMng.status_env()
+    shepherd.environmentMng.status_env(envCfg)
 
 
 @env.command(name="add")
@@ -285,7 +289,7 @@ def svc():
 @svc.command(name="build")
 @click.argument("service_template", type=str, required=True)
 @click.pass_obj
-def srv_build(shepherd: ShepherdMng, service_template: str):
+def svc_build(shepherd: ShepherdMng, service_template: str):
     """Build service image."""
     shepherd.serviceMng.build_image_svc(service_template)
 
@@ -294,60 +298,60 @@ def srv_build(shepherd: ShepherdMng, service_template: str):
 @click.argument("service_template", type=str, required=True)
 @click.pass_obj
 @require_active_env
-def srv_up(
+def svc_up(
     shepherd: ShepherdMng, envCfg: EnvironmentCfg, service_template: str
 ):
     """Start service."""
-    shepherd.serviceMng.start_svc(envCfg.tag, service_template)
+    shepherd.serviceMng.start_svc(envCfg, service_template)
 
 
 @svc.command(name="halt")
 @click.argument("service_template", type=str, required=True)
 @click.pass_obj
 @require_active_env
-def srv_halt(
+def svc_halt(
     shepherd: ShepherdMng, envCfg: EnvironmentCfg, service_template: str
 ):
     """Halt service."""
-    shepherd.serviceMng.halt_svc(envCfg.tag, service_template)
+    shepherd.serviceMng.halt_svc(envCfg, service_template)
 
 
 @svc.command(name="reload")
 @click.argument("service_template", type=str, required=True)
 @click.pass_obj
 @require_active_env
-def srv_reload(
+def svc_reload(
     shepherd: ShepherdMng, envCfg: EnvironmentCfg, service_template: str
 ):
     """Reload service."""
-    shepherd.serviceMng.reload_svc(envCfg.tag, service_template)
+    shepherd.serviceMng.reload_svc(envCfg, service_template)
 
 
 @svc.command(name="render")
 @click.argument("service_tag", type=str, required=True)
 @click.pass_obj
 @require_active_env
-def srv_render(shepherd: ShepherdMng, envCfg: EnvironmentCfg, service_tag: str):
+def svc_render(shepherd: ShepherdMng, envCfg: EnvironmentCfg, service_tag: str):
     """Render service configuration."""
-    click.echo(shepherd.serviceMng.render_svc(envCfg.tag, service_tag))
+    click.echo(shepherd.serviceMng.render_svc(envCfg, service_tag))
 
 
 @svc.command(name="stdout")
 @click.argument("service_tag", type=str, required=True)
 @click.pass_obj
 @require_active_env
-def srv_stdout(shepherd: ShepherdMng, envCfg: EnvironmentCfg, service_tag: str):
+def svc_stdout(shepherd: ShepherdMng, envCfg: EnvironmentCfg, service_tag: str):
     """Show service stdout."""
-    shepherd.serviceMng.stdout_svc(envCfg.tag, service_tag)
+    shepherd.serviceMng.stdout_svc(envCfg, service_tag)
 
 
 @svc.command(name="shell")
 @click.argument("service_tag", type=str, required=True)
 @click.pass_obj
 @require_active_env
-def srv_shell(shepherd: ShepherdMng, envCfg: EnvironmentCfg, service_tag: str):
+def svc_shell(shepherd: ShepherdMng, envCfg: EnvironmentCfg, service_tag: str):
     """Get a shell session for the service."""
-    shepherd.serviceMng.shell_svc(envCfg.tag, service_tag)
+    shepherd.serviceMng.shell_svc(envCfg, service_tag)
 
 
 if __name__ == "__main__":

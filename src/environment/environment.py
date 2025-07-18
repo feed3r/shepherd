@@ -292,19 +292,19 @@ class EnvironmentMng:
         for env in envs:
             Util.print(f" - {env.tag} ({env.type})")
 
-    def start_env(self):
+    def start_env(self, envCfg: EnvironmentCfg):
         """Start an environment."""
         pass
 
-    def halt_env(self):
+    def halt_env(self, envCfg: EnvironmentCfg):
         """Halt an environment."""
         pass
 
-    def reload_env(self):
+    def reload_env(self, envCfg: EnvironmentCfg):
         """Reload an environment."""
         pass
 
-    def status_env(self):
+    def status_env(self, envCfg: EnvironmentCfg):
         """Get environment status."""
         pass
 
