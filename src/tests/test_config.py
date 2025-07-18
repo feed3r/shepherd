@@ -23,6 +23,7 @@ import pytest
 from pytest_mock import MockerFixture
 
 from config import Config, ConfigMng
+from config.config import EnvironmentCfg, ServiceCfg, ServiceTemplateCfg
 from util import Constants
 
 config_json = """{
@@ -501,3 +502,37 @@ def test_store_config_with_real_files():
         for file_path in (".shpd.json", ".shpd.conf"):
             if os.path.exists(file_path):
                 os.remove(file_path)
+
+
+@pytest.mark.cfg
+def test_copy_config(mocker: MockerFixture):
+    """Test copying config with mock"""
+
+    mock_open1 = mock_open(read_data=values)
+    mock_open2 = mock_open(read_data=config_json)
+
+    mocker.patch("os.path.exists", return_value=True)
+    mocker.patch(
+        "builtins.open",
+        side_effect=[mock_open1.return_value, mock_open2.return_value],
+    )
+
+    cMng = ConfigMng(".shpd.conf")
+    config: Config = cMng.load_config()
+
+    service_templates = config.service_templates
+    assert service_templates
+    svc_templ = service_templates[0]
+    svc_templ_cloned = ServiceTemplateCfg.from_other(svc_templ)
+    assert svc_templ_cloned == svc_templ
+
+    env = config.envs[0]
+    assert env
+    env_cloned = EnvironmentCfg.from_other(env)
+    assert env_cloned == env
+
+    services = config.envs[0].services
+    assert services
+    svc = services[0]
+    svc_cloned = ServiceCfg.from_other(svc)
+    assert svc_cloned == svc

@@ -78,6 +78,216 @@ values = """
   log_format=%(asctime)s - %(levelname)s - %(message)s
   """
 
+shpd_config = """
+{
+  "logging": {
+    "file": "${log_file}",
+    "level": "${log_level}",
+    "stdout": "${log_stdout}",
+    "format": "${log_format}"
+  },
+  "shpd_registry": {
+    "ftp_server": "${shpd_registry}",
+    "ftp_user": "${shpd_registry_ftp_usr}",
+    "ftp_psw": "${shpd_registry_ftp_psw}",
+    "ftp_shpd_path": "${shpd_registry_ftp_shpd_path}",
+    "ftp_env_imgs_path": "${shpd_registry_ftp_imgs_path}"
+  },
+  "host_inet_ip": "${host_inet_ip}",
+  "domain": "${domain}",
+  "dns_type": "${dns_type}",
+  "ca": {
+    "country": "${ca_country}",
+    "state": "${ca_state}",
+    "locality": "${ca_locality}",
+    "organization": "${ca_org}",
+    "organizational_unit": "${ca_org_unit}",
+    "common_name": "${ca_cn}",
+    "email": "${ca_email}",
+    "passphrase": "${ca_passphrase}"
+  },
+  "cert": {
+    "country": "${cert_country}",
+    "state": "${cert_state}",
+    "locality": "${cert_locality}",
+    "organization": "${cert_org}",
+    "organizational_unit": "${cert_org_unit}",
+    "common_name": "${cert_cn}",
+    "email": "${cert_email}",
+    "subject_alternative_names": []
+  },
+  "service_templates": [
+    {
+      "template": "t1",
+      "image": "test-image:latest",
+      "labels": [
+        "com.example.label1=value1",
+        "com.example.label2=value2"
+      ],
+      "workdir": "/test",
+      "volumes": [
+          "/home/test/.ssh:/home/test/.ssh",
+          "/etc/ssh:/etc/ssh"
+      ],
+      "ingress": false,
+      "empty_env": null,
+      "environment": [],
+      "ports": [
+        "80:80",
+        "443:443",
+        "8080:8080"
+      ],
+      "properties": {},
+      "networks": [
+        "default"
+      ],
+      "extra_hosts": [
+        "host.docker.internal:host-gateway"
+      ],
+      "subject_alternative_name": null
+    },
+    {
+      "template": "t2",
+      "image": "test-image:latest",
+      "labels": [
+        "com.example.label1=value1",
+        "com.example.label2=value2"
+      ],
+      "workdir": "/test",
+      "volumes": [
+          "/home/test/.ssh:/home/test/.ssh",
+          "/etc/ssh:/etc/ssh"
+      ],
+      "ingress": false,
+      "empty_env": null,
+      "environment": [],
+      "ports": [
+        "80:80",
+        "443:443",
+        "8080:8080"
+      ],
+      "properties": {},
+      "networks": [
+        "default"
+      ],
+      "extra_hosts": [
+        "host.docker.internal:host-gateway"
+      ],
+      "subject_alternative_name": null
+    }
+  ],
+  "envs": [
+    {
+      "type": "docker-compose",
+      "tag": "test-1",
+      "services": [
+        {
+          "template": "t1",
+          "tag": "red",
+          "service_class": "foo-class",
+          "image": "test-image:latest",
+          "labels": [
+            "com.example.label1=value1",
+            "com.example.label2=value2"
+          ],
+          "workdir": "/test",
+          "volumes": [
+              "/home/test/.ssh:/home/test/.ssh",
+              "/etc/ssh:/etc/ssh"
+          ],
+          "ingress": false,
+          "empty_env": null,
+          "environment": [],
+          "ports": [
+            "80:80",
+            "443:443",
+            "8080:8080"
+          ],
+          "properties": {},
+          "networks": [
+            "default"
+          ],
+          "extra_hosts": [
+            "host.docker.internal:host-gateway"
+          ],
+          "subject_alternative_name": null
+        },
+        {
+          "template": "t1",
+          "tag": "white",
+          "image": "test-image:latest",
+          "labels": [
+            "com.example.label1=value1",
+            "com.example.label2=value2"
+          ],
+          "workdir": "/test",
+          "volumes": [
+              "/home/test/.ssh:/home/test/.ssh",
+              "/etc/ssh:/etc/ssh"
+          ],
+          "ingress": false,
+          "empty_env": null,
+          "environment": [],
+          "ports": [
+            "80:80",
+            "443:443",
+            "8080:8080"
+          ],
+          "properties": {},
+          "networks": [
+            "default"
+          ],
+          "extra_hosts": [
+            "host.docker.internal:host-gateway"
+          ],
+          "subject_alternative_name": null
+        }
+      ],
+      "archived": false,
+      "active": true
+    },
+    {
+      "type": "docker-compose",
+      "tag": "test-2",
+      "services": [
+        {
+          "template": "t2",
+          "tag": "blue",
+          "image": "test-image:latest",
+          "labels": [
+            "com.example.label1=value1",
+            "com.example.label2=value2"
+          ],
+          "workdir": "/test",
+          "volumes": [
+              "/home/test/.ssh:/home/test/.ssh",
+              "/etc/ssh:/etc/ssh"
+          ],
+          "ingress": false,
+          "empty_env": null,
+          "environment": [],
+          "ports": [
+            "80:80",
+            "443:443",
+            "8080:8080"
+          ],
+          "properties": {},
+          "networks": [
+            "default"
+          ],
+          "extra_hosts": [
+            "host.docker.internal:host-gateway"
+          ],
+          "subject_alternative_name": null
+        }
+      ],
+      "archived": false,
+      "active": false
+    }
+  ]
+}
+"""
+
 
 @pytest.fixture
 def temp_home(tmp_path: Path, mocker: MockerFixture) -> Path:
@@ -153,6 +363,325 @@ def test_completion_env_commands(
 
 @pytest.mark.compl
 @pytest.mark.parametrize("expanduser_side_effects", [1])
+def test_completion_env_init(
+    temp_home: Path,
+    runner: CliRunner,
+    mocker: MockerFixture,
+    expanduser_side_effects: int,
+):
+    side_effect = make_expanduser_side_effect(
+        temp_home, expanduser_side_effects
+    )
+    mocker.patch("os.path.expanduser", side_effect=side_effect)
+    shpd_dir = temp_home / "shpd"
+    shpd_dir.mkdir(parents=True, exist_ok=True)
+    shpd_json = shpd_dir / ".shpd.json"
+    shpd_json.write_text(shpd_config)
+
+    sm = ShepherdMng()
+    completions = sm.completionMng.get_completions(["env", "init"])
+    assert (
+        completions == sm.configMng.constants.ENV_TYPES
+    ), "Expected init completion"
+
+
+@pytest.mark.compl
+@pytest.mark.parametrize("expanduser_side_effects", [1])
+def test_completion_env_clone(
+    temp_home: Path,
+    runner: CliRunner,
+    mocker: MockerFixture,
+    expanduser_side_effects: int,
+):
+    side_effect = make_expanduser_side_effect(
+        temp_home, expanduser_side_effects
+    )
+    mocker.patch("os.path.expanduser", side_effect=side_effect)
+    shpd_dir = temp_home / "shpd"
+    shpd_dir.mkdir(parents=True, exist_ok=True)
+    shpd_json = shpd_dir / ".shpd.json"
+    shpd_json.write_text(shpd_config)
+
+    sm = ShepherdMng()
+    completions = sm.completionMng.get_completions(["env", "clone"])
+    assert completions == ["test-1", "test-2"], "Expected clone completion"
+
+
+@pytest.mark.compl
+@pytest.mark.parametrize("expanduser_side_effects", [1])
+def test_completion_env_rename(
+    temp_home: Path,
+    runner: CliRunner,
+    mocker: MockerFixture,
+    expanduser_side_effects: int,
+):
+    side_effect = make_expanduser_side_effect(
+        temp_home, expanduser_side_effects
+    )
+    mocker.patch("os.path.expanduser", side_effect=side_effect)
+    shpd_dir = temp_home / "shpd"
+    shpd_dir.mkdir(parents=True, exist_ok=True)
+    shpd_json = shpd_dir / ".shpd.json"
+    shpd_json.write_text(shpd_config)
+
+    sm = ShepherdMng()
+    completions = sm.completionMng.get_completions(["env", "rename"])
+    assert completions == ["test-1", "test-2"], "Expected rename completion"
+
+
+@pytest.mark.compl
+@pytest.mark.parametrize("expanduser_side_effects", [1])
+def test_completion_env_checkout(
+    temp_home: Path,
+    runner: CliRunner,
+    mocker: MockerFixture,
+    expanduser_side_effects: int,
+):
+    side_effect = make_expanduser_side_effect(
+        temp_home, expanduser_side_effects
+    )
+    mocker.patch("os.path.expanduser", side_effect=side_effect)
+    shpd_dir = temp_home / "shpd"
+    shpd_dir.mkdir(parents=True, exist_ok=True)
+    shpd_json = shpd_dir / ".shpd.json"
+    shpd_json.write_text(shpd_config)
+
+    sm = ShepherdMng()
+    completions = sm.completionMng.get_completions(["env", "checkout"])
+    assert completions == [
+        "test-2",
+    ], "Expected checkout completion"
+
+
+@pytest.mark.compl
+@pytest.mark.parametrize("expanduser_side_effects", [1])
+def test_completion_env_delete(
+    temp_home: Path,
+    runner: CliRunner,
+    mocker: MockerFixture,
+    expanduser_side_effects: int,
+):
+    side_effect = make_expanduser_side_effect(
+        temp_home, expanduser_side_effects
+    )
+    mocker.patch("os.path.expanduser", side_effect=side_effect)
+    shpd_dir = temp_home / "shpd"
+    shpd_dir.mkdir(parents=True, exist_ok=True)
+    shpd_json = shpd_dir / ".shpd.json"
+    shpd_json.write_text(shpd_config)
+
+    sm = ShepherdMng()
+    completions = sm.completionMng.get_completions(["env", "delete"])
+    assert completions == [
+        "test-1",
+        "test-2",
+    ], "Expected delete completion"
+
+
+@pytest.mark.compl
+@pytest.mark.parametrize("expanduser_side_effects", [1])
+def test_completion_env_list(
+    temp_home: Path,
+    runner: CliRunner,
+    mocker: MockerFixture,
+    expanduser_side_effects: int,
+):
+    side_effect = make_expanduser_side_effect(
+        temp_home, expanduser_side_effects
+    )
+    mocker.patch("os.path.expanduser", side_effect=side_effect)
+    shpd_dir = temp_home / "shpd"
+    shpd_dir.mkdir(parents=True, exist_ok=True)
+    shpd_json = shpd_dir / ".shpd.json"
+    shpd_json.write_text(shpd_config)
+
+    sm = ShepherdMng()
+    completions = sm.completionMng.get_completions(["env", "list"])
+    assert completions == [], "Expected list completion"
+
+
+@pytest.mark.compl
+@pytest.mark.parametrize("expanduser_side_effects", [1])
+def test_completion_env_up(
+    temp_home: Path,
+    runner: CliRunner,
+    mocker: MockerFixture,
+    expanduser_side_effects: int,
+):
+    side_effect = make_expanduser_side_effect(
+        temp_home, expanduser_side_effects
+    )
+    mocker.patch("os.path.expanduser", side_effect=side_effect)
+    shpd_dir = temp_home / "shpd"
+    shpd_dir.mkdir(parents=True, exist_ok=True)
+    shpd_json = shpd_dir / ".shpd.json"
+    shpd_json.write_text(shpd_config)
+
+    sm = ShepherdMng()
+    completions = sm.completionMng.get_completions(["env", "up"])
+    assert completions == [], "Expected up completion"
+
+
+@pytest.mark.compl
+@pytest.mark.parametrize("expanduser_side_effects", [1])
+def test_completion_env_halt(
+    temp_home: Path,
+    runner: CliRunner,
+    mocker: MockerFixture,
+    expanduser_side_effects: int,
+):
+    side_effect = make_expanduser_side_effect(
+        temp_home, expanduser_side_effects
+    )
+    mocker.patch("os.path.expanduser", side_effect=side_effect)
+    shpd_dir = temp_home / "shpd"
+    shpd_dir.mkdir(parents=True, exist_ok=True)
+    shpd_json = shpd_dir / ".shpd.json"
+    shpd_json.write_text(shpd_config)
+
+    sm = ShepherdMng()
+    completions = sm.completionMng.get_completions(["env", "halt"])
+    assert completions == [], "Expected halt completion"
+
+
+@pytest.mark.compl
+@pytest.mark.parametrize("expanduser_side_effects", [1])
+def test_completion_env_reload(
+    temp_home: Path,
+    runner: CliRunner,
+    mocker: MockerFixture,
+    expanduser_side_effects: int,
+):
+    side_effect = make_expanduser_side_effect(
+        temp_home, expanduser_side_effects
+    )
+    mocker.patch("os.path.expanduser", side_effect=side_effect)
+    shpd_dir = temp_home / "shpd"
+    shpd_dir.mkdir(parents=True, exist_ok=True)
+    shpd_json = shpd_dir / ".shpd.json"
+    shpd_json.write_text(shpd_config)
+
+    sm = ShepherdMng()
+    completions = sm.completionMng.get_completions(["env", "reload"])
+    assert completions == [], "Expected reload completion"
+
+
+@pytest.mark.compl
+@pytest.mark.parametrize("expanduser_side_effects", [1])
+def test_completion_env_status(
+    temp_home: Path,
+    runner: CliRunner,
+    mocker: MockerFixture,
+    expanduser_side_effects: int,
+):
+    side_effect = make_expanduser_side_effect(
+        temp_home, expanduser_side_effects
+    )
+    mocker.patch("os.path.expanduser", side_effect=side_effect)
+    shpd_dir = temp_home / "shpd"
+    shpd_dir.mkdir(parents=True, exist_ok=True)
+    shpd_json = shpd_dir / ".shpd.json"
+    shpd_json.write_text(shpd_config)
+
+    sm = ShepherdMng()
+    completions = sm.completionMng.get_completions(["env", "status"])
+    assert completions == [], "Expected status completion"
+
+
+@pytest.mark.compl
+@pytest.mark.parametrize("expanduser_side_effects", [1])
+def test_completion_env_add_1(
+    temp_home: Path,
+    runner: CliRunner,
+    mocker: MockerFixture,
+    expanduser_side_effects: int,
+):
+    side_effect = make_expanduser_side_effect(
+        temp_home, expanduser_side_effects
+    )
+    mocker.patch("os.path.expanduser", side_effect=side_effect)
+    shpd_dir = temp_home / "shpd"
+    shpd_dir.mkdir(parents=True, exist_ok=True)
+    shpd_json = shpd_dir / ".shpd.json"
+    shpd_json.write_text(shpd_config)
+
+    sm = ShepherdMng()
+    completions = sm.completionMng.get_completions(["env", "add"])
+    assert (
+        completions == sm.configMng.constants.RESOURCE_TYPES
+    ), "Expected add-1 completion"
+
+
+@pytest.mark.compl
+@pytest.mark.parametrize("expanduser_side_effects", [1])
+def test_completion_env_add_2(
+    temp_home: Path,
+    runner: CliRunner,
+    mocker: MockerFixture,
+    expanduser_side_effects: int,
+):
+    side_effect = make_expanduser_side_effect(
+        temp_home, expanduser_side_effects
+    )
+    mocker.patch("os.path.expanduser", side_effect=side_effect)
+    shpd_dir = temp_home / "shpd"
+    shpd_dir.mkdir(parents=True, exist_ok=True)
+    shpd_json = shpd_dir / ".shpd.json"
+    shpd_json.write_text(shpd_config)
+
+    sm = ShepherdMng()
+    completions = sm.completionMng.get_completions(["env", "add", "svc"])
+    assert completions == [], "Expected add-2 completion"
+
+
+@pytest.mark.compl
+@pytest.mark.parametrize("expanduser_side_effects", [1])
+def test_completion_env_add_3(
+    temp_home: Path,
+    runner: CliRunner,
+    mocker: MockerFixture,
+    expanduser_side_effects: int,
+):
+    side_effect = make_expanduser_side_effect(
+        temp_home, expanduser_side_effects
+    )
+    mocker.patch("os.path.expanduser", side_effect=side_effect)
+    shpd_dir = temp_home / "shpd"
+    shpd_dir.mkdir(parents=True, exist_ok=True)
+    shpd_json = shpd_dir / ".shpd.json"
+    shpd_json.write_text(shpd_config)
+
+    sm = ShepherdMng()
+    completions = sm.completionMng.get_completions(["env", "add", "svc", "foo"])
+    assert completions == ["t1", "t2"], "Expected add-3 completion"
+
+
+@pytest.mark.compl
+@pytest.mark.parametrize("expanduser_side_effects", [1])
+def test_completion_env_add_4(
+    temp_home: Path,
+    runner: CliRunner,
+    mocker: MockerFixture,
+    expanduser_side_effects: int,
+):
+    side_effect = make_expanduser_side_effect(
+        temp_home, expanduser_side_effects
+    )
+    mocker.patch("os.path.expanduser", side_effect=side_effect)
+    shpd_dir = temp_home / "shpd"
+    shpd_dir.mkdir(parents=True, exist_ok=True)
+    shpd_json = shpd_dir / ".shpd.json"
+    shpd_json.write_text(shpd_config)
+
+    sm = ShepherdMng()
+    completions = sm.completionMng.get_completions(
+        ["env", "add", "svc", "foo", "t1"]
+    )
+    assert completions == ["foo-class"], "Expected add-4 completion"
+
+
+@pytest.mark.compl
+@pytest.mark.parametrize("expanduser_side_effects", [1])
 def test_completion_db_commands(
     temp_home: Path,
     runner: CliRunner,
@@ -173,6 +702,28 @@ def test_completion_db_commands(
 
 @pytest.mark.compl
 @pytest.mark.parametrize("expanduser_side_effects", [1])
+def test_completion_db_sql_shell(
+    temp_home: Path,
+    runner: CliRunner,
+    mocker: MockerFixture,
+    expanduser_side_effects: int,
+):
+    side_effect = make_expanduser_side_effect(
+        temp_home, expanduser_side_effects
+    )
+    mocker.patch("os.path.expanduser", side_effect=side_effect)
+    shpd_dir = temp_home / "shpd"
+    shpd_dir.mkdir(parents=True, exist_ok=True)
+    shpd_json = shpd_dir / ".shpd.json"
+    shpd_json.write_text(shpd_config)
+
+    sm = ShepherdMng()
+    completions = sm.completionMng.get_completions(["db", "sql-shell"])
+    assert completions == ["red", "white"], "Expected sql-shell completion"
+
+
+@pytest.mark.compl
+@pytest.mark.parametrize("expanduser_side_effects", [1])
 def test_completion_svc_commands(
     temp_home: Path,
     runner: CliRunner,
@@ -189,3 +740,157 @@ def test_completion_svc_commands(
     assert (
         completions == sm.completionMng.completionSvcMng.COMMANDS_SVC
     ), "Expected svc commands only"
+
+
+@pytest.mark.compl
+@pytest.mark.parametrize("expanduser_side_effects", [1])
+def test_completion_svc_build(
+    temp_home: Path,
+    runner: CliRunner,
+    mocker: MockerFixture,
+    expanduser_side_effects: int,
+):
+    side_effect = make_expanduser_side_effect(
+        temp_home, expanduser_side_effects
+    )
+    mocker.patch("os.path.expanduser", side_effect=side_effect)
+    shpd_dir = temp_home / "shpd"
+    shpd_dir.mkdir(parents=True, exist_ok=True)
+    shpd_json = shpd_dir / ".shpd.json"
+    shpd_json.write_text(shpd_config)
+
+    sm = ShepherdMng()
+    completions = sm.completionMng.get_completions(["svc", "build"])
+    assert completions == ["t1", "t2"], "Expected build completion"
+
+
+@pytest.mark.compl
+@pytest.mark.parametrize("expanduser_side_effects", [1])
+def test_completion_svc_up(
+    temp_home: Path,
+    runner: CliRunner,
+    mocker: MockerFixture,
+    expanduser_side_effects: int,
+):
+    side_effect = make_expanduser_side_effect(
+        temp_home, expanduser_side_effects
+    )
+    mocker.patch("os.path.expanduser", side_effect=side_effect)
+    shpd_dir = temp_home / "shpd"
+    shpd_dir.mkdir(parents=True, exist_ok=True)
+    shpd_json = shpd_dir / ".shpd.json"
+    shpd_json.write_text(shpd_config)
+
+    sm = ShepherdMng()
+    completions = sm.completionMng.get_completions(["svc", "up"])
+    assert completions == ["red", "white"], "Expected up completion"
+
+
+@pytest.mark.compl
+@pytest.mark.parametrize("expanduser_side_effects", [1])
+def test_completion_svc_halt(
+    temp_home: Path,
+    runner: CliRunner,
+    mocker: MockerFixture,
+    expanduser_side_effects: int,
+):
+    side_effect = make_expanduser_side_effect(
+        temp_home, expanduser_side_effects
+    )
+    mocker.patch("os.path.expanduser", side_effect=side_effect)
+    shpd_dir = temp_home / "shpd"
+    shpd_dir.mkdir(parents=True, exist_ok=True)
+    shpd_json = shpd_dir / ".shpd.json"
+    shpd_json.write_text(shpd_config)
+
+    sm = ShepherdMng()
+    completions = sm.completionMng.get_completions(["svc", "halt"])
+    assert completions == ["red", "white"], "Expected halt completion"
+
+
+@pytest.mark.compl
+@pytest.mark.parametrize("expanduser_side_effects", [1])
+def test_completion_svc_reload(
+    temp_home: Path,
+    runner: CliRunner,
+    mocker: MockerFixture,
+    expanduser_side_effects: int,
+):
+    side_effect = make_expanduser_side_effect(
+        temp_home, expanduser_side_effects
+    )
+    mocker.patch("os.path.expanduser", side_effect=side_effect)
+    shpd_dir = temp_home / "shpd"
+    shpd_dir.mkdir(parents=True, exist_ok=True)
+    shpd_json = shpd_dir / ".shpd.json"
+    shpd_json.write_text(shpd_config)
+
+    sm = ShepherdMng()
+    completions = sm.completionMng.get_completions(["svc", "reload"])
+    assert completions == ["red", "white"], "Expected reload completion"
+
+
+@pytest.mark.compl
+@pytest.mark.parametrize("expanduser_side_effects", [1])
+def test_completion_svc_render(
+    temp_home: Path,
+    runner: CliRunner,
+    mocker: MockerFixture,
+    expanduser_side_effects: int,
+):
+    side_effect = make_expanduser_side_effect(
+        temp_home, expanduser_side_effects
+    )
+    mocker.patch("os.path.expanduser", side_effect=side_effect)
+    shpd_dir = temp_home / "shpd"
+    shpd_dir.mkdir(parents=True, exist_ok=True)
+    shpd_json = shpd_dir / ".shpd.json"
+    shpd_json.write_text(shpd_config)
+
+    sm = ShepherdMng()
+    completions = sm.completionMng.get_completions(["svc", "render"])
+    assert completions == ["red", "white"], "Expected render completion"
+
+
+@pytest.mark.compl
+@pytest.mark.parametrize("expanduser_side_effects", [1])
+def test_completion_svc_stdout(
+    temp_home: Path,
+    runner: CliRunner,
+    mocker: MockerFixture,
+    expanduser_side_effects: int,
+):
+    side_effect = make_expanduser_side_effect(
+        temp_home, expanduser_side_effects
+    )
+    mocker.patch("os.path.expanduser", side_effect=side_effect)
+    shpd_dir = temp_home / "shpd"
+    shpd_dir.mkdir(parents=True, exist_ok=True)
+    shpd_json = shpd_dir / ".shpd.json"
+    shpd_json.write_text(shpd_config)
+
+    sm = ShepherdMng()
+    completions = sm.completionMng.get_completions(["svc", "stdout"])
+    assert completions == ["red", "white"], "Expected stdout completion"
+
+
+@pytest.mark.compl
+@pytest.mark.parametrize("expanduser_side_effects", [1])
+def test_completion_svc_shell(
+    temp_home: Path,
+    runner: CliRunner,
+    mocker: MockerFixture,
+    expanduser_side_effects: int,
+):
+    side_effect = make_expanduser_side_effect(
+        temp_home, expanduser_side_effects
+    )
+    mocker.patch("os.path.expanduser", side_effect=side_effect)
+    shpd_dir = temp_home / "shpd"
+    shpd_dir.mkdir(parents=True, exist_ok=True)
+    shpd_json = shpd_dir / ".shpd.json"
+    shpd_json.write_text(shpd_config)
+
+    sm = ShepherdMng()
+    completions = sm.completionMng.get_completions(["svc", "shell"])
+    assert completions == ["red", "white"], "Expected shell completion"
