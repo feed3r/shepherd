@@ -173,7 +173,7 @@ class CompletionEnvMng(AbstractCompletionMng):
     def get_resource_classes(self, args: list[str]) -> list[str]:
         env = self.configMng.get_active_environment()
         if env:
-            return self.configMng.get_resource_classes(env.tag, args[0])
+            return self.configMng.get_resource_classes(env, args[0])
         return []
 
     def get_add_resource_completions(self, args: list[str]) -> list[str]:

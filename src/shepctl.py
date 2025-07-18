@@ -154,11 +154,14 @@ def db():
 
 
 @db.command(name="sql-shell")
+@click.argument("service_tag", type=str, required=True)
 @click.pass_obj
 @require_active_env
-def db_sql_shell(shepherd: ShepherdMng, envCfg: EnvironmentCfg):
+def db_sql_shell(
+    shepherd: ShepherdMng, envCfg: EnvironmentCfg, service_tag: str
+):
     """Get a SQL session for the database service."""
-    shepherd.databaseMng.sql_shell_svc(envCfg.tag, "db-id")
+    shepherd.databaseMng.sql_shell_svc(envCfg, service_tag)
 
 
 # Environment commands
@@ -295,36 +298,30 @@ def svc_build(shepherd: ShepherdMng, service_template: str):
 
 
 @svc.command(name="up")
-@click.argument("service_template", type=str, required=True)
+@click.argument("service_tag", type=str, required=True)
 @click.pass_obj
 @require_active_env
-def svc_up(
-    shepherd: ShepherdMng, envCfg: EnvironmentCfg, service_template: str
-):
+def svc_up(shepherd: ShepherdMng, envCfg: EnvironmentCfg, service_tag: str):
     """Start service."""
-    shepherd.serviceMng.start_svc(envCfg, service_template)
+    shepherd.serviceMng.start_svc(envCfg, service_tag)
 
 
 @svc.command(name="halt")
-@click.argument("service_template", type=str, required=True)
+@click.argument("service_tag", type=str, required=True)
 @click.pass_obj
 @require_active_env
-def svc_halt(
-    shepherd: ShepherdMng, envCfg: EnvironmentCfg, service_template: str
-):
+def svc_halt(shepherd: ShepherdMng, envCfg: EnvironmentCfg, service_tag: str):
     """Halt service."""
-    shepherd.serviceMng.halt_svc(envCfg, service_template)
+    shepherd.serviceMng.halt_svc(envCfg, service_tag)
 
 
 @svc.command(name="reload")
-@click.argument("service_template", type=str, required=True)
+@click.argument("service_tag", type=str, required=True)
 @click.pass_obj
 @require_active_env
-def svc_reload(
-    shepherd: ShepherdMng, envCfg: EnvironmentCfg, service_template: str
-):
+def svc_reload(shepherd: ShepherdMng, envCfg: EnvironmentCfg, service_tag: str):
     """Reload service."""
-    shepherd.serviceMng.reload_svc(envCfg, service_template)
+    shepherd.serviceMng.reload_svc(envCfg, service_tag)
 
 
 @svc.command(name="render")

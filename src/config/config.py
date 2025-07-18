@@ -853,7 +853,7 @@ class ConfigMng:
         self.store()
 
     def get_resource_classes(
-        self, env_tag: str, resource_type: str
+        self, env: EnvironmentCfg, resource_type: str
     ) -> list[str]:
         """
         Retrieves all unique resource classes from the service configurations.
@@ -862,14 +862,24 @@ class ConfigMng:
         """
         match resource_type:
             case self.constants.RESOURCE_TYPE_SVC:
-                return sorted(
-                    {
-                        svc.service_class
-                        for env in self.config.envs
-                        if env.tag == env_tag and env.services
-                        for svc in env.services
-                        if svc.service_class
-                    }
-                )
+                if env.services:
+                    return sorted(
+                        {
+                            svc.service_class
+                            for svc in env.services
+                            if svc.service_class
+                        }
+                    )
+                return []
             case _:
                 return []
+
+    def get_service_tags(self, env: EnvironmentCfg) -> list[str]:
+        """
+        Retrieves all unique service tags from the service configurations.
+
+        :return: A list of unique service tags.
+        """
+        if env.services:
+            return sorted({svc.tag for svc in env.services if svc.tag})
+        return []

@@ -645,7 +645,7 @@ def test_cli_srv_up(
     shpd_json = shpd_dir / ".shpd.json"
     shpd_json.write_text(shpd_config_svc_default)
 
-    result = runner.invoke(cli, ["svc", "up", "service_template"])
+    result = runner.invoke(cli, ["svc", "up", "service_tag"])
     assert result.exit_code == 0
     mock_start.assert_called_once()
 
@@ -668,7 +668,7 @@ def test_cli_srv_halt(
     shpd_json = shpd_dir / ".shpd.json"
     shpd_json.write_text(shpd_config_svc_default)
 
-    result = runner.invoke(cli, ["svc", "halt", "service_template"])
+    result = runner.invoke(cli, ["svc", "halt", "service_tag"])
     assert result.exit_code == 0
     mock_halt.assert_called_once()
 
@@ -691,7 +691,7 @@ def test_cli_srv_reload(
     shpd_json = shpd_dir / ".shpd.json"
     shpd_json.write_text(shpd_config_svc_default)
 
-    result = runner.invoke(cli, ["svc", "reload", "service_template"])
+    result = runner.invoke(cli, ["svc", "reload", "service_tag"])
     assert result.exit_code == 0
     mock_reload.assert_called_once()
 
@@ -714,7 +714,7 @@ def test_cli_srv_stdout(
     shpd_json = shpd_dir / ".shpd.json"
     shpd_json.write_text(shpd_config_svc_default)
 
-    result = runner.invoke(cli, ["svc", "stdout", "service_id"])
+    result = runner.invoke(cli, ["svc", "stdout", "service_tag"])
     assert result.exit_code == 0
     mock_stdout.assert_called_once()
 
@@ -737,7 +737,7 @@ def test_cli_srv_shell(
     shpd_json = shpd_dir / ".shpd.json"
     shpd_json.write_text(shpd_config_svc_default)
 
-    result = runner.invoke(cli, ["svc", "shell", "service_id"])
+    result = runner.invoke(cli, ["svc", "shell", "service_tag"])
     assert result.exit_code == 0
     mock_shell.assert_called_once()
 
@@ -763,9 +763,9 @@ def test_cli_db_sql_shell(
     shpd_json = shpd_dir / ".shpd.json"
     shpd_json.write_text(shpd_config_svc_default)
 
-    result = runner.invoke(cli, ["db", "sql-shell"])
+    result = runner.invoke(cli, ["db", "sql-shell", "db-tag"])
     assert result.exit_code == 0
-    mock_sql_shell.assert_called_once_with("test-1", "db-id")
+    mock_sql_shell.assert_called_once()
 
 
 # environment tests

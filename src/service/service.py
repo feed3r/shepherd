@@ -137,19 +137,15 @@ class ServiceMng:
     def build_image_svc(self, service_template: str):
         pass
 
-    def bootstrap_svc(self, service_template: str):
-        """Bootstrap a service."""
-        pass
-
-    def start_svc(self, envCfg: EnvironmentCfg, service_template: str):
+    def start_svc(self, envCfg: EnvironmentCfg, service_tag: str):
         """Start a service."""
         pass
 
-    def halt_svc(self, envCfg: EnvironmentCfg, service_template: str):
+    def halt_svc(self, envCfg: EnvironmentCfg, service_tag: str):
         """Halt a service."""
         pass
 
-    def reload_svc(self, envCfg: EnvironmentCfg, service_template: str):
+    def reload_svc(self, envCfg: EnvironmentCfg, service_tag: str):
         """Reload a service."""
         pass
 
