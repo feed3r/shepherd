@@ -90,6 +90,118 @@ values = """
   log_format=%(asctime)s - %(levelname)s - %(message)s
   """
 
+shpd_config_svc_default = """
+{
+  "logging": {
+    "file": "${log_file}",
+    "level": "${log_level}",
+    "stdout": "${log_stdout}",
+    "format": "${log_format}"
+  },
+  "shpd_registry": {
+    "ftp_server": "${shpd_registry}",
+    "ftp_user": "${shpd_registry_ftp_usr}",
+    "ftp_psw": "${shpd_registry_ftp_psw}",
+    "ftp_shpd_path": "${shpd_registry_ftp_shpd_path}",
+    "ftp_env_imgs_path": "${shpd_registry_ftp_imgs_path}"
+  },
+  "host_inet_ip": "${host_inet_ip}",
+  "domain": "${domain}",
+  "dns_type": "${dns_type}",
+  "ca": {
+    "country": "${ca_country}",
+    "state": "${ca_state}",
+    "locality": "${ca_locality}",
+    "organization": "${ca_org}",
+    "organizational_unit": "${ca_org_unit}",
+    "common_name": "${ca_cn}",
+    "email": "${ca_email}",
+    "passphrase": "${ca_passphrase}"
+  },
+  "cert": {
+    "country": "${cert_country}",
+    "state": "${cert_state}",
+    "locality": "${cert_locality}",
+    "organization": "${cert_org}",
+    "organizational_unit": "${cert_org_unit}",
+    "common_name": "${cert_cn}",
+    "email": "${cert_email}",
+    "subject_alternative_names": []
+  },
+  "service_types": [
+    {
+      "type": "image",
+      "image": "test-image:latest",
+      "labels": [
+        "com.example.label1=value1",
+        "com.example.label2=value2"
+      ],
+      "workdir": "/test",
+      "volumes": [
+          "/home/test/.ssh:/home/test/.ssh",
+          "/etc/ssh:/etc/ssh"
+      ],
+      "ingress": false,
+      "empty_env": null,
+      "environment": [],
+      "ports": [
+        "80:80",
+        "443:443",
+        "8080:8080"
+      ],
+      "properties": {},
+      "networks": [
+        "default"
+      ],
+      "extra_hosts": [
+        "host.docker.internal:host-gateway"
+      ],
+      "subject_alternative_name": null
+    }
+  ],
+  "envs": [
+    {
+      "type": "docker-compose",
+      "tag": "test-1",
+      "services": [
+        {
+          "type": "image",
+          "tag": "test",
+          "image": "test-image:latest",
+          "labels": [
+            "com.example.label1=value1",
+            "com.example.label2=value2"
+          ],
+          "workdir": "/test",
+          "volumes": [
+              "/home/test/.ssh:/home/test/.ssh",
+              "/etc/ssh:/etc/ssh"
+          ],
+          "ingress": false,
+          "empty_env": null,
+          "environment": [],
+          "ports": [
+            "80:80",
+            "443:443",
+            "8080:8080"
+          ],
+          "properties": {},
+          "networks": [
+            "default"
+          ],
+          "extra_hosts": [
+            "host.docker.internal:host-gateway"
+          ],
+          "subject_alternative_name": null
+        }
+      ],
+      "archived": false,
+      "active": true
+    }
+  ]
+}
+"""
+
 
 @pytest.fixture
 def temp_home(tmp_path: Path, mocker: MockerFixture) -> Path:
@@ -547,10 +659,14 @@ def test_cli_srv_up(
         temp_home, expanduser_side_effects
     )
     mocker.patch("os.path.expanduser", side_effect=side_effect)
+    shpd_dir = temp_home / "shpd"
+    shpd_dir.mkdir(parents=True, exist_ok=True)
+    shpd_json = shpd_dir / ".shpd.json"
+    shpd_json.write_text(shpd_config_svc_default)
 
     result = runner.invoke(cli, ["svc", "up", "service_type"])
     assert result.exit_code == 0
-    mock_start.assert_called_once_with("service_type")
+    mock_start.assert_called_once_with("test-1", "service_type")
 
 
 @pytest.mark.shpd
@@ -566,10 +682,14 @@ def test_cli_srv_halt(
         temp_home, expanduser_side_effects
     )
     mocker.patch("os.path.expanduser", side_effect=side_effect)
+    shpd_dir = temp_home / "shpd"
+    shpd_dir.mkdir(parents=True, exist_ok=True)
+    shpd_json = shpd_dir / ".shpd.json"
+    shpd_json.write_text(shpd_config_svc_default)
 
     result = runner.invoke(cli, ["svc", "halt", "service_type"])
     assert result.exit_code == 0
-    mock_halt.assert_called_once_with("service_type")
+    mock_halt.assert_called_once_with("test-1", "service_type")
 
 
 @pytest.mark.shpd
@@ -585,10 +705,14 @@ def test_cli_srv_reload(
         temp_home, expanduser_side_effects
     )
     mocker.patch("os.path.expanduser", side_effect=side_effect)
+    shpd_dir = temp_home / "shpd"
+    shpd_dir.mkdir(parents=True, exist_ok=True)
+    shpd_json = shpd_dir / ".shpd.json"
+    shpd_json.write_text(shpd_config_svc_default)
 
     result = runner.invoke(cli, ["svc", "reload", "service_type"])
     assert result.exit_code == 0
-    mock_reload.assert_called_once_with("service_type")
+    mock_reload.assert_called_once_with("test-1", "service_type")
 
 
 @pytest.mark.shpd
@@ -604,10 +728,14 @@ def test_cli_srv_stdout(
         temp_home, expanduser_side_effects
     )
     mocker.patch("os.path.expanduser", side_effect=side_effect)
+    shpd_dir = temp_home / "shpd"
+    shpd_dir.mkdir(parents=True, exist_ok=True)
+    shpd_json = shpd_dir / ".shpd.json"
+    shpd_json.write_text(shpd_config_svc_default)
 
     result = runner.invoke(cli, ["svc", "stdout", "service_id"])
     assert result.exit_code == 0
-    mock_stdout.assert_called_once_with("service_id")
+    mock_stdout.assert_called_once_with("test-1", "service_id")
 
 
 @pytest.mark.shpd
@@ -623,10 +751,14 @@ def test_cli_srv_shell(
         temp_home, expanduser_side_effects
     )
     mocker.patch("os.path.expanduser", side_effect=side_effect)
+    shpd_dir = temp_home / "shpd"
+    shpd_dir.mkdir(parents=True, exist_ok=True)
+    shpd_json = shpd_dir / ".shpd.json"
+    shpd_json.write_text(shpd_config_svc_default)
 
     result = runner.invoke(cli, ["svc", "shell", "service_id"])
     assert result.exit_code == 0
-    mock_shell.assert_called_once_with("service_id")
+    mock_shell.assert_called_once_with("test-1", "service_id")
 
 
 # database service tests
@@ -645,10 +777,14 @@ def test_cli_db_up(
         temp_home, expanduser_side_effects
     )
     mocker.patch("os.path.expanduser", side_effect=side_effect)
+    shpd_dir = temp_home / "shpd"
+    shpd_dir.mkdir(parents=True, exist_ok=True)
+    shpd_json = shpd_dir / ".shpd.json"
+    shpd_json.write_text(shpd_config_svc_default)
 
     result = runner.invoke(cli, ["db", "up"])
     assert result.exit_code == 0
-    mock_start.assert_called_once()
+    mock_start.assert_called_once_with("test-1", "database")
 
 
 @pytest.mark.shpd
@@ -702,10 +838,14 @@ def test_cli_db_halt(
         temp_home, expanduser_side_effects
     )
     mocker.patch("os.path.expanduser", side_effect=side_effect)
+    shpd_dir = temp_home / "shpd"
+    shpd_dir.mkdir(parents=True, exist_ok=True)
+    shpd_json = shpd_dir / ".shpd.json"
+    shpd_json.write_text(shpd_config_svc_default)
 
     result = runner.invoke(cli, ["db", "halt"])
     assert result.exit_code == 0
-    mock_halt.assert_called_once()
+    mock_halt.assert_called_once_with("test-1", "database")
 
 
 @pytest.mark.shpd
@@ -721,10 +861,14 @@ def test_cli_db_stdout(
         temp_home, expanduser_side_effects
     )
     mocker.patch("os.path.expanduser", side_effect=side_effect)
+    shpd_dir = temp_home / "shpd"
+    shpd_dir.mkdir(parents=True, exist_ok=True)
+    shpd_json = shpd_dir / ".shpd.json"
+    shpd_json.write_text(shpd_config_svc_default)
 
     result = runner.invoke(cli, ["db", "stdout"])
     assert result.exit_code == 0
-    mock_stdout.assert_called_once()
+    mock_stdout.assert_called_once_with("test-1", "db-id")
 
 
 @pytest.mark.shpd
@@ -740,10 +884,14 @@ def test_cli_db_shell(
         temp_home, expanduser_side_effects
     )
     mocker.patch("os.path.expanduser", side_effect=side_effect)
+    shpd_dir = temp_home / "shpd"
+    shpd_dir.mkdir(parents=True, exist_ok=True)
+    shpd_json = shpd_dir / ".shpd.json"
+    shpd_json.write_text(shpd_config_svc_default)
 
     result = runner.invoke(cli, ["db", "shell"])
     assert result.exit_code == 0
-    mock_shell.assert_called_once()
+    mock_shell.assert_called_once_with("test-1", "db-id")
 
 
 @pytest.mark.shpd
@@ -759,10 +907,14 @@ def test_cli_db_sql_shell(
         temp_home, expanduser_side_effects
     )
     mocker.patch("os.path.expanduser", side_effect=side_effect)
+    shpd_dir = temp_home / "shpd"
+    shpd_dir.mkdir(parents=True, exist_ok=True)
+    shpd_json = shpd_dir / ".shpd.json"
+    shpd_json.write_text(shpd_config_svc_default)
 
     result = runner.invoke(cli, ["db", "sql-shell"])
     assert result.exit_code == 0
-    mock_sql_shell.assert_called_once()
+    mock_sql_shell.assert_called_once_with("test-1", "db-id")
 
 
 # environment tests

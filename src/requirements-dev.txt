@@ -7,3 +7,4 @@ pyright
 flake8
 pyinstaller
 rich
+pyyaml

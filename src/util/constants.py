@@ -18,7 +18,7 @@
 
 import os
 from dataclasses import dataclass
-from typing import Any, Dict
+from typing import Any
 
 
 @dataclass(frozen=True)
@@ -68,12 +68,12 @@ class Constants:
 
     # Service types
 
-    SVC_TYPE_DOCKER: str = "docker"
+    SVC_TYPE_GENERIC_IMAGE: str = "image"
 
     # Default configuration values
 
     @property
-    def DEFAULT_CONFIG(self) -> Dict[Any, Any]:
+    def DEFAULT_CONFIG(self) -> dict[Any, Any]:
         return {
             "logging": {
                 "file": "${log_file}",
@@ -83,7 +83,7 @@ class Constants:
             },
             "service_types": [
                 {
-                    "type": "docker",
+                    "type": "image",
                     "image": "",
                     "ingress": False,
                     "envvars": {},
