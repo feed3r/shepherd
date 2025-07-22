@@ -18,8 +18,12 @@
 
 import json
 import os
+import platform
 import shutil
+import subprocess
 import sys
+from dataclasses import dataclass
+from typing import Any, List, Union
 
 from rich.console import Console
 
@@ -28,6 +32,14 @@ from .constants import Constants
 
 class Util:
     console = Console()
+
+    @dataclass
+    class OsInfo:
+        """Structured information about the operating system."""
+
+        system: str
+        distro: str | None = None
+        codename: str | None = None
 
     @staticmethod
     def confirm(prompt: str) -> bool:
@@ -134,3 +146,113 @@ class Util:
             Util.print_error_and_die(
                 f"Failed to create config file: {config_file_path}\nError: {e}"
             )
+
+    @staticmethod
+    def is_root() -> bool:
+        return os.geteuid() == 0
+
+    @staticmethod
+    def run_command(
+        cmd: Union[List[str], str],
+        check: bool = True,
+        shell: bool = False,
+        capture_output: bool = False,
+    ) -> Union[subprocess.CompletedProcess[Any], subprocess.CalledProcessError]:
+        """Run a shell command and return the result.
+
+        Args:
+            cmd: Command to run (list or string)
+            check: Whether to raise an exception on failure
+            shell: Whether to run through shell
+            capture_output: Whether to capture stdout/stderr
+
+        Returns:
+            CompletedProcess instance or CalledProcessError
+        """
+        if isinstance(cmd, str) and not shell:
+            cmd = cmd.split()
+
+        try:
+            result = subprocess.run(
+                cmd,
+                check=check,
+                shell=shell,
+                text=True,
+                capture_output=capture_output,
+            )
+            return result
+        except subprocess.CalledProcessError as e:
+            Util.console.print(f"Command failed: {e}", style="red")
+            if check:
+                sys.exit(1)
+            return e
+
+    @staticmethod
+    def get_current_user() -> str:
+        """Get the actual user, even when running with sudo."""
+        return os.environ.get("SUDO_USER") or Util._get_user_fallback()
+
+    @staticmethod
+    def _get_user_fallback() -> str:
+        try:
+            return os.getlogin()
+        except OSError:
+            import getpass
+
+            return getpass.getuser()
+
+    @staticmethod
+    def check_file_exists(path: str) -> bool:
+        """Check if a file exists and is readable at the given path."""
+        return os.path.isfile(path) and os.access(path, os.R_OK)
+
+    @staticmethod
+    def get_architecture() -> str:
+        bits, linkage = platform.architecture()
+        machine = platform.machine().lower()
+        arch_mapping = getattr(Constants, "ARCH_MAPPING", {})
+        if (bits, linkage) in arch_mapping:
+            return arch_mapping[(bits, linkage)]
+        if "arm" in machine or "aarch" in machine:
+            return "arm64"
+        return "amd64" if "64" in bits else "i386"
+
+    @staticmethod
+    def get_os_info() -> "Util.OsInfo":
+        system = platform.system().lower()
+        if system in ("windows", "win32", "darwin"):
+            raise ValueError(f"Unsupported operating system: {system}")
+        elif system == "linux":
+            import distro
+
+            dist_id = distro.id().lower()
+            code_name = distro.codename().lower()
+            return Util.OsInfo(
+                system=system, distro=dist_id, codename=code_name
+            )
+        return Util.OsInfo(system=system)
+
+    @staticmethod
+    def download_package(url: str, dest: str) -> None:
+        Util.run_command(["curl", "-fsSL", url, "-o", dest], check=True)
+        Util.console.print(
+            f"Package downloaded to {dest}",
+            style="green",
+        )
+
+    @staticmethod
+    def extract_package(package_path: str, extract_to: str) -> None:
+        Util.run_command(
+            [
+                "tar",
+                "-xzf",
+                package_path,
+                "-C",
+                extract_to,
+            ],
+            check=True,
+        )
+        Util.console.print(
+            f"Package extracted to {extract_to}",
+            style="green",
+        )
