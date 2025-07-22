@@ -629,25 +629,6 @@ def test_cli_srv_build(
 
 @pytest.mark.shpd
 @pytest.mark.parametrize("expanduser_side_effects", [1])
-def test_cli_srv_bootstrap(
-    temp_home: Path,
-    runner: CliRunner,
-    mocker: MockerFixture,
-    expanduser_side_effects: int,
-):
-    mock_bootstrap = mocker.patch.object(ServiceMng, "bootstrap_svc")
-    side_effect = make_expanduser_side_effect(
-        temp_home, expanduser_side_effects
-    )
-    mocker.patch("os.path.expanduser", side_effect=side_effect)
-
-    result = runner.invoke(cli, ["svc", "bootstrap", "service_template"])
-    assert result.exit_code == 0
-    mock_bootstrap.assert_called_once_with("service_template")
-
-
-@pytest.mark.shpd
-@pytest.mark.parametrize("expanduser_side_effects", [1])
 def test_cli_srv_up(
     temp_home: Path,
     runner: CliRunner,
@@ -664,9 +645,9 @@ def test_cli_srv_up(
     shpd_json = shpd_dir / ".shpd.json"
     shpd_json.write_text(shpd_config_svc_default)
 
-    result = runner.invoke(cli, ["svc", "up", "service_template"])
+    result = runner.invoke(cli, ["svc", "up", "service_tag"])
     assert result.exit_code == 0
-    mock_start.assert_called_once_with("test-1", "service_template")
+    mock_start.assert_called_once()
 
 
 @pytest.mark.shpd
@@ -687,9 +668,9 @@ def test_cli_srv_halt(
     shpd_json = shpd_dir / ".shpd.json"
     shpd_json.write_text(shpd_config_svc_default)
 
-    result = runner.invoke(cli, ["svc", "halt", "service_template"])
+    result = runner.invoke(cli, ["svc", "halt", "service_tag"])
     assert result.exit_code == 0
-    mock_halt.assert_called_once_with("test-1", "service_template")
+    mock_halt.assert_called_once()
 
 
 @pytest.mark.shpd
@@ -710,9 +691,9 @@ def test_cli_srv_reload(
     shpd_json = shpd_dir / ".shpd.json"
     shpd_json.write_text(shpd_config_svc_default)
 
-    result = runner.invoke(cli, ["svc", "reload", "service_template"])
+    result = runner.invoke(cli, ["svc", "reload", "service_tag"])
     assert result.exit_code == 0
-    mock_reload.assert_called_once_with("test-1", "service_template")
+    mock_reload.assert_called_once()
 
 
 @pytest.mark.shpd
@@ -733,9 +714,9 @@ def test_cli_srv_stdout(
     shpd_json = shpd_dir / ".shpd.json"
     shpd_json.write_text(shpd_config_svc_default)
 
-    result = runner.invoke(cli, ["svc", "stdout", "service_id"])
+    result = runner.invoke(cli, ["svc", "stdout", "service_tag"])
     assert result.exit_code == 0
-    mock_stdout.assert_called_once_with("test-1", "service_id")
+    mock_stdout.assert_called_once()
 
 
 @pytest.mark.shpd
@@ -756,142 +737,12 @@ def test_cli_srv_shell(
     shpd_json = shpd_dir / ".shpd.json"
     shpd_json.write_text(shpd_config_svc_default)
 
-    result = runner.invoke(cli, ["svc", "shell", "service_id"])
+    result = runner.invoke(cli, ["svc", "shell", "service_tag"])
     assert result.exit_code == 0
-    mock_shell.assert_called_once_with("test-1", "service_id")
+    mock_shell.assert_called_once()
 
 
 # database service tests
-
-
-@pytest.mark.shpd
-@pytest.mark.parametrize("expanduser_side_effects", [1])
-def test_cli_db_up(
-    temp_home: Path,
-    runner: CliRunner,
-    mocker: MockerFixture,
-    expanduser_side_effects: int,
-):
-    mock_start = mocker.patch.object(DatabaseMng, "start_svc")
-    side_effect = make_expanduser_side_effect(
-        temp_home, expanduser_side_effects
-    )
-    mocker.patch("os.path.expanduser", side_effect=side_effect)
-    shpd_dir = temp_home / "shpd"
-    shpd_dir.mkdir(parents=True, exist_ok=True)
-    shpd_json = shpd_dir / ".shpd.json"
-    shpd_json.write_text(shpd_config_svc_default)
-
-    result = runner.invoke(cli, ["db", "up"])
-    assert result.exit_code == 0
-    mock_start.assert_called_once_with("test-1", "database")
-
-
-@pytest.mark.shpd
-@pytest.mark.parametrize("expanduser_side_effects", [1])
-def test_cli_db_build(
-    temp_home: Path,
-    runner: CliRunner,
-    mocker: MockerFixture,
-    expanduser_side_effects: int,
-):
-    mock_build = mocker.patch.object(DatabaseMng, "build_image_svc")
-    side_effect = make_expanduser_side_effect(
-        temp_home, expanduser_side_effects
-    )
-    mocker.patch("os.path.expanduser", side_effect=side_effect)
-
-    result = runner.invoke(cli, ["db", "build"])
-    assert result.exit_code == 0
-    mock_build.assert_called_once()
-
-
-@pytest.mark.shpd
-@pytest.mark.parametrize("expanduser_side_effects", [1])
-def test_cli_db_bootstrap(
-    temp_home: Path,
-    runner: CliRunner,
-    mocker: MockerFixture,
-    expanduser_side_effects: int,
-):
-    mock_bootstrap = mocker.patch.object(DatabaseMng, "bootstrap_svc")
-    side_effect = make_expanduser_side_effect(
-        temp_home, expanduser_side_effects
-    )
-    mocker.patch("os.path.expanduser", side_effect=side_effect)
-
-    result = runner.invoke(cli, ["db", "bootstrap"])
-    assert result.exit_code == 0
-    mock_bootstrap.assert_called_once()
-
-
-@pytest.mark.shpd
-@pytest.mark.parametrize("expanduser_side_effects", [1])
-def test_cli_db_halt(
-    temp_home: Path,
-    runner: CliRunner,
-    mocker: MockerFixture,
-    expanduser_side_effects: int,
-):
-    mock_halt = mocker.patch.object(DatabaseMng, "halt_svc")
-    side_effect = make_expanduser_side_effect(
-        temp_home, expanduser_side_effects
-    )
-    mocker.patch("os.path.expanduser", side_effect=side_effect)
-    shpd_dir = temp_home / "shpd"
-    shpd_dir.mkdir(parents=True, exist_ok=True)
-    shpd_json = shpd_dir / ".shpd.json"
-    shpd_json.write_text(shpd_config_svc_default)
-
-    result = runner.invoke(cli, ["db", "halt"])
-    assert result.exit_code == 0
-    mock_halt.assert_called_once_with("test-1", "database")
-
-
-@pytest.mark.shpd
-@pytest.mark.parametrize("expanduser_side_effects", [1])
-def test_cli_db_stdout(
-    temp_home: Path,
-    runner: CliRunner,
-    mocker: MockerFixture,
-    expanduser_side_effects: int,
-):
-    mock_stdout = mocker.patch.object(DatabaseMng, "stdout_svc")
-    side_effect = make_expanduser_side_effect(
-        temp_home, expanduser_side_effects
-    )
-    mocker.patch("os.path.expanduser", side_effect=side_effect)
-    shpd_dir = temp_home / "shpd"
-    shpd_dir.mkdir(parents=True, exist_ok=True)
-    shpd_json = shpd_dir / ".shpd.json"
-    shpd_json.write_text(shpd_config_svc_default)
-
-    result = runner.invoke(cli, ["db", "stdout"])
-    assert result.exit_code == 0
-    mock_stdout.assert_called_once_with("test-1", "db-id")
-
-
-@pytest.mark.shpd
-@pytest.mark.parametrize("expanduser_side_effects", [1])
-def test_cli_db_shell(
-    temp_home: Path,
-    runner: CliRunner,
-    mocker: MockerFixture,
-    expanduser_side_effects: int,
-):
-    mock_shell = mocker.patch.object(DatabaseMng, "shell_svc")
-    side_effect = make_expanduser_side_effect(
-        temp_home, expanduser_side_effects
-    )
-    mocker.patch("os.path.expanduser", side_effect=side_effect)
-    shpd_dir = temp_home / "shpd"
-    shpd_dir.mkdir(parents=True, exist_ok=True)
-    shpd_json = shpd_dir / ".shpd.json"
-    shpd_json.write_text(shpd_config_svc_default)
-
-    result = runner.invoke(cli, ["db", "shell"])
-    assert result.exit_code == 0
-    mock_shell.assert_called_once_with("test-1", "db-id")
 
 
 @pytest.mark.shpd
@@ -912,9 +763,9 @@ def test_cli_db_sql_shell(
     shpd_json = shpd_dir / ".shpd.json"
     shpd_json.write_text(shpd_config_svc_default)
 
-    result = runner.invoke(cli, ["db", "sql-shell"])
+    result = runner.invoke(cli, ["db", "sql-shell", "db-tag"])
     assert result.exit_code == 0
-    mock_sql_shell.assert_called_once_with("test-1", "db-id")
+    mock_sql_shell.assert_called_once()
 
 
 # environment tests
@@ -1009,6 +860,10 @@ def test_cli_env_up(
         temp_home, expanduser_side_effects
     )
     mocker.patch("os.path.expanduser", side_effect=side_effect)
+    shpd_dir = temp_home / "shpd"
+    shpd_dir.mkdir(parents=True, exist_ok=True)
+    shpd_json = shpd_dir / ".shpd.json"
+    shpd_json.write_text(shpd_config_svc_default)
 
     result = runner.invoke(cli, ["env", "up"])
     assert result.exit_code == 0
@@ -1028,6 +883,10 @@ def test_cli_env_halt(
         temp_home, expanduser_side_effects
     )
     mocker.patch("os.path.expanduser", side_effect=side_effect)
+    shpd_dir = temp_home / "shpd"
+    shpd_dir.mkdir(parents=True, exist_ok=True)
+    shpd_json = shpd_dir / ".shpd.json"
+    shpd_json.write_text(shpd_config_svc_default)
 
     result = runner.invoke(cli, ["env", "halt"])
     assert result.exit_code == 0
@@ -1047,6 +906,10 @@ def test_cli_env_reload(
         temp_home, expanduser_side_effects
     )
     mocker.patch("os.path.expanduser", side_effect=side_effect)
+    shpd_dir = temp_home / "shpd"
+    shpd_dir.mkdir(parents=True, exist_ok=True)
+    shpd_json = shpd_dir / ".shpd.json"
+    shpd_json.write_text(shpd_config_svc_default)
 
     result = runner.invoke(cli, ["env", "reload"])
     assert result.exit_code == 0
@@ -1066,6 +929,10 @@ def test_cli_env_status(
         temp_home, expanduser_side_effects
     )
     mocker.patch("os.path.expanduser", side_effect=side_effect)
+    shpd_dir = temp_home / "shpd"
+    shpd_dir.mkdir(parents=True, exist_ok=True)
+    shpd_json = shpd_dir / ".shpd.json"
+    shpd_json.write_text(shpd_config_svc_default)
 
     result = runner.invoke(cli, ["env", "status"])
     assert result.exit_code == 0

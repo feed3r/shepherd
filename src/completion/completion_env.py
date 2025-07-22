@@ -35,7 +35,7 @@ class CompletionEnvMng(AbstractCompletionMng):
         "halt",
         "reload",
         "status",
-        "add-resource",
+        "add",
     ]
 
     def __init__(self, cli_flags: dict[str, bool], configMng: ConfigMng):
@@ -79,7 +79,7 @@ class CompletionEnvMng(AbstractCompletionMng):
                 return self.get_reload_completions(args[1:])
             case "status":
                 return self.get_status_completions(args[1:])
-            case "add-resource":
+            case "add":
                 return self.get_add_resource_completions(args[1:])
             case _:
                 return []
@@ -153,16 +153,27 @@ class CompletionEnvMng(AbstractCompletionMng):
             return False
         return True
 
-    def is_resource_class_chosen(self, args: list[str]) -> bool:
+    def is_resource_template_chosen(self, args: list[str]) -> bool:
         if len(args) < 3:
             return False
-        resource_class = args[2]
+        resource_template = args[2]
+        return resource_template in self.configMng.get_resource_templates(
+            args[0]
+        )
+
+    def get_resource_templates(self, args: list[str]) -> list[str]:
+        return self.configMng.get_resource_templates(args[0])
+
+    def is_resource_class_chosen(self, args: list[str]) -> bool:
+        if len(args) < 4:
+            return False
+        resource_class = args[3]
         return resource_class in self.get_resource_classes(args)
 
     def get_resource_classes(self, args: list[str]) -> list[str]:
         env = self.configMng.get_active_environment()
         if env:
-            return self.configMng.get_resource_classes(env.tag, args[0])
+            return self.configMng.get_resource_classes(env, args[0])
         return []
 
     def get_add_resource_completions(self, args: list[str]) -> list[str]:
@@ -170,6 +181,8 @@ class CompletionEnvMng(AbstractCompletionMng):
             return self.configMng.constants.RESOURCE_TYPES
         if not self.is_resource_tag_chosen(args):
             return []
+        if not self.is_resource_template_chosen(args):
+            return self.get_resource_templates(args)
         if not self.is_resource_class_chosen(args):
             return self.get_resource_classes(args)
         return []

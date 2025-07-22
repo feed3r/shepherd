@@ -18,13 +18,13 @@
 
 from typing import override
 
-from completion.completion_svc import CompletionSvcMng
+from completion.completion_mng import AbstractCompletionMng
 from config import ConfigMng
 
 
-class CompletionDbMng(CompletionSvcMng):
+class CompletionDbMng(AbstractCompletionMng):
 
-    COMMANDS_DB = CompletionSvcMng.COMMANDS_SVC + ["sql-shell"]
+    COMMANDS_DB = ["sql-shell"]
 
     def __init__(self, cli_flags: dict[str, bool], configMng: ConfigMng):
         self.cli_flags = cli_flags
@@ -52,5 +52,19 @@ class CompletionDbMng(CompletionSvcMng):
             case _:
                 return []
 
+    def is_svc_tag_chosen(self, args: list[str]) -> bool:
+        if len(args) < 1:
+            return False
+        svc_tag = args[0]
+        return svc_tag in self.get_svc_tags(args)
+
+    def get_svc_tags(self, args: list[str]) -> list[str]:
+        env = self.configMng.get_active_environment()
+        if env:
+            return self.configMng.get_service_tags(env)
+        return []
+
     def get_sql_shell_completions(self, args: list[str]) -> list[str]:
+        if not self.is_svc_tag_chosen(args):
+            return self.get_svc_tags(args)
         return []

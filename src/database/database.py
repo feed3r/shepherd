@@ -16,47 +16,13 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
-from typing import override
-
 from config import ConfigMng
-from service import Service, ServiceMng
+from config.config import EnvironmentCfg
+from docker.docker_svc import DockerSvc
+from service import ServiceMng
 
 
-class DatabaseService(Service):
-    @override
-    def build(self):
-        """Build the DBMS image."""
-        pass
-
-    @override
-    def bootstrap(self):
-        """Bootstrap the DBMS service."""
-        pass
-
-    @override
-    def start(self):
-        """Start the DBMS service."""
-        pass
-
-    @override
-    def halt(self):
-        """Halt the DBMS service."""
-        pass
-
-    @override
-    def reload(self):
-        """Reload the DBMS service."""
-        pass
-
-    @override
-    def show_stdout(self):
-        """Show the DBMS stdout."""
-        pass
-
-    @override
-    def get_shell(self):
-        """Get a shell session for the DBMS."""
-        pass
+class DatabaseService(DockerSvc):
 
     def get_sql_shell(self):
         """Get a SQL shell session."""
@@ -82,22 +48,28 @@ class DatabaseMng(ServiceMng):
         self.configMng = configMng
         pass
 
-    def sql_shell_svc(self, env_tag: str, svc_tag: str):
+    def sql_shell_svc(self, envCfg: EnvironmentCfg, svc_tag: str):
         """Get a SQL shell session."""
         pass
 
     def create_database_user_svc(
-        self, env_tag: str, svc_tag: str, user: str, psw: str
+        self, envCfg: EnvironmentCfg, svc_tag: str, user: str, psw: str
     ):
         """Create a new database user."""
         pass
 
     def create_database_directory_svc(
-        self, env_tag: str, svc_tag: str, user: str, directory_name: str
+        self,
+        envCfg: EnvironmentCfg,
+        svc_tag: str,
+        user: str,
+        directory_name: str,
     ):
         """Create a directory object in a database."""
         pass
 
-    def remove_database_user_svc(self, env_tag: str, svc_tag: str, user: str):
+    def remove_database_user_svc(
+        self, envCfg: EnvironmentCfg, svc_tag: str, user: str
+    ):
         """Drop an existing user."""
         pass

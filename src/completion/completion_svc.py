@@ -26,12 +26,12 @@ class CompletionSvcMng(AbstractCompletionMng):
 
     COMMANDS_SVC = [
         "build",
-        "bootstrap",
         "up",
         "halt",
         "stdout",
         "shell",
         "render",
+        "reload",
     ]
 
     def __init__(self, cli_flags: dict[str, bool], configMng: ConfigMng):
@@ -57,8 +57,6 @@ class CompletionSvcMng(AbstractCompletionMng):
         match command:
             case "build":
                 return self.get_build_completions(args[1:])
-            case "bootstrap":
-                return self.get_bootstrap_completions(args[1:])
             case "up":
                 return self.get_up_completions(args[1:])
             case "halt":
@@ -69,26 +67,67 @@ class CompletionSvcMng(AbstractCompletionMng):
                 return self.get_shell_completions(args[1:])
             case "render":
                 return self.get_render_completions(args[1:])
+            case "reload":
+                return self.get_reload_completions(args[1:])
             case _:
                 return []
 
+    def is_svc_template_chosen(self, args: list[str]) -> bool:
+        if len(args) < 1:
+            return False
+        resource_template = args[0]
+        return resource_template in self.configMng.get_resource_templates(
+            self.configMng.constants.RESOURCE_TYPE_SVC
+        )
+
+    def get_svc_templates(self, args: list[str]) -> list[str]:
+        return self.configMng.get_resource_templates(
+            self.configMng.constants.RESOURCE_TYPE_SVC
+        )
+
     def get_build_completions(self, args: list[str]) -> list[str]:
+        if not self.is_svc_template_chosen(args):
+            return self.get_svc_templates(args)
         return []
 
-    def get_bootstrap_completions(self, args: list[str]) -> list[str]:
+    def is_svc_tag_chosen(self, args: list[str]) -> bool:
+        if len(args) < 1:
+            return False
+        svc_tag = args[0]
+        return svc_tag in self.get_svc_tags(args)
+
+    def get_svc_tags(self, args: list[str]) -> list[str]:
+        env = self.configMng.get_active_environment()
+        if env:
+            return self.configMng.get_service_tags(env)
         return []
 
     def get_up_completions(self, args: list[str]) -> list[str]:
+        if not self.is_svc_tag_chosen(args):
+            return self.get_svc_tags(args)
         return []
 
     def get_halt_completions(self, args: list[str]) -> list[str]:
+        if not self.is_svc_tag_chosen(args):
+            return self.get_svc_tags(args)
         return []
 
     def get_stdout_completions(self, args: list[str]) -> list[str]:
+        if not self.is_svc_tag_chosen(args):
+            return self.get_svc_tags(args)
         return []
 
     def get_shell_completions(self, args: list[str]) -> list[str]:
+        if not self.is_svc_tag_chosen(args):
+            return self.get_svc_tags(args)
         return []
 
     def get_render_completions(self, args: list[str]) -> list[str]:
+        if not self.is_svc_tag_chosen(args):
+            return self.get_svc_tags(args)
+        return []
+
+    def get_reload_completions(self, args: list[str]) -> list[str]:
+        if not self.is_svc_tag_chosen(args):
+            return self.get_svc_tags(args)
         return []

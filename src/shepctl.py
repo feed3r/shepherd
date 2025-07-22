@@ -134,13 +134,20 @@ def empty():
     pass
 
 
-@cli.command(name="__complete", hidden=True)
-@click.argument("args", nargs=-1)
+@cli.command(
+    name="__complete",
+    hidden=True,
+    context_settings={"ignore_unknown_options": True, "allow_extra_args": True},
+)
+@click.argument("args", nargs=-1, type=click.UNPROCESSED)
 @click.pass_obj
 def complete(shepherd: ShepherdMng, args: list[str]):
     """
     Internal shell completion entrypoint.
     Usage: shepctl __complete <args...>
+
+    This command disables Click’s usual option parsing
+    to treat all arguments as raw strings.
     """
     completions = shepherd.completionMng.get_completions(args)
     for c in completions:
@@ -153,58 +160,15 @@ def db():
     pass
 
 
-@db.command(name="build")
-@click.pass_obj
-def db_build(shepherd: ShepherdMng):
-    """Build database image."""
-    shepherd.databaseMng.build_image_svc("")
-
-
-@db.command(name="bootstrap")
-@click.pass_obj
-def db_bootstrap(shepherd: ShepherdMng):
-    """Bootstrap database service."""
-    shepherd.databaseMng.bootstrap_svc("")
-
-
-@db.command(name="up")
-@click.pass_obj
-@require_active_env
-def db_up(shepherd: ShepherdMng, envCfg: EnvironmentCfg):
-    """Start database service."""
-    shepherd.databaseMng.start_svc(envCfg.tag, "database")
-
-
-@db.command(name="halt")
-@click.pass_obj
-@require_active_env
-def db_halt(shepherd: ShepherdMng, envCfg: EnvironmentCfg):
-    """Halt database service."""
-    shepherd.databaseMng.halt_svc(envCfg.tag, "database")
-
-
-@db.command(name="stdout")
-@click.pass_obj
-@require_active_env
-def db_stdout(shepherd: ShepherdMng, envCfg: EnvironmentCfg):
-    """Show database service stdout."""
-    shepherd.databaseMng.stdout_svc(envCfg.tag, "db-id")
-
-
-@db.command(name="shell")
-@click.pass_obj
-@require_active_env
-def db_shell(shepherd: ShepherdMng, envCfg: EnvironmentCfg):
-    """Get a shell session for the database service."""
-    shepherd.databaseMng.shell_svc(envCfg.tag, "db-id")
-
-
 @db.command(name="sql-shell")
+@click.argument("service_tag", type=str, required=True)
 @click.pass_obj
 @require_active_env
-def db_sql_shell(shepherd: ShepherdMng, envCfg: EnvironmentCfg):
+def db_sql_shell(
+    shepherd: ShepherdMng, envCfg: EnvironmentCfg, service_tag: str
+):
     """Get a SQL session for the database service."""
-    shepherd.databaseMng.sql_shell_svc(envCfg.tag, "db-id")
+    shepherd.databaseMng.sql_shell_svc(envCfg, service_tag)
 
 
 # Environment commands
@@ -266,57 +230,61 @@ def env_list(shepherd: ShepherdMng):
 
 @env.command(name="up")
 @click.pass_obj
-def env_up(shepherd: ShepherdMng):
+@require_active_env
+def env_up(shepherd: ShepherdMng, envCfg: EnvironmentCfg):
     """Start environment."""
-    shepherd.environmentMng.start_env()
+    shepherd.environmentMng.start_env(envCfg)
 
 
 @env.command(name="halt")
 @click.pass_obj
-def env_halt(shepherd: ShepherdMng):
+@require_active_env
+def env_halt(shepherd: ShepherdMng, envCfg: EnvironmentCfg):
     """Halt environment."""
-    shepherd.environmentMng.halt_env()
+    shepherd.environmentMng.halt_env(envCfg)
 
 
 @env.command(name="reload")
 @click.pass_obj
-def env_reload(shepherd: ShepherdMng):
+@require_active_env
+def env_reload(shepherd: ShepherdMng, envCfg: EnvironmentCfg):
     """Reload environment."""
-    shepherd.environmentMng.reload_env()
+    shepherd.environmentMng.reload_env(envCfg)
 
 
 @env.command(name="status")
 @click.pass_obj
-def env_status(shepherd: ShepherdMng):
+@require_active_env
+def env_status(shepherd: ShepherdMng, envCfg: EnvironmentCfg):
     """Print environment's status."""
-    shepherd.environmentMng.status_env()
+    shepherd.environmentMng.status_env(envCfg)
 
 
-@env.command(name="add-resource")
+@env.command(name="add")
 @click.argument("resource_type", required=True)
-@click.argument("resource_name", required=True)
-@click.argument("resource_class", required=False)
+@click.argument("resource_tag", required=True)
 @click.argument("resource_template", required=False)
+@click.argument("resource_class", required=False)
 @click.pass_obj
 @require_active_env
 def env_add_resource(
     shepherd: ShepherdMng,
     envCfg: EnvironmentCfg,
     resource_type: str,
-    resource_name: str,
-    resource_class: Optional[str] = None,
+    resource_tag: str,
     resource_template: Optional[str] = None,
+    resource_class: Optional[str] = None,
 ):
     """Add a resource to the current environment.
 
     RESOURCE_TYPE: The type of resource to add (e.g., svc).
-    RESOURCE_NAME: The name of the resource (e.g., svc-name).
-    RESOURCE_CLASS: Optional class of the resource (e.g., svc-class).
-    RESOURCE_TEMPLATE: Optional template for the resource.
+    RESOURCE_TAG: The name of the resource (e.g., redis-1).
+    RESOURCE_TEMPLATE: Optional template for the resource (e.g., redis).
+    RESOURCE_CLASS: Optional class of the resource (e.g., database).
     """
     if resource_type == shepherd.configMng.constants.RESOURCE_TYPE_SVC:
         shepherd.environmentMng.add_service(
-            envCfg.tag, resource_name, resource_class, resource_template
+            envCfg.tag, resource_tag, resource_template, resource_class
         )
     else:
         raise click.UsageError(f"Unsupported resource type: {resource_type}")
@@ -331,77 +299,63 @@ def svc():
 @svc.command(name="build")
 @click.argument("service_template", type=str, required=True)
 @click.pass_obj
-def srv_build(shepherd: ShepherdMng, service_template: str):
+def svc_build(shepherd: ShepherdMng, service_template: str):
     """Build service image."""
     shepherd.serviceMng.build_image_svc(service_template)
 
 
-@svc.command(name="bootstrap")
-@click.argument("service_template", type=str, required=True)
-@click.pass_obj
-def srv_bootstrap(shepherd: ShepherdMng, service_template: str):
-    """Bootstrap service."""
-    shepherd.serviceMng.bootstrap_svc(service_template)
-
-
 @svc.command(name="up")
-@click.argument("service_template", type=str, required=True)
+@click.argument("service_tag", type=str, required=True)
 @click.pass_obj
 @require_active_env
-def srv_up(
-    shepherd: ShepherdMng, envCfg: EnvironmentCfg, service_template: str
-):
+def svc_up(shepherd: ShepherdMng, envCfg: EnvironmentCfg, service_tag: str):
     """Start service."""
-    shepherd.serviceMng.start_svc(envCfg.tag, service_template)
+    shepherd.serviceMng.start_svc(envCfg, service_tag)
 
 
 @svc.command(name="halt")
-@click.argument("service_template", type=str, required=True)
+@click.argument("service_tag", type=str, required=True)
 @click.pass_obj
 @require_active_env
-def srv_halt(
-    shepherd: ShepherdMng, envCfg: EnvironmentCfg, service_template: str
-):
+def svc_halt(shepherd: ShepherdMng, envCfg: EnvironmentCfg, service_tag: str):
     """Halt service."""
-    shepherd.serviceMng.halt_svc(envCfg.tag, service_template)
+    shepherd.serviceMng.halt_svc(envCfg, service_tag)
 
 
 @svc.command(name="reload")
-@click.argument("service_template", type=str, required=True)
+@click.argument("service_tag", type=str, required=True)
 @click.pass_obj
 @require_active_env
-def srv_reload(
-    shepherd: ShepherdMng, envCfg: EnvironmentCfg, service_template: str
-):
+def svc_reload(shepherd: ShepherdMng, envCfg: EnvironmentCfg, service_tag: str):
     """Reload service."""
-    shepherd.serviceMng.reload_svc(envCfg.tag, service_template)
+    shepherd.serviceMng.reload_svc(envCfg, service_tag)
 
 
 @svc.command(name="render")
 @click.argument("service_tag", type=str, required=True)
 @click.pass_obj
 @require_active_env
-def srv_render(shepherd: ShepherdMng, envCfg: EnvironmentCfg, service_tag: str):
+def svc_render(shepherd: ShepherdMng, envCfg: EnvironmentCfg, service_tag: str):
     """Render service configuration."""
-    click.echo(shepherd.serviceMng.render_svc(envCfg.tag, service_tag))
+    click.echo(shepherd.serviceMng.render_svc(envCfg, service_tag))
 
 
 @svc.command(name="stdout")
 @click.argument("service_tag", type=str, required=True)
 @click.pass_obj
 @require_active_env
-def srv_stdout(shepherd: ShepherdMng, envCfg: EnvironmentCfg, service_tag: str):
+def svc_stdout(shepherd: ShepherdMng, envCfg: EnvironmentCfg, service_tag: str):
     """Show service stdout."""
-    shepherd.serviceMng.stdout_svc(envCfg.tag, service_tag)
+    shepherd.serviceMng.stdout_svc(envCfg, service_tag)
 
 
 @svc.command(name="shell")
 @click.argument("service_tag", type=str, required=True)
 @click.pass_obj
 @require_active_env
-def srv_shell(shepherd: ShepherdMng, envCfg: EnvironmentCfg, service_tag: str):
+def svc_shell(shepherd: ShepherdMng, envCfg: EnvironmentCfg, service_tag: str):
     """Get a shell session for the service."""
-    shepherd.serviceMng.shell_svc(envCfg.tag, service_tag)
+    shepherd.serviceMng.shell_svc(envCfg, service_tag)
 
 
 if __name__ == "__main__":

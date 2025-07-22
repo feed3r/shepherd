@@ -708,6 +708,45 @@ class ConfigMng:
         """
         self.store_config(self.config)
 
+    def get_service_template(
+        self, serviceTemplate: str
+    ) -> Optional[ServiceTemplateCfg]:
+        """
+        Retrieves a service template configuration by its template.
+
+        :param serviceTemplate: The template of the service to retrieve.
+        :return: The service template configuration if found, else None.
+        """
+        if self.config.service_templates:
+            for svc_template in self.config.service_templates:
+                if svc_template.template == serviceTemplate:
+                    return svc_template
+        return None
+
+    def get_service_templates(self) -> Optional[list[ServiceTemplateCfg]]:
+        """
+        Retrieves all service templates.
+
+        :return: A list of all service templates.
+        """
+        if self.config.service_templates:
+            return self.config.service_templates
+        return None
+
+    def get_resource_templates(self, resource_type: str) -> list[str]:
+        match resource_type:
+            case self.constants.RESOURCE_TYPE_SVC:
+                if self.config.service_templates:
+                    return sorted(
+                        [
+                            svc_template.template
+                            for svc_template in self.config.service_templates
+                        ]
+                    )
+                return []
+            case _:
+                return []
+
     def get_environment(self, envTag: str) -> Optional[EnvironmentCfg]:
         """
         Retrieves an environment configuration by its tag.
@@ -718,21 +757,6 @@ class ConfigMng:
         for env in self.config.envs:
             if env.tag == envTag:
                 return env
-        return None
-
-    def get_service_type(
-        self, serviceType: str
-    ) -> Optional[ServiceTemplateCfg]:
-        """
-        Retrieves a service type configuration by its type.
-
-        :param serviceType: The type of the service to retrieve.
-        :return: The service type configuration if found, else None.
-        """
-        if self.config.service_templates:
-            for svc_type in self.config.service_templates:
-                if svc_type.template == serviceType:
-                    return svc_type
         return None
 
     def get_environments(self) -> list[EnvironmentCfg]:
@@ -829,7 +853,7 @@ class ConfigMng:
         self.store()
 
     def get_resource_classes(
-        self, env_tag: str, resource_type: str
+        self, env: EnvironmentCfg, resource_type: str
     ) -> list[str]:
         """
         Retrieves all unique resource classes from the service configurations.
@@ -838,14 +862,24 @@ class ConfigMng:
         """
         match resource_type:
             case self.constants.RESOURCE_TYPE_SVC:
-                return sorted(
-                    {
-                        svc.service_class
-                        for env in self.config.envs
-                        if env.tag == env_tag and env.services
-                        for svc in env.services
-                        if svc.service_class
-                    }
-                )
+                if env.services:
+                    return sorted(
+                        {
+                            svc.service_class
+                            for svc in env.services
+                            if svc.service_class
+                        }
+                    )
+                return []
             case _:
                 return []
+
+    def get_service_tags(self, env: EnvironmentCfg) -> list[str]:
+        """
+        Retrieves all unique service tags from the service configurations.
+
+        :return: A list of unique service tags.
+        """
+        if env.services:
+            return sorted({svc.tag for svc in env.services if svc.tag})
+        return []
