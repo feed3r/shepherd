@@ -128,9 +128,9 @@ shpd_config_svc_default = """
     "email": "${cert_email}",
     "subject_alternative_names": []
   },
-  "service_types": [
+  "service_templates": [
     {
-      "type": "image",
+      "template": "image",
       "image": "test-image:latest",
       "labels": [
         "com.example.label1=value1",
@@ -165,7 +165,7 @@ shpd_config_svc_default = """
       "tag": "test-1",
       "services": [
         {
-          "type": "image",
+          "template": "image",
           "tag": "test",
           "image": "test-image:latest",
           "labels": [
@@ -622,9 +622,9 @@ def test_cli_srv_build(
     )
     mocker.patch("os.path.expanduser", side_effect=side_effect)
 
-    result = runner.invoke(cli, ["svc", "build", "service_type"])
+    result = runner.invoke(cli, ["svc", "build", "service_template"])
     assert result.exit_code == 0
-    mock_build.assert_called_once_with("service_type")
+    mock_build.assert_called_once_with("service_template")
 
 
 @pytest.mark.shpd
@@ -641,9 +641,9 @@ def test_cli_srv_bootstrap(
     )
     mocker.patch("os.path.expanduser", side_effect=side_effect)
 
-    result = runner.invoke(cli, ["svc", "bootstrap", "service_type"])
+    result = runner.invoke(cli, ["svc", "bootstrap", "service_template"])
     assert result.exit_code == 0
-    mock_bootstrap.assert_called_once_with("service_type")
+    mock_bootstrap.assert_called_once_with("service_template")
 
 
 @pytest.mark.shpd
@@ -664,9 +664,9 @@ def test_cli_srv_up(
     shpd_json = shpd_dir / ".shpd.json"
     shpd_json.write_text(shpd_config_svc_default)
 
-    result = runner.invoke(cli, ["svc", "up", "service_type"])
+    result = runner.invoke(cli, ["svc", "up", "service_template"])
     assert result.exit_code == 0
-    mock_start.assert_called_once_with("test-1", "service_type")
+    mock_start.assert_called_once_with("test-1", "service_template")
 
 
 @pytest.mark.shpd
@@ -687,9 +687,9 @@ def test_cli_srv_halt(
     shpd_json = shpd_dir / ".shpd.json"
     shpd_json.write_text(shpd_config_svc_default)
 
-    result = runner.invoke(cli, ["svc", "halt", "service_type"])
+    result = runner.invoke(cli, ["svc", "halt", "service_template"])
     assert result.exit_code == 0
-    mock_halt.assert_called_once_with("test-1", "service_type")
+    mock_halt.assert_called_once_with("test-1", "service_template")
 
 
 @pytest.mark.shpd
@@ -710,9 +710,9 @@ def test_cli_srv_reload(
     shpd_json = shpd_dir / ".shpd.json"
     shpd_json.write_text(shpd_config_svc_default)
 
-    result = runner.invoke(cli, ["svc", "reload", "service_type"])
+    result = runner.invoke(cli, ["svc", "reload", "service_template"])
     assert result.exit_code == 0
-    mock_reload.assert_called_once_with("test-1", "service_type")
+    mock_reload.assert_called_once_with("test-1", "service_template")
 
 
 @pytest.mark.shpd

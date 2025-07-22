@@ -25,32 +25,12 @@ from config import ConfigMng, EnvironmentCfg, ServiceCfg
 
 class Service(ABC):
 
-    type: str
-    tag: str
-    image: str
-    name: str
-    hostname: str
-    container_name: str
-    labels: list[str]
-    workdir: str
-    volumes: list[str]
-    ingress: bool
-    empty_env: str
-    environment: list[str]
-    ports: list[str]
-    properties: dict[str, str]
-    networks: list[str]
-    extra_hosts: list[str]
-    subject_alternative_name: Optional[str]
-
     def __init__(
         self, configMng: ConfigMng, envCfg: EnvironmentCfg, svcCfg: ServiceCfg
     ):
         self.configMng = configMng
         self.envCfg = envCfg
-        self.type = svcCfg.type
-        self.tag = svcCfg.tag
-        self.image = svcCfg.image
+        self.svcCfg = svcCfg
         self.name = self.canonical_name()
         self.hostname = (
             svcCfg.hostname if svcCfg.hostname else self.canonical_name()
@@ -60,23 +40,12 @@ class Service(ABC):
             if svcCfg.container_name
             else self.canonical_name()
         )
-        self.labels = svcCfg.labels if svcCfg.labels else []
-        self.workdir = svcCfg.workdir if svcCfg.workdir else ""
-        self.volumes = svcCfg.volumes if svcCfg.volumes else []
-        self.ingress = svcCfg.ingress if svcCfg.ingress else False
-        self.empty_env = svcCfg.empty_env if svcCfg.empty_env else ""
-        self.environment = svcCfg.environment if svcCfg.environment else []
-        self.ports = svcCfg.ports if svcCfg.ports else []
-        self.properties = svcCfg.properties if svcCfg.properties else {}
-        self.networks = svcCfg.networks if svcCfg.networks else []
-        self.extra_hosts = svcCfg.extra_hosts if svcCfg.extra_hosts else []
-        self.subject_alternative_name = svcCfg.subject_alternative_name
 
     def canonical_name(self) -> str:
         """
         Get the canonical name of the service.
         """
-        return f"{self.tag}-{self.envCfg.tag}"
+        return f"{self.svcCfg.tag}-{self.envCfg.tag}"
 
     @abstractmethod
     def clone(self, dst_svc_tag: str) -> Service:
@@ -126,24 +95,7 @@ class Service(ABC):
         pass
 
     def to_config(self) -> ServiceCfg:
-        return ServiceCfg(
-            type=self.type,
-            tag=self.tag,
-            image=self.image,
-            hostname=self.hostname,
-            container_name=self.container_name,
-            labels=self.labels,
-            workdir=self.workdir,
-            volumes=self.volumes,
-            ingress=self.ingress,
-            empty_env=self.empty_env,
-            environment=self.environment,
-            ports=self.ports,
-            properties=self.properties,
-            networks=self.networks,
-            extra_hosts=self.extra_hosts,
-            subject_alternative_name=self.subject_alternative_name,
-        )
+        return self.svcCfg
 
 
 class ServiceFactory(ABC):
@@ -185,22 +137,22 @@ class ServiceMng:
         else:
             return None
 
-    def build_image_svc(self, service_type: str):
+    def build_image_svc(self, service_template: str):
         pass
 
-    def bootstrap_svc(self, service_type: str):
+    def bootstrap_svc(self, service_template: str):
         """Bootstrap a service."""
         pass
 
-    def start_svc(self, env_tag: str, service_type: str):
+    def start_svc(self, env_tag: str, service_template: str):
         """Start a service."""
         pass
 
-    def halt_svc(self, env_tag: str, service_type: str):
+    def halt_svc(self, env_tag: str, service_template: str):
         """Halt a service."""
         pass
 
-    def reload_svc(self, env_tag: str, service_type: str):
+    def reload_svc(self, env_tag: str, service_template: str):
         """Reload a service."""
         pass
 

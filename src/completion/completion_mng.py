@@ -16,26 +16,21 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
-from .config import (
-    CACfg,
-    CertCfg,
-    Config,
-    ConfigMng,
-    EnvironmentCfg,
-    ServiceCfg,
-    ServiceTemplateCfg,
-    ShpdRegistryCfg,
-    UpstreamCfg,
-)
+from abc import ABC, abstractmethod
 
-__all__ = [
-    "CACfg",
-    "CertCfg",
-    "Config",
-    "EnvironmentCfg",
-    "ServiceTemplateCfg",
-    "ServiceCfg",
-    "ShpdRegistryCfg",
-    "UpstreamCfg",
-    "ConfigMng",
-]
+from config import ConfigMng
+
+
+class AbstractCompletionMng(ABC):
+    """
+    Abstract base class for completion managers.
+    This class defines the interface for completion managers.
+    """
+
+    def __init__(self, cli_flags: dict[str, bool], configMng: ConfigMng):
+        self.cli_flags = cli_flags
+        self.configMng = configMng
+
+    @abstractmethod
+    def get_completions(self, args: list[str]) -> list[str]:
+        pass

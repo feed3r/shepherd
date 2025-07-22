@@ -52,23 +52,23 @@ class DockerSvc(Service):
         Render the docker-compose service configuration for this service.
         """
         service_def: dict[str, Any] = {
-            "image": self.image,
+            "image": self.svcCfg.image,
             "hostname": self.hostname,
             "container_name": self.container_name,
         }
 
-        if self.labels:
-            service_def["labels"] = self.labels
-        if self.environment:
-            service_def["environment"] = self.environment
-        if self.volumes:
-            service_def["volumes"] = self.volumes
-        if self.ports:
-            service_def["ports"] = self.ports
-        if self.extra_hosts:
-            service_def["extra_hosts"] = self.extra_hosts
-        if self.networks:
-            service_def["networks"] = self.networks
+        if self.svcCfg.labels:
+            service_def["labels"] = self.svcCfg.labels
+        if self.svcCfg.environment:
+            service_def["environment"] = self.svcCfg.environment
+        if self.svcCfg.volumes:
+            service_def["volumes"] = self.svcCfg.volumes
+        if self.svcCfg.ports:
+            service_def["ports"] = self.svcCfg.ports
+        if self.svcCfg.extra_hosts:
+            service_def["extra_hosts"] = self.svcCfg.extra_hosts
+        if self.svcCfg.networks:
+            service_def["networks"] = self.svcCfg.networks
 
         return yaml.dump(
             {"services": {self.name: service_def}}, sort_keys=False

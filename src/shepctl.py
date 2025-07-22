@@ -219,8 +219,7 @@ def env():
 @click.argument("env_tag", required=True)
 @click.pass_obj
 def env_init(shepherd: ShepherdMng, env_type: str, env_tag: str):
-    """Init an environment with an environment type,
-    a database type and an environment's tag name."""
+    """Init an environment of type ENV_TYPE with tag ENV_TAG."""
     shepherd.environmentMng.init_env(env_type, env_tag)
 
 
@@ -296,6 +295,7 @@ def env_status(shepherd: ShepherdMng):
 @env.command(name="add-resource")
 @click.argument("resource_type", required=True)
 @click.argument("resource_name", required=True)
+@click.argument("resource_class", required=False)
 @click.argument("resource_template", required=False)
 @click.pass_obj
 @require_active_env
@@ -304,17 +304,19 @@ def env_add_resource(
     envCfg: EnvironmentCfg,
     resource_type: str,
     resource_name: str,
+    resource_class: Optional[str] = None,
     resource_template: Optional[str] = None,
 ):
     """Add a resource to the current environment.
 
     RESOURCE_TYPE: The type of resource to add (e.g., svc).
     RESOURCE_NAME: The name of the resource (e.g., svc-name).
+    RESOURCE_CLASS: Optional class of the resource (e.g., svc-class).
     RESOURCE_TEMPLATE: Optional template for the resource.
     """
-    if resource_type == "svc":
+    if resource_type == shepherd.configMng.constants.RESOURCE_TYPE_SVC:
         shepherd.environmentMng.add_service(
-            envCfg.tag, resource_name, resource_template
+            envCfg.tag, resource_name, resource_class, resource_template
         )
     else:
         raise click.UsageError(f"Unsupported resource type: {resource_type}")
@@ -327,48 +329,52 @@ def svc():
 
 
 @svc.command(name="build")
-@click.argument("service_type", type=str, required=True)
+@click.argument("service_template", type=str, required=True)
 @click.pass_obj
-def srv_build(shepherd: ShepherdMng, service_type: str):
+def srv_build(shepherd: ShepherdMng, service_template: str):
     """Build service image."""
-    shepherd.serviceMng.build_image_svc(service_type)
+    shepherd.serviceMng.build_image_svc(service_template)
 
 
 @svc.command(name="bootstrap")
-@click.argument("service_type", type=str, required=True)
+@click.argument("service_template", type=str, required=True)
 @click.pass_obj
-def srv_bootstrap(shepherd: ShepherdMng, service_type: str):
+def srv_bootstrap(shepherd: ShepherdMng, service_template: str):
     """Bootstrap service."""
-    shepherd.serviceMng.bootstrap_svc(service_type)
+    shepherd.serviceMng.bootstrap_svc(service_template)
 
 
 @svc.command(name="up")
-@click.argument("service_type", type=str, required=True)
+@click.argument("service_template", type=str, required=True)
 @click.pass_obj
 @require_active_env
-def srv_up(shepherd: ShepherdMng, envCfg: EnvironmentCfg, service_type: str):
+def srv_up(
+    shepherd: ShepherdMng, envCfg: EnvironmentCfg, service_template: str
+):
     """Start service."""
-    shepherd.serviceMng.start_svc(envCfg.tag, service_type)
+    shepherd.serviceMng.start_svc(envCfg.tag, service_template)
 
 
 @svc.command(name="halt")
-@click.argument("service_type", type=str, required=True)
+@click.argument("service_template", type=str, required=True)
 @click.pass_obj
 @require_active_env
-def srv_halt(shepherd: ShepherdMng, envCfg: EnvironmentCfg, service_type: str):
+def srv_halt(
+    shepherd: ShepherdMng, envCfg: EnvironmentCfg, service_template: str
+):
     """Halt service."""
-    shepherd.serviceMng.halt_svc(envCfg.tag, service_type)
+    shepherd.serviceMng.halt_svc(envCfg.tag, service_template)
 
 
 @svc.command(name="reload")
-@click.argument("service_type", type=str, required=True)
+@click.argument("service_template", type=str, required=True)
 @click.pass_obj
 @require_active_env
 def srv_reload(
-    shepherd: ShepherdMng, envCfg: EnvironmentCfg, service_type: str
+    shepherd: ShepherdMng, envCfg: EnvironmentCfg, service_template: str
 ):
     """Reload service."""
-    shepherd.serviceMng.reload_svc(envCfg.tag, service_type)
+    shepherd.serviceMng.reload_svc(envCfg.tag, service_template)
 
 
 @svc.command(name="render")

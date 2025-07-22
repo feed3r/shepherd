@@ -147,7 +147,7 @@ def test_completion_env_commands(
     sm = ShepherdMng()
     completions = sm.completionMng.get_completions(["env"])
     assert (
-        completions == sm.completionMng.COMMANDS_ENV
+        completions == sm.completionMng.completionEnvMng.COMMANDS_ENV
     ), "Expected env commands only"
 
 
@@ -167,7 +167,7 @@ def test_completion_db_commands(
     sm = ShepherdMng()
     completions = sm.completionMng.get_completions(["db"])
     assert (
-        completions == sm.completionMng.COMMANDS_DB
+        completions == sm.completionMng.completionDbMng.COMMANDS_DB
     ), "Expected db commands only"
 
 
@@ -187,5 +187,5 @@ def test_completion_svc_commands(
     sm = ShepherdMng()
     completions = sm.completionMng.get_completions(["svc"])
     assert (
-        completions == sm.completionMng.COMMANDS_SVC
+        completions == sm.completionMng.completionSvcMng.COMMANDS_SVC
     ), "Expected svc commands only"

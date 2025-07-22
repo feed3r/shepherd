@@ -62,9 +62,9 @@ config_json = """{
     "email": "${cert_email}",
     "subject_alternative_names": []
   },
-  "service_types": [
+  "service_templates": [
     {
-      "type": "oracle",
+      "template": "oracle",
       "image": "${ora_image}",
       "hostname": null,
       "container_name": null,
@@ -91,7 +91,7 @@ config_json = """{
       "subject_alternative_name": null
     },
     {
-      "type": "postgres",
+      "template": "postgres",
       "image": "${pg_image}",
       "hostname": null,
       "container_name": null,
@@ -121,8 +121,9 @@ config_json = """{
       "tag": "sample-1",
       "services": [
         {
-          "type": "postgres",
+          "template": "postgres",
           "tag": "pg-1",
+          "service_class": null,
           "image": "ghcr.io/lunaticfringers/shepherd/postgres:17-3.5",
           "hostname": null,
           "container_name": null,
@@ -174,8 +175,9 @@ config_json = """{
           ]
         },
         {
-          "type": "traefik",
+          "template": "traefik",
           "tag": "traefik-1",
+          "service_class": null,
           "image": "",
           "hostname": null,
           "container_name": null,
@@ -193,8 +195,9 @@ config_json = """{
           "upstreams": []
         },
         {
-          "type": "custom-1",
+          "template": "custom-1",
           "tag": "primary",
+          "service_class": null,
           "image": "",
           "hostname": null,
           "container_name": null,
@@ -215,8 +218,9 @@ config_json = """{
           "upstreams": []
         },
         {
-          "type": "nodejs",
+          "template": "nodejs",
           "tag": "poke",
+          "service_class": null,
           "image": "",
           "hostname": null,
           "container_name": null,
@@ -328,48 +332,54 @@ def test_load_config(mocker: MockerFixture):
     assert not config.logging.stdout
     assert config.logging.format == "%(asctime)s - %(levelname)s - %(message)s"
 
-    service_types = config.service_types
-    assert service_types and service_types[0].type == "oracle"
-    assert service_types[0].image == (
+    service_templates = config.service_templates
+    assert service_templates and service_templates[0].template == "oracle"
+    assert service_templates[0].image == (
         "ghcr.io/lunaticfringers/shepherd/oracle:19.3.0.0_TZ40"
     )
-    assert service_types[0].empty_env == "fresh-ora-19300"
-    assert service_types[0].ingress is False
-    assert service_types[0].environment == []
-    assert service_types[0].ports and service_types[0].ports[0] == "1521:1521"
+    assert service_templates[0].empty_env == "fresh-ora-19300"
+    assert service_templates[0].ingress is False
+    assert service_templates[0].environment == []
     assert (
-        service_types[0].properties
-        and service_types[0].properties["pump_dir_name"] == "PUMP_DIR"
+        service_templates[0].ports
+        and service_templates[0].ports[0] == "1521:1521"
     )
-    assert service_types[0].properties["root_db_name"] == "ORCLCDB"
-    assert service_types[0].properties["plug_db_name"] == "ORCLPDB1"
-    assert service_types[0].properties["sys_user"] == "sys"
-    assert service_types[0].properties["sys_psw"] == "sys"
-    assert service_types[0].properties["user"] == "docker"
-    assert service_types[0].properties["psw"] == "docker"
-    assert service_types[0].subject_alternative_name is None
-    assert service_types[1].type == "postgres"
-    assert service_types[1].image == (
+    assert (
+        service_templates[0].properties
+        and service_templates[0].properties["pump_dir_name"] == "PUMP_DIR"
+    )
+    assert service_templates[0].properties["root_db_name"] == "ORCLCDB"
+    assert service_templates[0].properties["plug_db_name"] == "ORCLPDB1"
+    assert service_templates[0].properties["sys_user"] == "sys"
+    assert service_templates[0].properties["sys_psw"] == "sys"
+    assert service_templates[0].properties["user"] == "docker"
+    assert service_templates[0].properties["psw"] == "docker"
+    assert service_templates[0].subject_alternative_name is None
+    assert service_templates[1].template == "postgres"
+    assert service_templates[1].image == (
         "ghcr.io/lunaticfringers/shepherd/postgres:17-3.5"
     )
-    assert service_types[1].empty_env == "fresh-pg-1735"
-    assert service_types[1].ingress is False
-    assert service_types[1].environment == []
-    assert service_types[1].ports and service_types[1].ports[0] == "5432:5432"
+    assert service_templates[1].empty_env == "fresh-pg-1735"
+    assert service_templates[1].ingress is False
+    assert service_templates[1].environment == []
     assert (
-        service_types[1].properties
-        and service_types[1].properties["sys_user"] == "sys"
+        service_templates[1].ports
+        and service_templates[1].ports[0] == "5432:5432"
     )
-    assert service_types[1].properties["sys_psw"] == "sys"
-    assert service_types[1].properties["user"] == "docker"
-    assert service_types[1].properties["psw"] == "docker"
-    assert service_types[1].subject_alternative_name is None
+    assert (
+        service_templates[1].properties
+        and service_templates[1].properties["sys_user"] == "sys"
+    )
+    assert service_templates[1].properties["sys_psw"] == "sys"
+    assert service_templates[1].properties["user"] == "docker"
+    assert service_templates[1].properties["psw"] == "docker"
+    assert service_templates[1].subject_alternative_name is None
 
     assert config.shpd_registry.ftp_server == "ftp.example.com"
     assert config.envs[0].type == Constants.ENV_TYPE_DOCKER_COMPOSE
     assert config.envs[0].tag == "sample-1"
     services = config.envs[0].services
-    assert services and services[0].type == "postgres"
+    assert services and services[0].template == "postgres"
     assert services[0].tag == "pg-1"
     assert services[0].image == (
         "ghcr.io/lunaticfringers/shepherd/postgres:17-3.5"
@@ -400,11 +410,11 @@ def test_load_config(mocker: MockerFixture):
     assert properties["unix_user"] == "postgres"
     assert properties["dump_dir"] == "/dumps/2"
     assert upstreams[1].enabled is False
-    assert services[1].type == "traefik"
+    assert services[1].template == "traefik"
     assert services[1].ingress is True
-    assert services[2].type == "custom-1"
+    assert services[2].template == "custom-1"
     assert services[2].tag == "primary"
-    assert services[3].type == "nodejs"
+    assert services[3].template == "nodejs"
     assert services[3].tag == "poke"
     environment = services[3].environment
     assert environment and environment[0] == "USER=user"

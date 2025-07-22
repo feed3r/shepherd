@@ -29,10 +29,6 @@ from util import Constants, Util
 
 class Environment(ABC):
 
-    type: str
-    tag: str
-    archived: bool
-    active: bool
     services: list[Service]
 
     def __init__(
@@ -43,10 +39,7 @@ class Environment(ABC):
     ):
         self.configMng = configMng
         self.svcFactory = svcFactory
-        self.type = envCfg.type
-        self.tag = envCfg.tag
-        self.archived = envCfg.archived
-        self.active = envCfg.active
+        self.envCfg = envCfg
         self.services = (
             [
                 self.svcFactory.new_service_from_cfg(envCfg, svcCfg)
@@ -83,17 +76,14 @@ class Environment(ABC):
 
     def to_config(self) -> EnvironmentCfg:
         """To config"""
-        return EnvironmentCfg(
-            type=self.type,
-            tag=self.tag,
-            services=[service.to_config() for service in self.services],
-            archived=self.archived,
-            active=self.active,
-        )
+        self.envCfg.services = [svc.svcCfg for svc in self.services]
+        return self.envCfg
 
     def get_dir(self) -> str:
         """Return the directory of the environment."""
-        return os.path.join(self.configMng.constants.SHPD_ENVS_DIR, self.tag)
+        return os.path.join(
+            self.configMng.constants.SHPD_ENVS_DIR, self.envCfg.tag
+        )
 
     def get_dir_for_tag(self, env_tag: str) -> str:
         """Return the directory for the environment with a given tag."""
@@ -103,7 +93,7 @@ class Environment(ABC):
         """Realize the environment."""
         Util.create_dir(
             self.get_dir(),
-            self.tag,
+            self.envCfg.tag,
         )
         self.sync_config()
 
@@ -115,38 +105,38 @@ class Environment(ABC):
     def move_to(self, dst_env_tag: str):
         """Move the environment to a new tag."""
         Util.move_dir(self.get_dir(), self.get_dir_for_tag(dst_env_tag))
-        self.configMng.remove_environment(self.tag)
-        self.tag = dst_env_tag
+        self.configMng.remove_environment(self.envCfg.tag)
+        self.envCfg.tag = dst_env_tag
         self.sync_config()
 
     def delete(self):
         """Delete the environment."""
         Util.remove_dir(self.get_dir())
-        self.configMng.remove_environment(self.tag)
+        self.configMng.remove_environment(self.envCfg.tag)
 
     def sync_config(self):
         """Sync the environment configuration."""
-        self.configMng.add_or_set_environment(self.tag, self.to_config())
+        self.configMng.add_or_set_environment(self.envCfg.tag, self.to_config())
 
     def get_tag(self) -> str:
         """Return the tag of the environment."""
-        return self.tag
+        return self.envCfg.tag
 
     def set_tag(self, tag: str):
         """Set the tag of the environment."""
-        self.tag = tag
+        self.envCfg.tag = tag
 
     def is_archived(self) -> bool:
-        return self.archived
+        return self.envCfg.archived
 
     def set_archived(self, archived: bool):
-        self.archived = archived
+        self.envCfg.archived = archived
 
     def is_active(self) -> bool:
-        return self.active
+        return self.envCfg.active
 
     def set_active(self, active: bool):
-        self.active = active
+        self.envCfg.active = active
 
     def add_service(self, service: Service):
         """Add a service to the environment."""
@@ -165,7 +155,7 @@ class Environment(ABC):
     def get_service(self, svc_name: str) -> Optional[Service]:
         """Get a service by name."""
         for service in self.services:
-            if service.tag == svc_name:
+            if service.svcCfg.tag == svc_name:
                 return service
         return None
 
@@ -290,7 +280,7 @@ class EnvironmentMng:
 
             env = self.envFactory.new_environment_cfg(envCfg)
             env.delete()
-            Util.print(f"Deleted: {env.tag}")
+            Util.print(f"Deleted: {env.envCfg.tag}")
 
     def list_envs(self):
         """List all available environments."""
@@ -319,7 +309,11 @@ class EnvironmentMng:
         pass
 
     def add_service(
-        self, env_tag: Optional[str], svc_tag: str, svc_template: Optional[str]
+        self,
+        env_tag: Optional[str],
+        svc_tag: str,
+        svc_class: Optional[str],
+        svc_template: Optional[str],
     ):
         """Add a service to an environment."""
         env = self.get_environment(env_tag)
@@ -338,7 +332,9 @@ class EnvironmentMng:
             )
 
             if svc_type_cfg:
-                svcCfg = ServiceCfg.from_service_type(svc_type_cfg, svc_tag)
+                svcCfg = ServiceCfg.from_service_template(
+                    svc_type_cfg, svc_tag, svc_class
+                )
             else:
                 svcCfg = ServiceCfg.from_tag(
                     (
@@ -347,13 +343,15 @@ class EnvironmentMng:
                         else Constants.SVC_TYPE_GENERIC_IMAGE
                     ),
                     svc_tag,
+                    svc_class,
                 )
 
             try:
                 service = self.svcFactory.new_service_from_cfg(envCfg, svcCfg)
                 env.add_service(service)
                 Util.print(
-                    f"Service '{service.tag}' added to environment '{env.tag}'."
+                    f"Service '{service.svcCfg.tag}' added to "
+                    f"environment '{env.envCfg.tag}'."
                 )
             except ValueError as e:
                 Util.print_error_and_die(f"Failed to create service: {e}")

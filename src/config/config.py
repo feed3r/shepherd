@@ -51,12 +51,12 @@ class UpstreamCfg:
 
 
 @dataclass
-class ServiceTypeCfg:
+class ServiceTemplateCfg:
     """
-    Represents a service type configuration.
+    Represents a service template configuration.
     """
 
-    type: str
+    template: str
     image: str
     hostname: Optional[str] = None
     container_name: Optional[str] = None
@@ -73,12 +73,12 @@ class ServiceTypeCfg:
     subject_alternative_name: Optional[str] = None
 
     @classmethod
-    def from_tag(cls, service_type: str):
+    def from_tag(cls, service_template: str):
         """
-        Creates a ServiceTypeCfg object from a type-tag.
+        Creates a ServiceTemplateCfg object from a type-tag.
         """
-        return ServiceTypeCfg(
-            type=service_type,
+        return ServiceTemplateCfg(
+            template=service_template,
             image="",
             hostname=None,
             container_name=None,
@@ -96,12 +96,12 @@ class ServiceTypeCfg:
         )
 
     @classmethod
-    def from_other(cls, other: "ServiceTypeCfg"):
+    def from_other(cls, other: "ServiceTemplateCfg"):
         """
-        Creates a copy of an existing ServiceTypeCfg object.
+        Creates a copy of an existing ServiceTemplateCfg object.
         """
         return cls(
-            type=other.type,
+            template=other.template,
             image=other.image,
             hostname=other.hostname,
             container_name=other.container_name,
@@ -125,9 +125,10 @@ class ServiceCfg:
     Represents a service configuration.
     """
 
-    type: str
+    template: str
     tag: str
-    image: str
+    service_class: Optional[str] = None
+    image: str = ""
     hostname: Optional[str] = None
     container_name: Optional[str] = None
     labels: Optional[list[str]] = field(default_factory=list)
@@ -144,13 +145,19 @@ class ServiceCfg:
     upstreams: Optional[list[UpstreamCfg]] = field(default_factory=list)
 
     @classmethod
-    def from_tag(cls, service_type: str, service_tag: str):
+    def from_tag(
+        cls,
+        service_template: str,
+        service_tag: str,
+        service_class: Optional[str],
+    ):
         """
         Creates a ServiceCfg object from a tag.
         """
         return ServiceCfg(
-            type=service_type,
+            template=service_template,
             tag=service_tag,
+            service_class=service_class,
             image="",
             hostname=None,
             container_name=None,
@@ -174,8 +181,9 @@ class ServiceCfg:
         Creates a copy of an existing ServiceCfg object.
         """
         return cls(
-            type=other.type,
+            template=other.template,
             tag=other.tag,
+            service_class=other.service_class,
             image=other.image,
             hostname=other.hostname,
             container_name=other.container_name,
@@ -194,27 +202,33 @@ class ServiceCfg:
         )
 
     @classmethod
-    def from_service_type(cls, service_type: ServiceTypeCfg, service_tag: str):
+    def from_service_template(
+        cls,
+        service_template: ServiceTemplateCfg,
+        service_tag: str,
+        service_class: Optional[str],
+    ):
         """
-        Creates a ServiceCfg object from a ServiceTypeCfg object.
+        Creates a ServiceCfg object from a ServiceTemplateCfg object.
         """
         return cls(
-            type=service_type.type,
+            template=service_template.template,
             tag=service_tag,
-            image=service_type.image,
-            hostname=service_type.hostname,
-            container_name=service_type.container_name,
-            labels=deepcopy(service_type.labels),
-            workdir=service_type.workdir,
-            volumes=deepcopy(service_type.volumes),
-            ingress=service_type.ingress,
-            empty_env=service_type.empty_env,
-            environment=deepcopy(service_type.environment),
-            ports=deepcopy(service_type.ports),
-            properties=deepcopy(service_type.properties),
-            networks=deepcopy(service_type.networks),
-            extra_hosts=deepcopy(service_type.extra_hosts),
-            subject_alternative_name=service_type.subject_alternative_name,
+            service_class=service_class,
+            image=service_template.image,
+            hostname=service_template.hostname,
+            container_name=service_template.container_name,
+            labels=deepcopy(service_template.labels),
+            workdir=service_template.workdir,
+            volumes=deepcopy(service_template.volumes),
+            ingress=service_template.ingress,
+            empty_env=service_template.empty_env,
+            environment=deepcopy(service_template.environment),
+            ports=deepcopy(service_template.ports),
+            properties=deepcopy(service_template.properties),
+            networks=deepcopy(service_template.networks),
+            extra_hosts=deepcopy(service_template.extra_hosts),
+            subject_alternative_name=service_template.subject_alternative_name,
             upstreams=[],
         )
 
@@ -330,7 +344,9 @@ class Config:
     dns_type: str
     ca: CACfg
     cert: CertCfg
-    service_types: Optional[list[ServiceTypeCfg]] = field(default_factory=list)
+    service_templates: Optional[list[ServiceTemplateCfg]] = field(
+        default_factory=list
+    )
     envs: list[EnvironmentCfg] = field(default_factory=list)
 
 
@@ -366,9 +382,9 @@ def parse_config(json_str: str) -> Config:
             enabled=item["enabled"],
         )
 
-    def parse_service_type(item: Any) -> ServiceTypeCfg:
-        return ServiceTypeCfg(
-            type=item["type"],
+    def parse_service_template(item: Any) -> ServiceTemplateCfg:
+        return ServiceTemplateCfg(
+            template=item["template"],
             image=item["image"],
             hostname=item.get("hostname"),
             container_name=item.get("container_name"),
@@ -387,8 +403,9 @@ def parse_config(json_str: str) -> Config:
 
     def parse_service(item: Any) -> ServiceCfg:
         return ServiceCfg(
-            type=item["type"],
+            template=item["template"],
             tag=item["tag"],
+            service_class=item.get("service_class"),
             image=item["image"],
             hostname=item.get("hostname"),
             container_name=item.get("container_name"),
@@ -454,9 +471,9 @@ def parse_config(json_str: str) -> Config:
         )
 
     return Config(
-        service_types=[
-            parse_service_type(service_type)
-            for service_type in data.get("service_types", [])
+        service_templates=[
+            parse_service_template(service_template)
+            for service_template in data.get("service_templates", [])
         ],
         shpd_registry=parse_shpd_registry(data["shpd_registry"]),
         host_inet_ip=data["host_inet_ip"],
@@ -703,16 +720,18 @@ class ConfigMng:
                 return env
         return None
 
-    def get_service_type(self, serviceType: str) -> Optional[ServiceTypeCfg]:
+    def get_service_type(
+        self, serviceType: str
+    ) -> Optional[ServiceTemplateCfg]:
         """
         Retrieves a service type configuration by its type.
 
         :param serviceType: The type of the service to retrieve.
         :return: The service type configuration if found, else None.
         """
-        if self.config.service_types:
-            for svc_type in self.config.service_types:
-                if svc_type.type == serviceType:
+        if self.config.service_templates:
+            for svc_type in self.config.service_templates:
+                if svc_type.template == serviceType:
                     return svc_type
         return None
 
@@ -808,3 +827,25 @@ class ConfigMng:
             else:
                 env.active = False
         self.store()
+
+    def get_resource_classes(
+        self, env_tag: str, resource_type: str
+    ) -> list[str]:
+        """
+        Retrieves all unique resource classes from the service configurations.
+
+        :return: A list of unique resource classes.
+        """
+        match resource_type:
+            case self.constants.RESOURCE_TYPE_SVC:
+                return sorted(
+                    {
+                        svc.service_class
+                        for env in self.config.envs
+                        if env.tag == env_tag and env.services
+                        for svc in env.services
+                        if svc.service_class
+                    }
+                )
+            case _:
+                return []
