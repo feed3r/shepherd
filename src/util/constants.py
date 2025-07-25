@@ -62,19 +62,28 @@ class Constants:
     APP_LICENSE: str = "MIT"
     APP_URL: str = "https://github.com/LunaticFringers/shepherd"
 
+    # Environment templates:
+
+    ENV_TEMPLATE_DEFAULT: str = "default"
+
     # Environment types
 
-    ENV_TYPE_DOCKER_COMPOSE: str = "docker-compose"
+    ENV_FACTORY_DEFAULT: str = "docker-compose"
 
     @property
-    def ENV_TYPES(self) -> list[str]:
+    def ENV_FACTORIES(self) -> list[str]:
         return [
-            self.ENV_TYPE_DOCKER_COMPOSE,
+            self.ENV_FACTORY_DEFAULT,
         ]
 
-    # Service types
+    # Service templates:
 
-    SVC_TYPE_GENERIC_IMAGE: str = "image"
+    SVC_TEMPLATE_DEFAULT: str = "default"
+    SVC_TAG_DEFAULT: str = "service-default"
+
+    # Service factories:
+
+    SVC_FACTORY_DEFAULT: str = "docker"
 
     # Resource types
 
@@ -88,6 +97,9 @@ class Constants:
 
     # Default configuration values
 
+    NET_KEY_DEFAULT: str = "shpdnet"
+    NET_NAME_DEFAULT: str = "envnet"
+
     @property
     def DEFAULT_CONFIG(self) -> dict[Any, Any]:
         return {
@@ -97,9 +109,29 @@ class Constants:
                 "stdout": "${log_stdout}",
                 "format": "${log_format}",
             },
+            "env_templates": [
+                {
+                    "tag": self.ENV_TEMPLATE_DEFAULT,
+                    "factory": self.ENV_FACTORY_DEFAULT,
+                    "service_templates": [
+                        {
+                            "template": self.SVC_TEMPLATE_DEFAULT,
+                            "tag": self.SVC_TAG_DEFAULT,
+                        }
+                    ],
+                    "networks": [
+                        {
+                            "key": self.NET_KEY_DEFAULT,
+                            "name": self.NET_NAME_DEFAULT,
+                            "external": True,
+                        }
+                    ],
+                }
+            ],
             "service_templates": [
                 {
-                    "template": "image",
+                    "tag": self.SVC_TEMPLATE_DEFAULT,
+                    "factory": self.SVC_FACTORY_DEFAULT,
                     "image": "",
                     "ingress": False,
                     "envvars": {},

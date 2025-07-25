@@ -116,9 +116,29 @@ shpd_config = """
     "email": "${cert_email}",
     "subject_alternative_names": []
   },
+  "env_templates":[
+    {
+      "tag": "default",
+      "factory": "docker-compose",
+      "service_templates": [
+        {
+          "template": "default",
+          "tag": "service-default"
+        }
+      ],
+      "networks": [
+        {
+          "key": "shpdnet",
+          "name": "envnet",
+          "external": true
+        }
+      ]
+    }
+  ],
   "service_templates": [
     {
-      "template": "t1",
+      "tag": "t1",
+      "factory": "docker",
       "image": "test-image:latest",
       "labels": [
         "com.example.label1=value1",
@@ -147,7 +167,8 @@ shpd_config = """
       "subject_alternative_name": null
     },
     {
-      "template": "t2",
+      "tag": "t2",
+      "factory": "docker",
       "image": "test-image:latest",
       "labels": [
         "com.example.label1=value1",
@@ -178,11 +199,13 @@ shpd_config = """
   ],
   "envs": [
     {
-      "type": "docker-compose",
+      "template": "default",
+      "factory": "docker-compose",
       "tag": "test-1",
       "services": [
         {
           "template": "t1",
+          "factory": "docker",
           "tag": "red",
           "service_class": "foo-class",
           "image": "test-image:latest",
@@ -214,6 +237,7 @@ shpd_config = """
         },
         {
           "template": "t1",
+          "factory": "docker",
           "tag": "white",
           "image": "test-image:latest",
           "labels": [
@@ -247,11 +271,13 @@ shpd_config = """
       "active": true
     },
     {
-      "type": "docker-compose",
+      "template": "default",
+      "factory": "docker-compose",
       "tag": "test-2",
       "services": [
         {
           "template": "t2",
+          "factory": "docker",
           "tag": "blue",
           "image": "test-image:latest",
           "labels": [
@@ -381,7 +407,7 @@ def test_completion_env_init(
     sm = ShepherdMng()
     completions = sm.completionMng.get_completions(["env", "init"])
     assert (
-        completions == sm.configMng.constants.ENV_TYPES
+        completions == sm.configMng.get_environment_template_tags()
     ), "Expected init completion"
 
 

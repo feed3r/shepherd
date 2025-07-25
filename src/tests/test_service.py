@@ -116,9 +116,29 @@ shpd_config_svc_default = """
     "email": "${cert_email}",
     "subject_alternative_names": []
   },
+  "env_templates": [
+    {
+      "tag": "default",
+      "factory": "docker-compose",
+      "service_templates": [
+        {
+          "template": "default",
+          "tag": "service-default"
+        }
+      ],
+      "networks": [
+        {
+          "key": "shpdnet",
+          "name": "envnet",
+          "external": true
+        }
+      ]
+    }
+  ],
   "service_templates": [
     {
-      "template": "image",
+      "tag": "default",
+      "factory": "docker",
       "image": "test-image:latest",
       "labels": [
         "com.example.label1=value1",
@@ -149,11 +169,13 @@ shpd_config_svc_default = """
   ],
   "envs": [
     {
-      "type": "docker-compose",
+      "template": "default",
+      "factory": "docker-compose",
       "tag": "test-1",
       "services": [
         {
-          "template": "image",
+          "template": "default",
+          "factory": "docker",
           "tag": "test",
           "image": "test-image:latest",
           "labels": [
@@ -228,9 +250,29 @@ shpd_config_pg_template = """
     "email": "${cert_email}",
     "subject_alternative_names": []
   },
+  "env_templates": [
+    {
+      "tag": "default",
+      "factory": "docker-compose",
+      "service_templates": [
+        {
+          "template": "default",
+          "tag": "service-default"
+        }
+      ],
+      "networks": [
+        {
+          "key": "shpdnet",
+          "name": "envnet",
+          "external": true
+        }
+      ]
+    }
+  ],
   "service_templates": [
     {
-      "template": "image",
+      "tag": "default",
+      "factory": "docker",
       "image": "",
       "ingress": false,
       "empty_env": null,
@@ -240,7 +282,8 @@ shpd_config_pg_template = """
       "subject_alternative_name": null
     },
     {
-      "template": "postgres",
+      "tag": "postgres",
+      "factory": "postgres",
       "image": "${pg_image}",
       "ingress": false,
       "empty_env": "${pg_empty_env}",
@@ -307,9 +350,7 @@ def test_svc_add_one_default(
     )
     mocker.patch("os.path.expanduser", side_effect=side_effect)
 
-    result = runner.invoke(
-        cli, ["env", "init", "docker-compose", "test-svc-add"]
-    )
+    result = runner.invoke(cli, ["env", "init", "default", "test-svc-add"])
     assert result.exit_code == 0
 
     result = runner.invoke(cli, ["env", "checkout", "test-svc-add"])
@@ -321,61 +362,20 @@ def test_svc_add_one_default(
     sm = ShepherdMng()
 
     env = sm.configMng.get_active_environment()
-    assert env is not None, "Active environment should not be None"
-    assert env.services is not None, "Services should not be None"
-    assert len(env.services) == 1, "There should be exactly one service"
-    assert env.services[0].tag == "svc-1", "Service tag should be 'svc-1'"
-    assert env.services[0].template == "image", "Service type should be 'image'"
-    assert env.services[0].image == "", "Service image should be ''"
 
-    assert env.services[0].ingress is False, "Service ingress should be False"
-    assert (
-        env.services[0].environment == []
-    ), "Service environment should be empty"
-    assert env.services[0].ports == [], "Service ports should be empty"
-    assert (
-        env.services[0].properties == {}
-    ), "Service properties should be empty"
-    assert (
-        env.services[0].subject_alternative_name is None
-    ), "Service SAN should be None"
-
-
-@pytest.mark.svc
-@pytest.mark.parametrize("expanduser_side_effects", [5])
-def test_svc_add_two_default(
-    temp_home: Path,
-    runner: CliRunner,
-    mocker: MockerFixture,
-    expanduser_side_effects: int,
-):
-    side_effect = make_expanduser_side_effect(
-        temp_home, expanduser_side_effects
-    )
-    mocker.patch("os.path.expanduser", side_effect=side_effect)
-
-    result = runner.invoke(
-        cli, ["env", "init", "docker-compose", "test-svc-add"]
-    )
-    assert result.exit_code == 0
-
-    result = runner.invoke(cli, ["env", "checkout", "test-svc-add"])
-    assert result.exit_code == 0
-
-    result = runner.invoke(cli, ["env", "add", "svc", "svc-1"])
-    assert result.exit_code == 0
-
-    result = runner.invoke(cli, ["env", "add", "svc", "svc-2"])
-    assert result.exit_code == 0
-
-    sm = ShepherdMng()
-
-    env = sm.configMng.get_active_environment()
     assert env is not None, "Active environment should not be None"
     assert env.services is not None, "Services should not be None"
     assert len(env.services) == 2, "There should be exactly two services"
-    assert env.services[0].tag == "svc-1", "Service tag should be 'svc-1'"
-    assert env.services[0].template == "image", "Service type should be 'image'"
+
+    assert (
+        env.services[0].tag == "service-default"
+    ), "Service tag should be 'service-default'"
+    assert (
+        env.services[0].template == "default"
+    ), "Service type should be 'default'"
+    assert (
+        env.services[0].factory == "docker"
+    ), "Service factory should be 'docker'"
     assert env.services[0].image == "", "Service image should be ''"
 
     assert env.services[0].ingress is False, "Service ingress should be False"
@@ -390,8 +390,13 @@ def test_svc_add_two_default(
         env.services[0].subject_alternative_name is None
     ), "Service SAN should be None"
 
-    assert env.services[1].tag == "svc-2", "Service tag should be 'svc-2'"
-    assert env.services[1].template == "image", "Service type should be 'image'"
+    assert env.services[1].tag == "svc-1", "Service tag should be 'svc-1'"
+    assert (
+        env.services[1].template == "default"
+    ), "Service type should be 'default'"
+    assert (
+        env.services[1].factory == "docker"
+    ), "Service factory should be 'docker'"
     assert env.services[1].image == "", "Service image should be ''"
 
     assert env.services[1].ingress is False, "Service ingress should be False"
@@ -409,6 +414,81 @@ def test_svc_add_two_default(
 
 @pytest.mark.svc
 @pytest.mark.parametrize("expanduser_side_effects", [5])
+def test_svc_add_two_default(
+    temp_home: Path,
+    runner: CliRunner,
+    mocker: MockerFixture,
+    expanduser_side_effects: int,
+):
+    side_effect = make_expanduser_side_effect(
+        temp_home, expanduser_side_effects
+    )
+    mocker.patch("os.path.expanduser", side_effect=side_effect)
+
+    result = runner.invoke(cli, ["env", "init", "default", "test-svc-add"])
+    assert result.exit_code == 0
+
+    result = runner.invoke(cli, ["env", "checkout", "test-svc-add"])
+    assert result.exit_code == 0
+
+    result = runner.invoke(cli, ["env", "add", "svc", "svc-1"])
+    assert result.exit_code == 0
+
+    result = runner.invoke(cli, ["env", "add", "svc", "svc-2"])
+    assert result.exit_code == 0
+
+    sm = ShepherdMng()
+
+    env = sm.configMng.get_active_environment()
+    assert env is not None, "Active environment should not be None"
+    assert env.services is not None, "Services should not be None"
+    assert len(env.services) == 3, "There should be exactly three services"
+
+    assert env.services[1].tag == "svc-1", "Service tag should be 'svc-1'"
+    assert (
+        env.services[1].template == "default"
+    ), "Service type should be 'default'"
+    assert (
+        env.services[1].factory == "docker"
+    ), "Service factory should be 'docker'"
+    assert env.services[1].image == "", "Service image should be ''"
+
+    assert env.services[1].ingress is False, "Service ingress should be False"
+    assert (
+        env.services[1].environment == []
+    ), "Service environment should be empty"
+    assert env.services[1].ports == [], "Service ports should be empty"
+    assert (
+        env.services[1].properties == {}
+    ), "Service properties should be empty"
+    assert (
+        env.services[1].subject_alternative_name is None
+    ), "Service SAN should be None"
+
+    assert env.services[2].tag == "svc-2", "Service tag should be 'svc-2'"
+    assert (
+        env.services[2].template == "default"
+    ), "Service type should be 'default'"
+    assert (
+        env.services[2].factory == "docker"
+    ), "Service factory should be 'docker'"
+    assert env.services[2].image == "", "Service image should be ''"
+
+    assert env.services[2].ingress is False, "Service ingress should be False"
+    assert (
+        env.services[2].environment == []
+    ), "Service environment should be empty"
+    assert env.services[2].ports == [], "Service ports should be empty"
+    assert (
+        env.services[2].properties == {}
+    ), "Service properties should be empty"
+    assert (
+        env.services[2].subject_alternative_name is None
+    ), "Service SAN should be None"
+
+
+@pytest.mark.svc
+@pytest.mark.parametrize("expanduser_side_effects", [5])
 def test_svc_add_two_same_tag_default(
     temp_home: Path,
     runner: CliRunner,
@@ -420,9 +500,7 @@ def test_svc_add_two_same_tag_default(
     )
     mocker.patch("os.path.expanduser", side_effect=side_effect)
 
-    result = runner.invoke(
-        cli, ["env", "init", "docker-compose", "test-svc-add"]
-    )
+    result = runner.invoke(cli, ["env", "init", "default", "test-svc-add"])
     assert result.exit_code == 0
 
     result = runner.invoke(cli, ["env", "checkout", "test-svc-add"])
@@ -439,21 +517,26 @@ def test_svc_add_two_same_tag_default(
     env = sm.configMng.get_active_environment()
     assert env is not None, "Active environment should not be None"
     assert env.services is not None, "Services should not be None"
-    assert len(env.services) == 1, "There should be exactly one service"
-    assert env.services[0].tag == "svc-1", "Service tag should be 'svc-1'"
-    assert env.services[0].template == "image", "Service type should be 'image'"
-    assert env.services[0].image == "", "Service image should be ''"
+    assert len(env.services) == 2, "There should be exactly one service"
+    assert env.services[1].tag == "svc-1", "Service tag should be 'svc-1'"
+    assert (
+        env.services[1].template == "default"
+    ), "Service type should be 'default'"
+    assert (
+        env.services[1].factory == "docker"
+    ), "Service factory should be 'docker'"
+    assert env.services[1].image == "", "Service image should be ''"
 
-    assert env.services[0].ingress is False, "Service ingress should be False"
+    assert env.services[1].ingress is False, "Service ingress should be False"
     assert (
-        env.services[0].environment == []
+        env.services[1].environment == []
     ), "Service environment should be empty"
-    assert env.services[0].ports == [], "Service ports should be empty"
+    assert env.services[1].ports == [], "Service ports should be empty"
     assert (
-        env.services[0].properties == {}
+        env.services[1].properties == {}
     ), "Service properties should be empty"
     assert (
-        env.services[0].subject_alternative_name is None
+        env.services[1].subject_alternative_name is None
     ), "Service SAN should be None"
 
 
@@ -474,19 +557,17 @@ def test_svc_add_one_with_template(
     shpd_json = shpd_dir / ".shpd.json"
     shpd_json.write_text(shpd_config_pg_template)
 
-    result = runner.invoke(
-        cli, ["env", "init", "docker-compose", "test-svc-add"]
-    )
+    result = runner.invoke(cli, ["env", "init", "default", "test-svc-add"])
     assert result.exit_code == 0
 
     result = runner.invoke(cli, ["env", "checkout", "test-svc-add"])
     assert result.exit_code == 0
 
     result = runner.invoke(
-        cli, ["env", "add", "svc", "pg-1", "database", "postgres"]
+        cli, ["env", "add", "svc", "pg-1", "postgres", "database"]
     )
 
-    # we still don't support templates, so this should fail
+    # no 'postgres' factory, so this should fail
     assert result.exit_code == 1
 
     sm = ShepherdMng()
@@ -494,7 +575,13 @@ def test_svc_add_one_with_template(
     env = sm.configMng.get_active_environment()
     assert env is not None, "Active environment should not be None"
     assert env.services is not None, "Services should not be None"
-    assert len(env.services) == 0, "There should be exactly zero services"
+    assert (
+        len(env.services) == 1
+    ), "There should be exactly one (default) service"
+
+    assert (
+        env.services[0].tag == "service-default"
+    ), "Service tag should be 'service-default'"
 
 
 @pytest.mark.svc

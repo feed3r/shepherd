@@ -23,7 +23,6 @@ import pytest
 from pytest_mock import MockerFixture
 
 from config import Config, ConfigMng
-from config.config import EnvironmentCfg, ServiceCfg, ServiceTemplateCfg
 from util import Constants
 
 config_json = """{
@@ -63,9 +62,29 @@ config_json = """{
     "email": "${cert_email}",
     "subject_alternative_names": []
   },
+  "env_templates": [
+    {
+      "tag": "default",
+      "factory": "docker-compose",
+      "service_templates": [
+        {
+          "template": "default",
+          "tag": "service-default"
+        }
+      ],
+      "networks": [
+        {
+          "key": "shpdnet",
+          "name": "envnet",
+          "external": true
+        }
+      ]
+    }
+  ],
   "service_templates": [
     {
-      "template": "oracle",
+      "tag": "oracle",
+      "factory": "docker",
       "image": "${ora_image}",
       "hostname": null,
       "container_name": null,
@@ -92,7 +111,8 @@ config_json = """{
       "subject_alternative_name": null
     },
     {
-      "template": "postgres",
+      "tag": "postgres",
+      "factory": "docker",
       "image": "${pg_image}",
       "hostname": null,
       "container_name": null,
@@ -118,11 +138,13 @@ config_json = """{
   ],
   "envs": [
     {
-      "type": "docker-compose",
+      "template": "default",
+      "factory": "docker-compose",
       "tag": "sample-1",
       "services": [
         {
           "template": "postgres",
+          "factory": "docker",
           "tag": "pg-1",
           "service_class": null,
           "image": "ghcr.io/lunaticfringers/shepherd/postgres:17-3.5",
@@ -177,6 +199,7 @@ config_json = """{
         },
         {
           "template": "traefik",
+          "factory": "docker",
           "tag": "traefik-1",
           "service_class": null,
           "image": "",
@@ -197,6 +220,7 @@ config_json = """{
         },
         {
           "template": "custom-1",
+          "factory": "docker",
           "tag": "primary",
           "service_class": null,
           "image": "",
@@ -220,6 +244,7 @@ config_json = """{
         },
         {
           "template": "nodejs",
+          "factory": "docker",
           "tag": "poke",
           "service_class": null,
           "image": "",
@@ -242,6 +267,13 @@ config_json = """{
           "extra_hosts": [],
           "subject_alternative_name": null,
           "upstreams": []
+        }
+      ],
+      "networks": [
+        {
+          "key": "shpdnet",
+          "name": "envnet",
+          "external": true
         }
       ],
       "archived": false,
@@ -333,8 +365,20 @@ def test_load_config(mocker: MockerFixture):
     assert not config.logging.stdout
     assert config.logging.format == "%(asctime)s - %(levelname)s - %(message)s"
 
+    env_templates = config.env_templates
+    assert env_templates and env_templates[0].tag == "default"
+    assert env_templates[0].factory == "docker-compose"
+    assert env_templates[0].service_templates
+    assert env_templates[0].service_templates[0].tag == "service-default"
+    assert env_templates[0].service_templates[0].template == "default"
+    assert env_templates[0].networks
+    assert env_templates[0].networks[0].key == "shpdnet"
+    assert env_templates[0].networks[0].name == "envnet"
+    assert env_templates[0].networks[0].external is True
+
     service_templates = config.service_templates
-    assert service_templates and service_templates[0].template == "oracle"
+    assert service_templates and service_templates[0].tag == "oracle"
+    assert service_templates[0].factory == "docker"
     assert service_templates[0].image == (
         "ghcr.io/lunaticfringers/shepherd/oracle:19.3.0.0_TZ40"
     )
@@ -356,7 +400,8 @@ def test_load_config(mocker: MockerFixture):
     assert service_templates[0].properties["user"] == "docker"
     assert service_templates[0].properties["psw"] == "docker"
     assert service_templates[0].subject_alternative_name is None
-    assert service_templates[1].template == "postgres"
+    assert service_templates[1].tag == "postgres"
+    assert service_templates[1].factory == "docker"
     assert service_templates[1].image == (
         "ghcr.io/lunaticfringers/shepherd/postgres:17-3.5"
     )
@@ -377,10 +422,12 @@ def test_load_config(mocker: MockerFixture):
     assert service_templates[1].subject_alternative_name is None
 
     assert config.shpd_registry.ftp_server == "ftp.example.com"
-    assert config.envs[0].type == Constants.ENV_TYPE_DOCKER_COMPOSE
+    assert config.envs[0].template == Constants.ENV_TEMPLATE_DEFAULT
+    assert config.envs[0].factory == Constants.ENV_FACTORY_DEFAULT
     assert config.envs[0].tag == "sample-1"
     services = config.envs[0].services
     assert services and services[0].template == "postgres"
+    assert services[0].factory == "docker"
     assert services[0].tag == "pg-1"
     assert services[0].image == (
         "ghcr.io/lunaticfringers/shepherd/postgres:17-3.5"
@@ -412,6 +459,7 @@ def test_load_config(mocker: MockerFixture):
     assert properties["dump_dir"] == "/dumps/2"
     assert upstreams[1].enabled is False
     assert services[1].template == "traefik"
+    assert services[1].factory == "docker"
     assert services[1].ingress is True
     assert services[2].template == "custom-1"
     assert services[2].tag == "primary"
@@ -421,6 +469,10 @@ def test_load_config(mocker: MockerFixture):
     assert environment and environment[0] == "USER=user"
     assert environment and environment[1] == "PSW=psw"
     ports = services[3].ports
+    assert config.envs[0].networks
+    assert config.envs[0].networks[0].key == "shpdnet"
+    assert config.envs[0].networks[0].name == "envnet"
+    assert config.envs[0].networks[0].external is True
     assert ports and ports[0] == "3000:3000"
     assert config.host_inet_ip == "127.0.0.1"
     assert config.domain == "sslip.io"
@@ -523,16 +575,16 @@ def test_copy_config(mocker: MockerFixture):
     service_templates = config.service_templates
     assert service_templates
     svc_templ = service_templates[0]
-    svc_templ_cloned = ServiceTemplateCfg.from_other(svc_templ)
+    svc_templ_cloned = cMng.svc_tmpl_cfg_from_other(svc_templ)
     assert svc_templ_cloned == svc_templ
 
     env = config.envs[0]
     assert env
-    env_cloned = EnvironmentCfg.from_other(env)
+    env_cloned = cMng.env_cfg_from_other(env)
     assert env_cloned == env
 
     services = config.envs[0].services
     assert services
     svc = services[0]
-    svc_cloned = ServiceCfg.from_other(svc)
+    svc_cloned = cMng.svc_cfg_from_other(svc)
     assert svc_cloned == svc

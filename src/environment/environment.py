@@ -22,7 +22,7 @@ import os
 from abc import ABC, abstractmethod
 from typing import Optional
 
-from config import ConfigMng, EnvironmentCfg, ServiceCfg
+from config import ConfigMng, EnvironmentCfg, EnvironmentTemplateCfg
 from service import Service, ServiceFactory
 from util import Constants, Util
 
@@ -169,7 +169,11 @@ class EnvironmentFactory(ABC):
         self.config = config
 
     @abstractmethod
-    def new_environment(self, env_type: str, env_tag: str) -> Environment:
+    def new_environment(
+        self,
+        env_tmpl_cfg: EnvironmentTemplateCfg,
+        env_tag: str,
+    ) -> Environment:
         """
         Create an environment.
         """
@@ -215,15 +219,24 @@ class EnvironmentMng:
         else:
             return None
 
-    def init_env(self, env_type: str, env_tag: str):
+    def init_env(self, env_template: str, env_tag: str):
         """Initialize an environment."""
         if self.configMng.get_environment(env_tag):
             Util.print_error_and_die(
                 f"Environment with tag '{env_tag}' already exists."
             )
-        env = self.envFactory.new_environment(env_type, env_tag)
-        env.realize()
-        Util.print(f"{env_tag}")
+        if envTmplCfg := self.configMng.get_environment_template(env_template):
+            env = self.envFactory.new_environment(
+                envTmplCfg,
+                env_tag,
+            )
+            env.realize()
+            Util.print(f"{env_tag}")
+        else:
+            Util.print_error_and_die(
+                f"Environment Template with tag '{env_template}' "
+                f"does not exist."
+            )
 
     def clone_env(self, src_env_tag: str, dst_env_tag: str):
         """Clone an environment."""
@@ -290,7 +303,7 @@ class EnvironmentMng:
             return
         Util.print("Available environments:")
         for env in envs:
-            Util.print(f" - {env.tag} ({env.type})")
+            Util.print(f" - {env.tag} ({env.template})")
 
     def start_env(self, envCfg: EnvironmentCfg):
         """Start an environment."""
@@ -326,21 +339,19 @@ class EnvironmentMng:
                     exists in environment '{envCfg.tag}'."""
                 )
             svc_type_cfg = self.configMng.get_service_template(
-                svc_template
-                if svc_template
-                else Constants.SVC_TYPE_GENERIC_IMAGE
+                svc_template if svc_template else Constants.SVC_TEMPLATE_DEFAULT
             )
 
             if svc_type_cfg:
-                svcCfg = ServiceCfg.from_service_template(
+                svcCfg = self.configMng.svc_cfg_from_service_template(
                     svc_type_cfg, svc_tag, svc_class
                 )
             else:
-                svcCfg = ServiceCfg.from_tag(
+                svcCfg = self.configMng.svc_cfg_from_tag(
                     (
                         svc_template
                         if svc_template
-                        else Constants.SVC_TYPE_GENERIC_IMAGE
+                        else Constants.SVC_TEMPLATE_DEFAULT
                     ),
                     svc_tag,
                     svc_class,
