@@ -601,13 +601,10 @@ def test_svc_render_compose_service(
     shpd_json = shpd_dir / ".shpd.json"
     shpd_json.write_text(shpd_config_svc_default)
 
-    sm = ShepherdMng()
+    result = runner.invoke(cli, ["svc", "render", "test"])
+    assert result.exit_code == 0
 
-    env = sm.environmentMng.get_environment("test-1")
-    assert env is not None, "Environment should not be None"
-    svc = env.get_service("test")
-    assert svc is not None, "Service should not be None"
-    assert svc.render() == (
+    assert result.output == (
         "services:\n"
         "  test-test-1:\n"
         "    image: test-image:latest\n"
@@ -626,5 +623,5 @@ def test_svc_render_compose_service(
         "    extra_hosts:\n"
         "    - host.docker.internal:host-gateway\n"
         "    networks:\n"
-        "    - default\n"
+        "    - default\n\n"
     )
