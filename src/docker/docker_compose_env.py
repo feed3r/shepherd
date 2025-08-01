@@ -18,7 +18,9 @@
 
 from __future__ import annotations
 
-from typing import override
+from typing import Any, override
+
+import yaml
 
 from config import ConfigMng, EnvironmentCfg
 from environment import Environment
@@ -38,7 +40,7 @@ class DockerComposeEnv(Environment):
 
     @override
     def clone(self, dst_env_tag: str) -> DockerComposeEnv:
-        """Clone an environment."""
+        """Clone the environment."""
         clonedCfg = self.configMng.env_cfg_from_other(self.to_config())
         clonedCfg.tag = dst_env_tag
         clonedEnv = DockerComposeEnv(
@@ -50,18 +52,34 @@ class DockerComposeEnv(Environment):
 
     @override
     def start(self):
-        """Start an environment."""
+        """Start the environment."""
         pass
 
     @override
     def halt(self):
-        """Halt an environment."""
+        """Halt the environment."""
         pass
 
     @override
     def reload(self):
-        """Reload an environment."""
+        """Reload the environment."""
         pass
+
+    @override
+    def render(self) -> str:
+        """
+        Render the full docker-compose YAML configuration for the environment.
+        """
+
+        compose_config: dict[str, Any] = {
+            "services": {},
+        }
+
+        for svc in self.services:
+            svc_yaml = yaml.safe_load(svc.render())
+            compose_config["services"].update(svc_yaml["services"])
+
+        return yaml.dump(compose_config, sort_keys=False)
 
     @override
     def status(self):

@@ -51,22 +51,29 @@ class Environment(ABC):
 
     @abstractmethod
     def clone(self, dst_env_tag: str) -> Environment:
-        """Clone an environment."""
+        """Clone the environment."""
         pass
 
     @abstractmethod
     def start(self):
-        """Start an environment."""
+        """Start the environment."""
         pass
 
     @abstractmethod
     def halt(self):
-        """Halt an environment."""
+        """Halt the environment."""
         pass
 
     @abstractmethod
     def reload(self):
-        """Reload an environment."""
+        """Reload the environment."""
+        pass
+
+    @abstractmethod
+    def render(self) -> str:
+        """
+        Render the environment configuration.
+        """
         pass
 
     @abstractmethod
@@ -316,6 +323,13 @@ class EnvironmentMng:
     def reload_env(self, envCfg: EnvironmentCfg):
         """Reload an environment."""
         pass
+
+    def render_env(self, env_tag: str) -> Optional[str]:
+        """Render an environment configuration."""
+        env = self.get_environment(env_tag)
+        if env:
+            return env.render()
+        return None
 
     def status_env(self, envCfg: EnvironmentCfg):
         """Get environment status."""
