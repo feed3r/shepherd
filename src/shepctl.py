@@ -252,6 +252,14 @@ def env_reload(shepherd: ShepherdMng, envCfg: EnvironmentCfg):
     shepherd.environmentMng.reload_env(envCfg)
 
 
+@env.command(name="render")
+@click.argument("env_tag", required=False)
+@click.pass_obj
+def env_render(shepherd: ShepherdMng, env_tag: str):
+    """Render environment configuration."""
+    click.echo(shepherd.environmentMng.render_env(env_tag))
+
+
 @env.command(name="status")
 @click.pass_obj
 @require_active_env

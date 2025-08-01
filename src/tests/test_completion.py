@@ -594,6 +594,31 @@ def test_completion_env_reload(
 
 @pytest.mark.compl
 @pytest.mark.parametrize("expanduser_side_effects", [1])
+def test_completion_env_render(
+    temp_home: Path,
+    runner: CliRunner,
+    mocker: MockerFixture,
+    expanduser_side_effects: int,
+):
+    side_effect = make_expanduser_side_effect(
+        temp_home, expanduser_side_effects
+    )
+    mocker.patch("os.path.expanduser", side_effect=side_effect)
+    shpd_dir = temp_home / "shpd"
+    shpd_dir.mkdir(parents=True, exist_ok=True)
+    shpd_json = shpd_dir / ".shpd.json"
+    shpd_json.write_text(shpd_config)
+
+    sm = ShepherdMng()
+    completions = sm.completionMng.get_completions(["env", "render"])
+    assert completions == [
+        "test-1",
+        "test-2",
+    ], "Expected render completion"
+
+
+@pytest.mark.compl
+@pytest.mark.parametrize("expanduser_side_effects", [1])
 def test_completion_env_status(
     temp_home: Path,
     runner: CliRunner,

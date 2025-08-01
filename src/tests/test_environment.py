@@ -87,6 +87,224 @@ values = """
   log_format=%(asctime)s - %(levelname)s - %(message)s
   """
 
+values = """
+  # PostgreSQL (pg) Configuration
+  pg_image=ghcr.io/lunaticfringers/shepherd/postgres:17-3.5
+  pg_empty_env=fresh-pg-1735
+  pg_listener_port=5432
+
+  # SHPD Registry Configuration
+  shpd_registry=ftp.example.com
+  shpd_registry_ftp_usr=
+  shpd_registry_ftp_psw=
+  shpd_registry_ftp_shpd_path=shpd
+  shpd_registry_ftp_imgs_path=imgs
+
+  # Host and Domain Configuration
+  host_inet_ip=127.0.0.1
+  domain=sslip.io
+  dns_type=autoresolving
+
+  # Certificate Authority (CA) Configuration
+  ca_country=IT
+  ca_state=MS
+  ca_locality=Carrara
+  ca_org=LunaticFringe
+  ca_org_unit=Development
+  ca_cn=sslip.io
+  ca_email=lf@sslip.io
+  ca_passphrase=test
+
+  # Certificate Configuration
+  cert_country=IT
+  cert_state=MS
+  cert_locality=Carrara
+  cert_org=LunaticFringe
+  cert_org_unit=Development
+  cert_cn=sslip.io
+  cert_email=lf@sslip.io
+  cert_subject_alternative_names=
+
+  shpd_dir=~/shpd
+
+  # Database Default Configuration
+  db_sys_usr=sys
+  db_sys_psw=sys
+  db_usr=docker
+  db_psw=docker
+
+  # Logging Configuration
+  log_file=~/shpd/shepctl.log
+  log_level=WARNING
+  log_stdout=false
+  log_format=%(asctime)s - %(levelname)s - %(message)s
+  """
+
+shpd_config = """
+{
+  "logging": {
+    "file": "${log_file}",
+    "level": "${log_level}",
+    "stdout": "${log_stdout}",
+    "format": "${log_format}"
+  },
+  "shpd_registry": {
+    "ftp_server": "${shpd_registry}",
+    "ftp_user": "${shpd_registry_ftp_usr}",
+    "ftp_psw": "${shpd_registry_ftp_psw}",
+    "ftp_shpd_path": "${shpd_registry_ftp_shpd_path}",
+    "ftp_env_imgs_path": "${shpd_registry_ftp_imgs_path}"
+  },
+  "host_inet_ip": "${host_inet_ip}",
+  "domain": "${domain}",
+  "dns_type": "${dns_type}",
+  "ca": {
+    "country": "${ca_country}",
+    "state": "${ca_state}",
+    "locality": "${ca_locality}",
+    "organization": "${ca_org}",
+    "organizational_unit": "${ca_org_unit}",
+    "common_name": "${ca_cn}",
+    "email": "${ca_email}",
+    "passphrase": "${ca_passphrase}"
+  },
+  "cert": {
+    "country": "${cert_country}",
+    "state": "${cert_state}",
+    "locality": "${cert_locality}",
+    "organization": "${cert_org}",
+    "organizational_unit": "${cert_org_unit}",
+    "common_name": "${cert_cn}",
+    "email": "${cert_email}",
+    "subject_alternative_names": []
+  },
+  "env_templates": [
+    {
+      "tag": "default",
+      "factory": "docker-compose",
+      "service_templates": [
+        {
+          "template": "default",
+          "tag": "service-default"
+        }
+      ],
+      "networks": [
+        {
+          "key": "shpdnet",
+          "name": "envnet",
+          "external": true
+        }
+      ]
+    }
+  ],
+  "service_templates": [
+    {
+      "tag": "default",
+      "factory": "docker",
+      "image": "test-image:latest",
+      "labels": [
+        "com.example.label1=value1",
+        "com.example.label2=value2"
+      ],
+      "workdir": "/test",
+      "volumes": [
+          "/home/test/.ssh:/home/test/.ssh",
+          "/etc/ssh:/etc/ssh"
+      ],
+      "ingress": false,
+      "empty_env": null,
+      "environment": [],
+      "ports": [
+        "80:80",
+        "443:443",
+        "8080:8080"
+      ],
+      "properties": {},
+      "networks": [
+        "default"
+      ],
+      "extra_hosts": [
+        "host.docker.internal:host-gateway"
+      ],
+      "subject_alternative_name": null
+    }
+  ],
+  "envs": [
+    {
+      "template": "default",
+      "factory": "docker-compose",
+      "tag": "test-1",
+      "services": [
+        {
+          "template": "default",
+          "factory": "docker",
+          "tag": "test-1",
+          "image": "test-1-image:latest",
+          "labels": [
+            "com.example.label1=value1",
+            "com.example.label2=value2"
+          ],
+          "workdir": "/test",
+          "volumes": [
+              "/home/test/.ssh:/home/test/.ssh",
+              "/etc/ssh:/etc/ssh"
+          ],
+          "ingress": false,
+          "empty_env": null,
+          "environment": [],
+          "ports": [
+            "80:80",
+            "443:443",
+            "8080:8080"
+          ],
+          "properties": {},
+          "networks": [
+            "default"
+          ],
+          "extra_hosts": [
+            "host.docker.internal:host-gateway"
+          ],
+          "subject_alternative_name": null
+        },
+        {
+          "template": "default",
+          "factory": "docker",
+          "tag": "test-2",
+          "image": "test-2-image:latest",
+          "labels": [
+            "com.example.label1=value1",
+            "com.example.label2=value2"
+          ],
+          "workdir": "/test",
+          "volumes": [
+              "/home/test/.ssh:/home/test/.ssh",
+              "/etc/ssh:/etc/ssh"
+          ],
+          "ingress": false,
+          "empty_env": null,
+          "environment": [],
+          "ports": [
+            "80:80",
+            "443:443",
+            "8080:8080"
+          ],
+          "properties": {},
+          "networks": [
+            "default"
+          ],
+          "extra_hosts": [
+            "host.docker.internal:host-gateway"
+          ],
+          "subject_alternative_name": null
+        }
+      ],
+      "archived": false,
+      "active": true
+    }
+  ]
+}
+"""
+
 
 @pytest.fixture
 def temp_home(tmp_path: Path, mocker: MockerFixture) -> Path:
@@ -368,3 +586,64 @@ def test_env_add_nonexisting_resource(
 
     result = runner.invoke(cli, ["env", "add", "foo", "foo-1"])
     assert result.exit_code == 2
+
+
+@pytest.mark.env
+@pytest.mark.parametrize("expanduser_side_effects", [1])
+def test_env_render_compose_env(
+    temp_home: Path,
+    runner: CliRunner,
+    mocker: MockerFixture,
+    expanduser_side_effects: int,
+):
+    side_effect = make_expanduser_side_effect(
+        temp_home, expanduser_side_effects
+    )
+    mocker.patch("os.path.expanduser", side_effect=side_effect)
+    shpd_dir = temp_home / "shpd"
+    shpd_dir.mkdir(parents=True, exist_ok=True)
+    shpd_json = shpd_dir / ".shpd.json"
+    shpd_json.write_text(shpd_config)
+
+    result = runner.invoke(cli, ["env", "render", "test-1"])
+    assert result.exit_code == 0
+
+    assert result.output == (
+        "services:\n"
+        "  test-1-test-1:\n"
+        "    image: test-1-image:latest\n"
+        "    hostname: test-1-test-1\n"
+        "    container_name: test-1-test-1\n"
+        "    labels:\n"
+        "    - com.example.label1=value1\n"
+        "    - com.example.label2=value2\n"
+        "    volumes:\n"
+        "    - /home/test/.ssh:/home/test/.ssh\n"
+        "    - /etc/ssh:/etc/ssh\n"
+        "    ports:\n"
+        "    - 80:80\n"
+        "    - 443:443\n"
+        "    - 8080:8080\n"
+        "    extra_hosts:\n"
+        "    - host.docker.internal:host-gateway\n"
+        "    networks:\n"
+        "    - default\n"
+        "  test-2-test-1:\n"
+        "    image: test-2-image:latest\n"
+        "    hostname: test-2-test-1\n"
+        "    container_name: test-2-test-1\n"
+        "    labels:\n"
+        "    - com.example.label1=value1\n"
+        "    - com.example.label2=value2\n"
+        "    volumes:\n"
+        "    - /home/test/.ssh:/home/test/.ssh\n"
+        "    - /etc/ssh:/etc/ssh\n"
+        "    ports:\n"
+        "    - 80:80\n"
+        "    - 443:443\n"
+        "    - 8080:8080\n"
+        "    extra_hosts:\n"
+        "    - host.docker.internal:host-gateway\n"
+        "    networks:\n"
+        "    - default\n\n"
+    )

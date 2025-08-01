@@ -33,6 +33,7 @@ class CompletionEnvMng(AbstractCompletionMng):
         "list",
         "up",
         "halt",
+        "render",
         "reload",
         "status",
         "add",
@@ -75,6 +76,8 @@ class CompletionEnvMng(AbstractCompletionMng):
                 return self.get_up_completions(args[1:])
             case "halt":
                 return self.get_halt_completions(args[1:])
+            case "render":
+                return self.get_render_completions(args[1:])
             case "reload":
                 return self.get_reload_completions(args[1:])
             case "status":
@@ -134,6 +137,11 @@ class CompletionEnvMng(AbstractCompletionMng):
         return []
 
     def get_halt_completions(self, args: list[str]) -> list[str]:
+        return []
+
+    def get_render_completions(self, args: list[str]) -> list[str]:
+        if not self.is_src_env_tag_chosen(args):
+            return [env.tag for env in self.configMng.get_environments()]
         return []
 
     def get_reload_completions(self, args: list[str]) -> list[str]:
