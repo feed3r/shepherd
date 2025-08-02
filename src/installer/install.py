@@ -36,6 +36,9 @@ force_source_download = False
 # Configuration
 exec_dir = Path(__file__).parent.resolve()
 py_src_dir = (exec_dir.parent).resolve()
+original_user = os.environ.get("SUDO_USER", None)
+default_config_file = py_src_dir / "resources" / "shpd.conf"
+
 
 # Environment variables with defaults
 install_shepctl_dir = Path(
@@ -284,7 +287,6 @@ def install_source() -> None:
         "shepctl installed from source with isolated dependencies.",
         style="green",
     )
-    Util.console.print("You can now run it with: shepctl", style="green")
 
 
 def set_py_permissions(dest_dir: Path) -> None:
@@ -313,7 +315,17 @@ def install_shepctl() -> None:
             f"Error: Unknown install method '{install_method}'", style="red"
         )
         sys.exit(1)
+
+    # Create a default configuration file if it does not exist
+    Util.console.print("Creating default configuration file...", style="blue")
+    manage_config_file()
+
+    # Install the auto-completion script
+    Util.console.print("Installing shell completion script...", style="blue")
     install_completion()
+
+    Util.console.print("Installation completed:", style="green")
+    Util.console.print("You can now run it with: shepctl", style="green")
 
 
 def get_script_completion_src() -> tuple[Path, str]:
@@ -337,9 +349,6 @@ def install_completion() -> None:
     dest = completion_dir / script_completion_filename
 
     if completion_dir.is_dir():
-        Util.console.print(
-            "Installing shell completion script...", style="blue"
-        )
         try:
             shutil.copy2(src, dest)
             os.chmod(dest, 0o755)
@@ -429,6 +438,47 @@ def create_virtualenv(install_dir: Path) -> Path:
         for f in files:
             os.chown(os.path.join(root, f), uid, gid)
     return venv_path
+
+
+def manage_config_file() -> None:
+    """
+    Create a default configuration file in the
+    user home directory if it not exists.
+    """
+    config_file_path, user_config_exists = check_user_config_file()
+    if not user_config_exists:
+        ensure_source_config_file()
+        shutil.copy2(
+            default_config_file,
+            config_file_path,
+        )
+        Util.console.print(
+            f"Created default config file: {config_file_path}", style="green"
+        )
+    else:
+        Util.console.print(
+            f"Config file already exists: {config_file_path}", style="yellow"
+        )
+
+
+def check_user_config_file() -> tuple[Path, bool]:
+    """
+    Check if the user has a configuration file in their home directory.
+    Returns True if the file exists, False otherwise.
+    """
+    home_dir = Path(pwd.getpwnam(str(original_user)).pw_dir)
+    config_file_path = home_dir / ".shpd.conf"
+    return config_file_path, config_file_path.exists()
+
+
+def ensure_source_config_file() -> None:
+    """
+    Ensure the source configuration file exists.
+    """
+    if not default_config_file.exists():
+        raise FileNotFoundError(
+            f"Source config file not found: {default_config_file}"
+        )
 
 
 if __name__ == "__main__":

@@ -94,8 +94,6 @@ class TestInstallScript:
             # more precise checks, you would need to patch the individual Path
             # objects with patch.object.
 
-            # ...existing code...
-
     @patch("pathlib.Path.is_dir")
     def test_install_completion_no_dir(self, mock_is_dir: MagicMock) -> None:
         # Simulate /etc/bash_completion.d does not exist
@@ -249,35 +247,30 @@ class TestInstallScript:
         mock_install_packages: MagicMock,
     ) -> None:
         """Test install function with dependency installation."""
-        # Mock skip_ensure_deps
         install.skip_ensure_deps = False
         install.install_method = "binary"
-
-        # Mock OS info
         mock_os_info = Util.OsInfo(
             system="linux",
             distro="ubuntu",
             codename="focal",
         )
         mock_get_os_info.return_value = mock_os_info
-
-        # Mock install_shepctl_dir exists
-        with patch("pathlib.Path.exists", return_value=True):
+        with (
+            patch("pathlib.Path.exists", return_value=True),
+            patch(
+                "installer.install.check_user_config_file",
+                return_value=(Path("/tmp/testuser/.shpd.conf"), True),
+            ),
+        ):
             install.install_shepctl()
-
-        # Check dependencies were installed
         mock_get_os_info.assert_called_once()
         mock_install_packages.assert_called_once_with(
             mock_os_info.distro, mock_os_info.codename, False
         )
-
-        # Check directory was recreated
         mock_rmtree.assert_called_once_with(install.install_shepctl_dir)
         mock_makedirs.assert_called_once_with(
             install.install_shepctl_dir, exist_ok=True
         )
-
-        # Verify the binary installation was called
         mock_install_binary.assert_called_once()
 
     @patch("util.Util.get_os_info")
@@ -294,25 +287,22 @@ class TestInstallScript:
         mock_install_packages: MagicMock,
     ) -> None:
         """Test install function while skipping dependencies."""
-        # Mock skip_ensure_deps
         install.skip_ensure_deps = True
         install.install_method = "binary"
-
-        # Mock install_shepctl_dir exists
-        with patch("pathlib.Path.exists", return_value=True):
+        with (
+            patch("pathlib.Path.exists", return_value=True),
+            patch(
+                "installer.install.check_user_config_file",
+                return_value=(Path("/tmp/testuser/.shpd.conf"), True),
+            ),
+        ):
             install.install_shepctl()
-
-        # Check dependencies were not installed
         mock_get_os_info.assert_not_called()
         mock_install_packages.assert_not_called()
-
-        # Check directory was recreated
         mock_rmtree.assert_called_once_with(install.install_shepctl_dir)
         mock_makedirs.assert_called_once_with(
             install.install_shepctl_dir, exist_ok=True
         )
-
-        # Verify the binary installation was called
         mock_install_binary.assert_called_once()
 
     @patch("os.makedirs")
@@ -331,8 +321,6 @@ class TestInstallScript:
         with patch("pathlib.Path.exists", return_value=True):
             with pytest.raises(SystemExit):
                 install.install_shepctl()
-
-    # ...existing code...
 
     @patch("util.Util.check_file_exists", return_value=False)
     @patch("util.Util.run_command")
@@ -447,6 +435,53 @@ class TestInstallScript:
                     f"{self.install_dir}/shepctl",
                     Path(f"{os.environ['SYMLINK_DIR']}/shepctl"),
                 )
+
+    @patch("installer.install.shutil.copy2")
+    @patch("installer.install.Util.console.print")
+    def test_manage_config_file_creates_file(
+        self,
+        mock_print: MagicMock,
+        mock_copy2: MagicMock,
+    ) -> None:
+        # Simula che il file config utente non esista, ma quello di default sì
+        with (
+            patch(
+                "installer.install.check_user_config_file",
+                return_value=(Path("/tmp/testuser/.shpd.conf"), False),
+            ),
+            patch(
+                "installer.install.default_config_file",
+                Path("/tmp/default.conf"),
+            ),
+            patch("installer.install.ensure_source_config_file"),
+        ):
+            install.manage_config_file()
+            mock_copy2.assert_called_once_with(
+                Path("/tmp/default.conf"), Path("/tmp/testuser/.shpd.conf")
+            )
+            mock_print.assert_any_call(
+                "Created default config file: /tmp/testuser/.shpd.conf",
+                style="green",
+            )
+
+    @patch("installer.install.shutil.copy2")
+    @patch("installer.install.Util.console.print")
+    def test_manage_config_file_already_exists(
+        self,
+        mock_print: MagicMock,
+        mock_copy2: MagicMock,
+    ) -> None:
+        # Simula che il file config utente esista già
+        with patch(
+            "installer.install.check_user_config_file",
+            return_value=(Path("/tmp/testuser/.shpd.conf"), True),
+        ):
+            install.manage_config_file()
+            mock_copy2.assert_not_called()
+            mock_print.assert_any_call(
+                "Config file already exists: /tmp/testuser/.shpd.conf",
+                style="yellow",
+            )
 
 
 if __name__ == "__main__":
