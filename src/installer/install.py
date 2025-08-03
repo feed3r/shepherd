@@ -271,11 +271,14 @@ def install_source() -> None:
         )
         os.makedirs(install_shepctl_dir, exist_ok=True)
 
-    copy_python_sources(py_src_dir, install_shepctl_dir)
-    set_py_permissions(install_shepctl_dir)
+    # Create venv
     venv_path = create_virtualenv(install_shepctl_dir)
     install_requirements_in_venv(py_src_dir, venv_path)
     create_wrapper_script(install_shepctl_dir, symlink_dir)
+
+    # Copy Python source files
+    copy_python_sources(py_src_dir, install_shepctl_dir)
+    set_py_permissions(install_shepctl_dir)
 
     Util.console.print(
         "shepctl installed from source with isolated dependencies.",
